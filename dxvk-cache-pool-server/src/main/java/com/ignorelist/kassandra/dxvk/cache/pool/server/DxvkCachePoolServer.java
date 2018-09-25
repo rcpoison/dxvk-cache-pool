@@ -24,7 +24,9 @@ import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
+import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 
 /**
  *
@@ -46,7 +48,8 @@ public class DxvkCachePoolServer implements Closeable {
 			throw new IllegalStateException("server already started");
 		}
 		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
-		ResourceConfig resourceConfig=new DxvkCachePoolApplication(configuration);
+		ResourceConfig resourceConfig=buildResourceConfig();
+
 		server=JettyHttpContainerFactory.createServer(baseUri, resourceConfig);
 		server.setRequestLog(new RequestLog() {
 			@Override
@@ -55,6 +58,14 @@ public class DxvkCachePoolServer implements Closeable {
 			}
 		});
 		server.start();
+	}
+
+	private ResourceConfig buildResourceConfig() {
+		ResourceConfig resourceConfig=new ResourceConfig();
+		resourceConfig.register(DxvkCachePoolREST.class);
+		resourceConfig.register(new ServerBinder(configuration));
+		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
+		return resourceConfig;
 	}
 
 	public void join() throws InterruptedException {
