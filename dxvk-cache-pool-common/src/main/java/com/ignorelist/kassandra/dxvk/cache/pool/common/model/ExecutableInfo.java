@@ -15,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -30,7 +29,6 @@ public class ExecutableInfo implements Serializable {
 
 	@NotNull
 	private Path path;
-	@Size(min=32, max=32)
 	private byte[] hash;
 
 	public ExecutableInfo() {
