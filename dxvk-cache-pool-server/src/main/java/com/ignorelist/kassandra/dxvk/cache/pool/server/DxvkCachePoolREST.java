@@ -28,10 +28,7 @@ public class DxvkCachePoolREST {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Set<ExecutableInfo> executableInfos() {
 		FsScanner fsScanner=FsScanner.scan(ImmutableSet.of(Paths.get("/home/poison/.wine/")));
-		return fsScanner.getExecutables()
-				.stream()
-				.map(ExecutableInfo::copyWithRelativePath)
-				.collect(ImmutableSet.toImmutableSet());
+		return fsScanner.getExecutables();
 	}
 
 	@POST
