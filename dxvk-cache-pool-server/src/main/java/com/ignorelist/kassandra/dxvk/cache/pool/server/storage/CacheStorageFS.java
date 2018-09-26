@@ -18,14 +18,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class CacheStorageFs implements CacheStorage {
+public class CacheStorageFS implements CacheStorage {
 
 	private final Equivalence<ExecutableInfo> equivalence=new ExecutableInfoEquivalenceRelativePath();
 
 	private final Path storageRoot;
 	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheDescriptor> storageCache;
 
-	public CacheStorageFs(Path storageRoot) {
+	public CacheStorageFS(Path storageRoot) {
 		this.storageRoot=storageRoot;
 	}
 	
