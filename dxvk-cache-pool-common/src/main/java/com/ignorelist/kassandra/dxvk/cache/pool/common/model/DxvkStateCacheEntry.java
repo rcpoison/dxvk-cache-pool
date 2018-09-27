@@ -29,8 +29,12 @@ public class DxvkStateCacheEntry implements Serializable {
 	}
 
 	public DxvkStateCacheEntry(byte[] entry) {
-		descriptor=new DxvkStateCacheEntryInfo(Hashing.sha256().hashBytes(entry).asBytes());
+		descriptor=new DxvkStateCacheEntryInfo(entryHash(entry));
 		this.entry=entry;
+	}
+
+	private static byte[] entryHash(byte[] entry) {
+		return Hashing.sha256().hashBytes(entry).asBytes();
 	}
 
 	public DxvkStateCacheEntryInfo getDescriptor() {
