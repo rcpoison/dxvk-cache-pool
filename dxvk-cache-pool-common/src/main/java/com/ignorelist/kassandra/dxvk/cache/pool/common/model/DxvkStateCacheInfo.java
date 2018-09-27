@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -17,49 +18,58 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
-    @NotNull
-    private ExecutableInfo executableInfo;
-    private int version;
-    @NotNull
-    private int entrySize;
-    private Set<DxvkStateCacheEntryInfo> entries;
+	@NotNull
+	private ExecutableInfo executableInfo;
+	private int version;
+	@NotNull
+	private int entrySize;
+	private Instant lastModified;
+	private Set<DxvkStateCacheEntryInfo> entries;
 
-    public DxvkStateCacheInfo() {
-    }
+	public DxvkStateCacheInfo() {
+	}
 
-    @Override
-    public ExecutableInfo getExecutableInfo() {
-        return executableInfo;
-    }
+	@Override
+	public ExecutableInfo getExecutableInfo() {
+		return executableInfo;
+	}
 
-    public void setExecutableInfo(ExecutableInfo executableInfo) {
-        this.executableInfo = executableInfo;
-    }
+	public void setExecutableInfo(ExecutableInfo executableInfo) {
+		this.executableInfo=executableInfo;
+	}
 
-    @Override
-    public int getVersion() {
-        return version;
-    }
+	@Override
+	public int getVersion() {
+		return version;
+	}
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
+	public void setVersion(int version) {
+		this.version=version;
+	}
 
-    @Override
-    public int getEntrySize() {
-        return entrySize;
-    }
+	@Override
+	public int getEntrySize() {
+		return entrySize;
+	}
 
-    public void setEntrySize(int entrySize) {
-        this.entrySize = entrySize;
-    }
+	public void setEntrySize(int entrySize) {
+		this.entrySize=entrySize;
+	}
 
-    public Set<DxvkStateCacheEntryInfo> getEntries() {
-        return entries;
-    }
+	public Set<DxvkStateCacheEntryInfo> getEntries() {
+		return entries;
+	}
 
-    public void setEntries(Set<DxvkStateCacheEntryInfo> entries) {
-        this.entries = entries;
-    }
+	public void setEntries(Set<DxvkStateCacheEntryInfo> entries) {
+		this.entries=entries;
+	}
+
+	public Instant getLastModified() {
+		return lastModified;
+	}
+
+	public void setLastModified(Instant lastModified) {
+		this.lastModified=lastModified;
+	}
 
 }
