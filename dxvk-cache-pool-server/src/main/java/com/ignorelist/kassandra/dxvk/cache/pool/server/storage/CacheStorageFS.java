@@ -172,7 +172,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 			final Path targetDirectory=buildTargetDirectory(existingCache);
 			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
 					-> missingEntries.parallelStream()
-							.map(e -> readEntry(targetDirectory, e))
+							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
 			return task.get();
 		} catch (RuntimeException e) {
@@ -211,7 +211,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
 			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
 					-> cacheDescriptor.getEntries().parallelStream()
-							.map(e -> readEntry(targetDirectory, e))
+							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
 			cache.setEntries(task.get());
 			return cache;
@@ -224,7 +224,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		}
 	}
 
-	private DxvkStateCacheEntry readEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
+	private DxvkStateCacheEntry readCacheEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
 		final Path entryFile=targetDirectory.resolve(BASE16.encode(cacheEntryInfo.getHash()));
 		try (InputStream entryStream=Files.newInputStream(entryFile)) {
 			final byte[] entryData=ByteStreams.toByteArray(entryStream);
