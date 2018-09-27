@@ -106,11 +106,11 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 					entriesInRelativePath.asMap().entrySet().parallelStream()
 							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), version))
 							.forEach(d -> m.put(equivalence.wrap(d.getExecutableInfo()), d));
-					storageCache=m;
 				} catch (Exception e) {
 					LOG.log(Level.WARNING, null, e);
 				}
 			}
+			storageCache=m;
 		}
 		return storageCache;
 	}
