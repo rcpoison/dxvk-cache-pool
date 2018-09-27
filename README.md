@@ -1,5 +1,7 @@
 # DXVK cache pool
 
+Client/server to share dxvk pipeline cache.
+
 ## Building
 
 Prerequisites:
