@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class DxvkStateCacheDescriptor implements DxvkStateCacheMeta, Serializable {
+public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
     @NotNull
     private ExecutableInfo executableInfo;
@@ -24,7 +24,7 @@ public class DxvkStateCacheDescriptor implements DxvkStateCacheMeta, Serializabl
     private int entrySize;
     private Set<DxvkStateCacheEntryInfo> entries;
 
-    public DxvkStateCacheDescriptor() {
+    public DxvkStateCacheInfo() {
     }
 
     @Override

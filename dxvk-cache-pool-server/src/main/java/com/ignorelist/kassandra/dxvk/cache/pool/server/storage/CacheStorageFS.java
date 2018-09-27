@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheDescriptor;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
@@ -33,15 +33,15 @@ public class CacheStorageFS implements CacheStorage {
 	private final Equivalence<ExecutableInfo> equivalence=new ExecutableInfoEquivalenceRelativePath();
 
 	private final Path storageRoot;
-	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheDescriptor> storageCache;
+	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> storageCache;
 
 	public CacheStorageFS(Path storageRoot) {
 		this.storageRoot=storageRoot;
 	}
 
-	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheDescriptor> getStorageCache() throws IOException {
+	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> getStorageCache() throws IOException {
 		if (null==storageCache) {
-			ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheDescriptor> m=new ConcurrentHashMap<>();
+			ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> m=new ConcurrentHashMap<>();
 			ImmutableSet<String> versions=Files.list(storageRoot)
 					.filter(Files::isDirectory)
 					.map(Path::getFileName)
@@ -58,7 +58,7 @@ public class CacheStorageFS implements CacheStorage {
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
 					collect.asMap().entrySet().parallelStream()
 							.map(e -> {
-								DxvkStateCacheDescriptor cacheDescriptor=new DxvkStateCacheDescriptor();
+								DxvkStateCacheInfo cacheDescriptor=new DxvkStateCacheInfo();
 								cacheDescriptor.setVersion(version);
 								ExecutableInfo ei=new ExecutableInfo(e.getKey());
 								ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=e.getValue().stream()
@@ -81,11 +81,11 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<DxvkStateCacheDescriptor> getCacheDescriptors() {
+	public Set<DxvkStateCacheInfo> getCacheDescriptors() {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	public DxvkStateCacheDescriptor getCacheDescriptor(ExecutableInfo executableInfo) {
+	public DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
@@ -99,8 +99,8 @@ public class CacheStorageFS implements CacheStorage {
 		final ExecutableInfo executableInfo=cache.getExecutableInfo();
 		final Path targetDirectory=storageRoot.resolve(executableInfo.getRelativePath());
 		final Equivalence.Wrapper<ExecutableInfo> executableInfoWrapper=equivalence.wrap(executableInfo);
-		DxvkStateCacheDescriptor descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
-			DxvkStateCacheDescriptor d=new DxvkStateCacheDescriptor();
+		DxvkStateCacheInfo descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
+			DxvkStateCacheInfo d=new DxvkStateCacheInfo();
 			d.setVersion(cache.getVersion());
 			d.setEntrySize(cache.getEntrySize());
 			d.setExecutableInfo(executableInfo);

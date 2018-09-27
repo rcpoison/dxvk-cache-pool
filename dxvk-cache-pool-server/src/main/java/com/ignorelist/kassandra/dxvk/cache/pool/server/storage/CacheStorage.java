@@ -6,7 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheDescriptor;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import java.io.IOException;
 import java.util.Set;
@@ -17,9 +17,9 @@ import java.util.Set;
  */
 public interface CacheStorage {
 
-	Set<DxvkStateCacheDescriptor> getCacheDescriptors();
+	Set<DxvkStateCacheInfo> getCacheDescriptors();
 
-	DxvkStateCacheDescriptor getCacheDescriptor(ExecutableInfo executableInfo);
+	DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo);
 
 	DxvkStateCache getCache(ExecutableInfo executableInfo);
 
