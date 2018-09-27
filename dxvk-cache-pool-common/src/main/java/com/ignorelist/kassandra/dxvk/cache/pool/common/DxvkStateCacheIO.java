@@ -40,7 +40,13 @@ public class DxvkStateCacheIO {
 		}
 	}
 
-	private static DxvkStateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
+	public static DxvkStateCache parse(final Path path) throws IOException {
+		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
+			return parse(is);
+		}
+	}
+
+	public static DxvkStateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
 		/*
 		struct DxvkStateCacheHeader {
 		  char     magic[4]   = { 'D', 'X', 'V', 'K' };
@@ -92,7 +98,13 @@ public class DxvkStateCacheIO {
 		return dxvkStateCache;
 	}
 
-	private static void write(final OutputStream out, DxvkStateCache cache) throws IOException {
+	public static void write(final Path path, DxvkStateCache cache) throws IOException {
+		try (OutputStream os=Files.newOutputStream(path)) {
+			write(os, cache);
+		}
+	}
+
+	public static void write(final OutputStream out, DxvkStateCache cache) throws IOException {
 		out.write("DXVK".getBytes(Charsets.US_ASCII));
 		out.write(toUnsignedIntBytes(cache.getVersion()));
 		out.write(toUnsignedIntBytes(cache.getEntrySize()));
