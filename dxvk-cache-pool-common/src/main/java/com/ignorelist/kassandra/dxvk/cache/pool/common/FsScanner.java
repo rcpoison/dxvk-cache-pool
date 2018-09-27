@@ -81,7 +81,7 @@ public class FsScanner {
 		ImmutableSet<Path> cachePaths=paths.stream()
 				.filter(PREDICATE_CACHE)
 				.collect(ImmutableSet.toImmutableSet());
-		ImmutableSet<ExecutableInfo> exec=paths.parallelStream()
+		ImmutableSet<ExecutableInfo> exec=paths.stream()
 				.filter(PREDICATE_EXE)
 				.map(ExecutableInfo::build)
 				.collect(ImmutableSet.toImmutableSet());
