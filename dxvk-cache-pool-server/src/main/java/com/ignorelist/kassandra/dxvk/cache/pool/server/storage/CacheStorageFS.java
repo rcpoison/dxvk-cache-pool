@@ -130,7 +130,33 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public Set<DxvkStateCacheInfo> getCacheDescriptors() {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		try {
+			return ImmutableSet.copyOf(getStorageCache().values());
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			return ImmutableSet.of();
+		}
+	}
+
+	@Override
+	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache) {
+		final ExecutableInfo executableInfo=existingCache.getExecutableInfo();
+		final Lock readLock=getReadLock(executableInfo);
+		readLock.lock();
+		try {
+			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(executableInfo);
+			if (null==cacheDescriptor) {
+				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
+			}
+			final Sets.SetView<DxvkStateCacheEntryInfo> missingEntries=Sets.difference(cacheDescriptor.getEntries(), existingCache.getEntries());
+			final Path targetDirectory=buildTargetDirectory(existingCache);
+
+			return missingEntries.parallelStream()
+					.map(e -> readEntry(targetDirectory, e))
+					.collect(ImmutableSet.toImmutableSet());
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	@Override
