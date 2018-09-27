@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -20,6 +21,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -32,6 +34,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
@@ -45,7 +50,7 @@ import java.util.regex.Pattern;
  *
  * @author poison
  */
-public class CacheStorageFS implements CacheStorage {
+public class CacheStorageFS implements CacheStorage, Closeable {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
 	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{16}", Pattern.CASE_INSENSITIVE);
@@ -54,11 +59,19 @@ public class CacheStorageFS implements CacheStorage {
 	private final Equivalence<ExecutableInfo> equivalence=new ExecutableInfoEquivalenceRelativePath();
 
 	private final Path storageRoot;
-	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> storageCache;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
+	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> storageCache;
+	private ForkJoinPool storageThreadPool;
 
 	public CacheStorageFS(Path storageRoot) {
 		this.storageRoot=storageRoot;
+	}
+
+	private synchronized ForkJoinPool getThreadPool() {
+		if (null==storageThreadPool) {
+			storageThreadPool=new ForkJoinPool(8);
+		}
+		return storageThreadPool;
 	}
 
 	private Lock getReadLock(ExecutableInfo key) {
@@ -150,10 +163,15 @@ public class CacheStorageFS implements CacheStorage {
 			}
 			final Sets.SetView<DxvkStateCacheEntryInfo> missingEntries=Sets.difference(cacheDescriptor.getEntries(), existingCache.getEntries());
 			final Path targetDirectory=buildTargetDirectory(existingCache);
-
-			return missingEntries.parallelStream()
-					.map(e -> readEntry(targetDirectory, e))
-					.collect(ImmutableSet.toImmutableSet());
+			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
+					-> missingEntries.parallelStream()
+							.map(e -> readEntry(targetDirectory, e))
+							.collect(ImmutableSet.toImmutableSet()));
+			return task.get();
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		} finally {
 			readLock.unlock();
 		}
@@ -163,7 +181,7 @@ public class CacheStorageFS implements CacheStorage {
 	public DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo) {
 		try {
 			return getStorageCache().get(equivalence.wrap(executableInfo));
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			LOG.log(Level.INFO, null, ex);
 			return null;
 		}
@@ -184,11 +202,16 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setExecutableInfo(executableInfo);
 			cache.setVersion(cacheDescriptor.getVersion());
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
-			final ImmutableSet<DxvkStateCacheEntry> cacheEntries=cacheDescriptor.getEntries().parallelStream()
-					.map(e -> readEntry(targetDirectory, e))
-					.collect(ImmutableSet.toImmutableSet());
-			cache.setEntries(cacheEntries);
+			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
+					-> cacheDescriptor.getEntries().parallelStream()
+							.map(e -> readEntry(targetDirectory, e))
+							.collect(ImmutableSet.toImmutableSet()));
+			cache.setEntries(task.get());
 			return cache;
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		} finally {
 			readLock.unlock();
 		}
@@ -248,6 +271,13 @@ public class CacheStorageFS implements CacheStorage {
 				.resolve(Integer.toString(cache.getVersion()))
 				.resolve(executableInfo.getRelativePath());
 		return targetPath;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (null!=storageThreadPool) {
+			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
+		}
 	}
 
 }
