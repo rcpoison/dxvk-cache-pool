@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Simple storage using the filesystem.
@@ -125,12 +126,12 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		cacheInfo.setVersion(version);
 		final ExecutableInfo ei=new ExecutableInfo(relativePath);
 		cacheInfo.setExecutableInfo(ei);
-		ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
+		Set<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
 				.map(Path::toString)
 				.map(BASE16::decode)
 				.map(h -> new DxvkStateCacheEntryInfo(h))
-				.collect(ImmutableSet.toImmutableSet());
+				.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
 		cacheInfo.setEntries(entryDescriptors);
 		final Optional<FileTime> lastModified=cacheEntryPaths.stream()
 				.map(p -> {
