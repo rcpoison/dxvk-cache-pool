@@ -132,8 +132,14 @@ public class CacheStorageFS implements CacheStorage {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
+	@Override
 	public DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		try {
+			return getStorageCache().get(equivalence.wrap(executableInfo));
+		} catch (IOException ex) {
+			LOG.log(Level.INFO, null, ex);
+			return null;
+		}
 	}
 
 	@Override
