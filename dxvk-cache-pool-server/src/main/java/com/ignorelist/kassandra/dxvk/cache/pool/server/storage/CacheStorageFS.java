@@ -11,14 +11,20 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -95,7 +101,7 @@ public class CacheStorageFS implements CacheStorage {
 					try {
 						return Files.getLastModifiedTime(p);
 					} catch (IOException ex) {
-						throw new IllegalStateException("failed to get mtime for:"+p);
+						throw new IllegalStateException("failed to get mtime for:"+p, ex);
 					}
 				})
 				.max(FileTime::compareTo);
@@ -122,7 +128,6 @@ public class CacheStorageFS implements CacheStorage {
 	@Override
 	public void store(final DxvkStateCache cache) throws IOException {
 		final ExecutableInfo executableInfo=cache.getExecutableInfo();
-		final Path targetDirectory=storageRoot.resolve(executableInfo.getRelativePath());
 		final Equivalence.Wrapper<ExecutableInfo> executableInfoWrapper=equivalence.wrap(executableInfo);
 		DxvkStateCacheInfo descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
 			DxvkStateCacheInfo d=new DxvkStateCacheInfo();
@@ -133,11 +138,25 @@ public class CacheStorageFS implements CacheStorage {
 			return d;
 		});
 
+		final Path targetDirectory=buildTargetDirectory(cache);
 		Files.createDirectories(targetDirectory);
-		cache.getEntries().parallelStream();
+		cache.getEntries().parallelStream()
+				.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
+				.forEach(e -> writeCacheEntry(targetDirectory, e));
+		descriptor.setLastModified(Instant.now());
 	}
 
-	private Path buildTargetDirectory(DxvkStateCache cache) {
+	private static void writeCacheEntry(final Path targetDirectory, final DxvkStateCacheEntry dxvkStateCacheEntry) {
+		final String fileName=BASE16.encode(dxvkStateCacheEntry.getDescriptor().getHash());
+		final Path targetFile=targetDirectory.resolve(fileName);
+		try (InputStream entryContent=new ByteArrayInputStream(dxvkStateCacheEntry.getEntry())) {
+			Files.copy(entryContent, targetFile, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ex) {
+			throw new IllegalStateException("failed to write entry: "+dxvkStateCacheEntry, ex);
+		}
+	}
+
+	private Path buildTargetDirectory(DxvkStateCacheMeta cache) {
 		final ExecutableInfo executableInfo=cache.getExecutableInfo();
 		final Path targetPath=storageRoot
 				.resolve(Integer.toString(cache.getVersion()))
