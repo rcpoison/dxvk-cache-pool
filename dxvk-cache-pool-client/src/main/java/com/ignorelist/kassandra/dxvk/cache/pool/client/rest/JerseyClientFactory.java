@@ -18,8 +18,8 @@ import org.glassfish.jersey.client.JerseyClientBuilder;
  */
 final class JerseyClientFactory extends BasePooledObjectFactory<Client> {
 
-	private static final long CONNECT_TIMEOUT=1000;
-	private static final long READ_TIMEOUT=30000;
+	private static final int CONNECT_TIMEOUT=1000;
+	private static final int READ_TIMEOUT=30000;
 
 	@Override
 	public Client create() throws Exception {
