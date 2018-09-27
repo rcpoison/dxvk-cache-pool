@@ -18,6 +18,9 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquiv
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,6 +39,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
 	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{16}", Pattern.CASE_INSENSITIVE);
+	private static final BaseEncoding BASE16=BaseEncoding.base16();
 
 	private final Equivalence<ExecutableInfo> equivalence=new ExecutableInfoEquivalenceRelativePath();
 
@@ -54,29 +58,16 @@ public class CacheStorageFS implements CacheStorage {
 					.map(Path::getFileName)
 					.map(Path::toString)
 					.collect(ImmutableSet.toImmutableSet());
-			BaseEncoding base16=BaseEncoding.base16();
 			for (String versionString : versions) {
 				try {
 					final int version=Integer.parseInt(versionString);
 					final Path versionDirectory=storageRoot.resolve(versionString);
-					ImmutableSetMultimap<Path, Path> collect=Files.walk(versionDirectory)
+					final ImmutableSetMultimap<Path, Path> entriesInRelativePath=Files.walk(versionDirectory)
 							.filter(Files::isRegularFile)
 							.filter(p -> SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
-					collect.asMap().entrySet().parallelStream()
-							.map(e -> {
-								DxvkStateCacheInfo cacheDescriptor=new DxvkStateCacheInfo();
-								cacheDescriptor.setVersion(version);
-								ExecutableInfo ei=new ExecutableInfo(e.getKey());
-								ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=e.getValue().stream()
-										.map(Path::getFileName)
-										.map(Path::toString)
-										.map(base16::decode)
-										.map(h -> new DxvkStateCacheEntryInfo(h))
-										.collect(ImmutableSet.toImmutableSet());
-								cacheDescriptor.setEntries(entryDescriptors);
-								return cacheDescriptor;
-							})
+					entriesInRelativePath.asMap().entrySet().parallelStream()
+							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), version))
 							.forEach(d -> m.put(equivalence.wrap(d.getExecutableInfo()), d));
 					storageCache=m;
 				} catch (Exception e) {
@@ -85,6 +76,33 @@ public class CacheStorageFS implements CacheStorage {
 			}
 		}
 		return storageCache;
+	}
+
+	private static DxvkStateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
+		DxvkStateCacheInfo cacheInfo=new DxvkStateCacheInfo();
+		cacheInfo.setVersion(version);
+		ExecutableInfo ei=new ExecutableInfo(relativePath);
+		cacheInfo.setExecutableInfo(ei);
+		ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
+				.map(Path::getFileName)
+				.map(Path::toString)
+				.map(BASE16::decode)
+				.map(h -> new DxvkStateCacheEntryInfo(h))
+				.collect(ImmutableSet.toImmutableSet());
+		cacheInfo.setEntries(entryDescriptors);
+		final Optional<FileTime> lastModified=cacheEntryPaths.stream()
+				.map(p -> {
+					try {
+						return Files.getLastModifiedTime(p);
+					} catch (IOException ex) {
+						throw new IllegalStateException("failed to get mtime for:"+p);
+					}
+				})
+				.max(FileTime::compareTo);
+		if (lastModified.isPresent()) {
+			cacheInfo.setLastModified(lastModified.get().toInstant());
+		}
+		return cacheInfo;
 	}
 
 	@Override
