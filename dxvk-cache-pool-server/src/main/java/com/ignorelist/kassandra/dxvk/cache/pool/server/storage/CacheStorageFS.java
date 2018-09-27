@@ -25,6 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+/**
+ * Simple storage using the filesystem.
+ *
+ * FS layout: storageRoot / version / executable parent path / executable name / entry sha256
+ *
+ * @author poison
+ */
 public class CacheStorageFS implements CacheStorage {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
