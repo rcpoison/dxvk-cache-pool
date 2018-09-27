@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -55,6 +56,39 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 
 	public void setEntries(Set<DxvkStateCacheEntry> entries) {
 		this.entries=entries;
+	}
+
+	@Override
+	public int hashCode() {
+		int hash=7;
+		hash=89*hash+Objects.hashCode(this.executableInfo);
+		hash=89*hash+this.version;
+		hash=89*hash+Objects.hashCode(this.entries);
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this==obj) {
+			return true;
+		}
+		if (obj==null) {
+			return false;
+		}
+		if (getClass()!=obj.getClass()) {
+			return false;
+		}
+		final DxvkStateCache other=(DxvkStateCache) obj;
+		if (this.version!=other.version) {
+			return false;
+		}
+		if (!Objects.equals(this.executableInfo, other.executableInfo)) {
+			return false;
+		}
+		if (!Objects.equals(this.entries, other.entries)) {
+			return false;
+		}
+		return true;
 	}
 
 }
