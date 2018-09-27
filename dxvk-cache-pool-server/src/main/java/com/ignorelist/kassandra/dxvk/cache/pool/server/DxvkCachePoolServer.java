@@ -11,6 +11,7 @@ import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -106,8 +107,10 @@ public class DxvkCachePoolServer implements Closeable {
 		} catch (ParseException|EOFException e) {
 			System.exit(1);
 		}
-		CacheStorage storage=new CacheStorageFS(Paths.get(System.getProperty("user.home"), ".local", "share", "dxvk-cache-pool-server", "storage"));
-		try (DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
+		final Path storagePath=Paths.get(System.getProperty("user.home"), ".local", "share", "dxvk-cache-pool-server", "storage");
+
+		try (CacheStorageFS storage=new CacheStorageFS(storagePath); DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
+			storage.init();
 			js.start();
 			js.join();
 		}

@@ -74,6 +74,10 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		return storageThreadPool;
 	}
 
+	public void init() throws IOException {
+		getStorageCache();
+	}
+
 	private Lock getReadLock(ExecutableInfo key) {
 		final ReadWriteLock lock=storageLock.get(key.getRelativePath());
 		final Lock readLock=lock.readLock();
@@ -105,6 +109,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
 					entriesInRelativePath.asMap().entrySet().parallelStream()
 							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), version))
+							.peek(d -> LOG.info(() -> "loaded: "+d.getExecutableInfo().getRelativePath()+" with "+d.getEntries().size()+" entries"))
 							.forEach(d -> m.put(equivalence.wrap(d.getExecutableInfo()), d));
 				} catch (Exception e) {
 					LOG.log(Level.WARNING, null, e);
