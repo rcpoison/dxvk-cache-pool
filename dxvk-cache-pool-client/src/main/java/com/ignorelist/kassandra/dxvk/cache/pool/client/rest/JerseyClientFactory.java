@@ -10,7 +10,10 @@ import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.glassfish.jersey.client.filter.EncodingFilter;
+import org.glassfish.jersey.message.GZipEncoder;
 
 /**
  *
@@ -23,10 +26,15 @@ final class JerseyClientFactory extends BasePooledObjectFactory<Client> {
 
 	@Override
 	public Client create() throws Exception {
-		return new JerseyClientBuilder()
+		final JerseyClient client=new JerseyClientBuilder()
+				.register(GZipEncoder.class)
+				.register(EncodingFilter.class)
 				.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT)
 				.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT)
+				.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT)
+				.property(ClientProperties.USE_ENCODING, "gzip")
 				.build();
+		return client;
 	}
 
 	@Override
