@@ -24,9 +24,9 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Collection;
@@ -43,6 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Simple storage using the filesystem.
@@ -226,12 +228,24 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 
 	private DxvkStateCacheEntry readCacheEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
 		final Path entryFile=targetDirectory.resolve(BASE16.encode(cacheEntryInfo.getHash()));
-		try (InputStream entryStream=Files.newInputStream(entryFile)) {
+		try (InputStream entryStream=new GZIPInputStream(Files.newInputStream(entryFile))) {
 			final byte[] entryData=ByteStreams.toByteArray(entryStream);
 			return new DxvkStateCacheEntry(cacheEntryInfo, entryData);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, null, ex);
 			throw new IllegalStateException("failed to read entry: "+cacheEntryInfo, ex);
+		}
+	}
+
+	private static void writeCacheEntry(final Path targetDirectory, final DxvkStateCacheEntry dxvkStateCacheEntry) {
+		final String fileName=BASE16.encode(dxvkStateCacheEntry.getDescriptor().getHash());
+		final Path targetFile=targetDirectory.resolve(fileName);
+		try (InputStream entryContent=new ByteArrayInputStream(dxvkStateCacheEntry.getEntry())) {
+			try (OutputStream out=new GZIPOutputStream(Files.newOutputStream(targetFile))) {
+				ByteStreams.copy(entryContent, out);
+			}
+		} catch (IOException ex) {
+			throw new IllegalStateException("failed to write entry: "+dxvkStateCacheEntry, ex);
 		}
 	}
 
@@ -269,16 +283,6 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 			throw new RuntimeException(e);
 		} finally {
 			writeLock.unlock();
-		}
-	}
-
-	private static void writeCacheEntry(final Path targetDirectory, final DxvkStateCacheEntry dxvkStateCacheEntry) {
-		final String fileName=BASE16.encode(dxvkStateCacheEntry.getDescriptor().getHash());
-		final Path targetFile=targetDirectory.resolve(fileName);
-		try (InputStream entryContent=new ByteArrayInputStream(dxvkStateCacheEntry.getEntry())) {
-			Files.copy(entryContent, targetFile, StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException ex) {
-			throw new IllegalStateException("failed to write entry: "+dxvkStateCacheEntry, ex);
 		}
 	}
 
