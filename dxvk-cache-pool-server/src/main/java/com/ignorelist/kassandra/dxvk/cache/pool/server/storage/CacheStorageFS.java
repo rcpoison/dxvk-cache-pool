@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
+import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -30,6 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -51,9 +54,22 @@ public class CacheStorageFS implements CacheStorage {
 
 	private final Path storageRoot;
 	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> storageCache;
+	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
 
 	public CacheStorageFS(Path storageRoot) {
 		this.storageRoot=storageRoot;
+	}
+
+	private Lock getReadLock(ExecutableInfo key) {
+		final ReadWriteLock lock=storageLock.get(key.getRelativePath());
+		final Lock readLock=lock.readLock();
+		return readLock;
+	}
+
+	private Lock getWriteLock(ExecutableInfo key) {
+		final ReadWriteLock lock=storageLock.get(key.getRelativePath());
+		final Lock writeLock=lock.writeLock();
+		return writeLock;
 	}
 
 	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> getStorageCache() throws IOException {
@@ -87,7 +103,7 @@ public class CacheStorageFS implements CacheStorage {
 	private static DxvkStateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
 		DxvkStateCacheInfo cacheInfo=new DxvkStateCacheInfo();
 		cacheInfo.setVersion(version);
-		ExecutableInfo ei=new ExecutableInfo(relativePath);
+		final ExecutableInfo ei=new ExecutableInfo(relativePath);
 		cacheInfo.setExecutableInfo(ei);
 		ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
@@ -129,21 +145,27 @@ public class CacheStorageFS implements CacheStorage {
 	public void store(final DxvkStateCache cache) throws IOException {
 		final ExecutableInfo executableInfo=cache.getExecutableInfo();
 		final Equivalence.Wrapper<ExecutableInfo> executableInfoWrapper=equivalence.wrap(executableInfo);
-		DxvkStateCacheInfo descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
-			DxvkStateCacheInfo d=new DxvkStateCacheInfo();
-			d.setVersion(cache.getVersion());
-			d.setEntrySize(cache.getEntrySize());
-			d.setExecutableInfo(executableInfo);
-			d.setEntries(Sets.newConcurrentHashSet());
-			return d;
-		});
+		final Lock writeLock=getWriteLock(executableInfo);
+		writeLock.lock();
+		try {
+			final DxvkStateCacheInfo descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
+				DxvkStateCacheInfo d=new DxvkStateCacheInfo();
+				d.setVersion(cache.getVersion());
+				d.setEntrySize(cache.getEntrySize());
+				d.setExecutableInfo(executableInfo);
+				d.setEntries(Sets.newConcurrentHashSet());
+				return d;
+			});
 
-		final Path targetDirectory=buildTargetDirectory(cache);
-		Files.createDirectories(targetDirectory);
-		cache.getEntries().parallelStream()
-				.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
-				.forEach(e -> writeCacheEntry(targetDirectory, e));
-		descriptor.setLastModified(Instant.now());
+			final Path targetDirectory=buildTargetDirectory(cache);
+			Files.createDirectories(targetDirectory);
+			cache.getEntries().parallelStream()
+					.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
+					.forEach(e -> writeCacheEntry(targetDirectory, e));
+			descriptor.setLastModified(Instant.now());
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	private static void writeCacheEntry(final Path targetDirectory, final DxvkStateCacheEntry dxvkStateCacheEntry) {
