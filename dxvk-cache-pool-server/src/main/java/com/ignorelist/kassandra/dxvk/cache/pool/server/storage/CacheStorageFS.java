@@ -246,10 +246,20 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 
 			final Path targetDirectory=buildTargetDirectory(cache);
 			Files.createDirectories(targetDirectory);
-			cache.getEntries().parallelStream()
+			ImmutableSet<DxvkStateCacheEntry> newEntries=cache.getEntries().stream()
 					.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
-					.forEach(e -> writeCacheEntry(targetDirectory, e));
+					.collect(ImmutableSet.toImmutableSet());
+			ForkJoinTask<?> task=getThreadPool().submit(()
+					-> newEntries.parallelStream()
+							.forEach(e -> writeCacheEntry(targetDirectory, e)));
+			task.get();
+
+			descriptor.getEntries().addAll(newEntries.stream().map(DxvkStateCacheEntry::getDescriptor).collect(ImmutableSet.toImmutableSet()));
 			descriptor.setLastModified(Instant.now());
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		} finally {
 			writeLock.unlock();
 		}
