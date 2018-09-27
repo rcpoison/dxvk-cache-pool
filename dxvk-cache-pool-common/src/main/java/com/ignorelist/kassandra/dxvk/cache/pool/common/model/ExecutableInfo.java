@@ -6,9 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -128,7 +126,6 @@ public class ExecutableInfo implements Serializable {
 	public static ExecutableInfo build(Path path) {
 		try {
 			ExecutableInfo executableInfo=new ExecutableInfo(path);
-			executableInfo.setHash(Util.hash(Hashing.sha256(), path).asBytes());
 			return executableInfo;
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
