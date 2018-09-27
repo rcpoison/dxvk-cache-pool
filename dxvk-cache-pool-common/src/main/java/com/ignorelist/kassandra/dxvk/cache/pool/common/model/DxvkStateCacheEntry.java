@@ -17,27 +17,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class DxvkStateCacheEntry implements Serializable {
 
-	private DxvkStateCacheEntryDescriptor descriptor;
+	private DxvkStateCacheEntryInfo descriptor;
 	private byte[] entry;
 
 	public DxvkStateCacheEntry() {
 	}
 
-	public DxvkStateCacheEntry(DxvkStateCacheEntryDescriptor descriptor, byte[] entry) {
+	public DxvkStateCacheEntry(DxvkStateCacheEntryInfo descriptor, byte[] entry) {
 		this.descriptor=descriptor;
 		this.entry=entry;
 	}
 
 	public DxvkStateCacheEntry(byte[] entry) {
-		descriptor=new DxvkStateCacheEntryDescriptor(Hashing.sha256().hashBytes(entry).asBytes());
+		descriptor=new DxvkStateCacheEntryInfo(Hashing.sha256().hashBytes(entry).asBytes());
 		this.entry=entry;
 	}
 
-	public DxvkStateCacheEntryDescriptor getDescriptor() {
+	public DxvkStateCacheEntryInfo getDescriptor() {
 		return descriptor;
 	}
 
-	public void setDescriptor(DxvkStateCacheEntryDescriptor descriptor) {
+	public void setDescriptor(DxvkStateCacheEntryInfo descriptor) {
 		this.descriptor=descriptor;
 	}
 

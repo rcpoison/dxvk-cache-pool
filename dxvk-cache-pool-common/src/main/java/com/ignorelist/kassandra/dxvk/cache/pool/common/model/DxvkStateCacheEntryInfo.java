@@ -14,14 +14,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class DxvkStateCacheEntryDescriptor implements Serializable {
+public class DxvkStateCacheEntryInfo implements Serializable {
 
 	private byte[] hash;
 
-	public DxvkStateCacheEntryDescriptor() {
+	public DxvkStateCacheEntryInfo() {
 	}
 
-	public DxvkStateCacheEntryDescriptor(byte[] hash) {
+	public DxvkStateCacheEntryInfo(byte[] hash) {
 		this.hash=hash;
 	}
 
@@ -51,7 +51,7 @@ public class DxvkStateCacheEntryDescriptor implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final DxvkStateCacheEntryDescriptor other=(DxvkStateCacheEntryDescriptor) obj;
+		final DxvkStateCacheEntryInfo other=(DxvkStateCacheEntryInfo) obj;
 		if (!Arrays.equals(this.hash, other.hash)) {
 			return false;
 		}

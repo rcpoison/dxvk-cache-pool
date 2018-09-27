@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheDescriptor;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryDescriptor;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
 import java.io.IOException;
@@ -61,11 +61,11 @@ public class CacheStorageFS implements CacheStorage {
 								DxvkStateCacheDescriptor cacheDescriptor=new DxvkStateCacheDescriptor();
 								cacheDescriptor.setVersion(version);
 								ExecutableInfo ei=new ExecutableInfo(e.getKey());
-								ImmutableSet<DxvkStateCacheEntryDescriptor> entryDescriptors=e.getValue().stream()
+								ImmutableSet<DxvkStateCacheEntryInfo> entryDescriptors=e.getValue().stream()
 										.map(Path::getFileName)
 										.map(Path::toString)
 										.map(base16::decode)
-										.map(h -> new DxvkStateCacheEntryDescriptor(h))
+										.map(h -> new DxvkStateCacheEntryInfo(h))
 										.collect(ImmutableSet.toImmutableSet());
 								cacheDescriptor.setEntries(entryDescriptors);
 								return cacheDescriptor;

@@ -22,7 +22,7 @@ public class DxvkStateCacheDescriptor implements DxvkStateCacheMeta, Serializabl
     private int version;
     @NotNull
     private int entrySize;
-    private Set<DxvkStateCacheEntryDescriptor> entries;
+    private Set<DxvkStateCacheEntryInfo> entries;
 
     public DxvkStateCacheDescriptor() {
     }
@@ -54,11 +54,11 @@ public class DxvkStateCacheDescriptor implements DxvkStateCacheMeta, Serializabl
         this.entrySize = entrySize;
     }
 
-    public Set<DxvkStateCacheEntryDescriptor> getEntries() {
+    public Set<DxvkStateCacheEntryInfo> getEntries() {
         return entries;
     }
 
-    public void setEntries(Set<DxvkStateCacheEntryDescriptor> entries) {
+    public void setEntries(Set<DxvkStateCacheEntryInfo> entries) {
         this.entries = entries;
     }
 
