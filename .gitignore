@@ -31,3 +31,5 @@ git.properties
 trace.db
 /settings.xml
 /trash
+/dxvk-cache-client
+/dxvk-cache-server
