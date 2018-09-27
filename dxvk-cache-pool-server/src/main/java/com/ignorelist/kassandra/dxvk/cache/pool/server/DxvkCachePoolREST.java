@@ -71,7 +71,7 @@ public class DxvkCachePoolREST {
 	}
 
 	@POST
-	@Path("stateCache")
+	@Path("store")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void store(DxvkStateCache dxvkStateCache) throws IOException {
 		if (null==dxvkStateCache) {
