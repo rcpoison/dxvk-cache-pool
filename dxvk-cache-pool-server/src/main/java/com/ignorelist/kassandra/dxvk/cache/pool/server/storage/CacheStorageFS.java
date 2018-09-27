@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
 public class CacheStorageFS implements CacheStorage, Closeable {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
-	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{16}", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{64}", Pattern.CASE_INSENSITIVE);
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
 
 	private final Equivalence<ExecutableInfo> equivalence=new ExecutableInfoEquivalenceRelativePath();
