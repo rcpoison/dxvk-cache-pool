@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedInteger;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +53,9 @@ public class DxvkStateCacheIO {
 
 	public static DxvkStateCache parse(final Path path) throws IOException {
 		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
-			return parse(is);
+			final DxvkStateCache cache=parse(is);
+			cache.setExecutableInfo(new ExecutableInfo(path));
+			return cache;
 		}
 	}
 
