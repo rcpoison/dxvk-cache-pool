@@ -45,7 +45,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient {
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(executableInfos, MediaType.APPLICATION_JSON), TYPE_CACHE_INFO_SET);
+				.post(Entity.json(executableInfos), TYPE_CACHE_INFO_SET);
 	}
 
 	public DxvkStateCache getStateCache(int version, ExecutableInfo executableInfo) {
@@ -54,7 +54,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient {
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(executableInfo, MediaType.APPLICATION_JSON), DxvkStateCache.class);
+				.post(Entity.json(executableInfo), DxvkStateCache.class);
 	}
 
 	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
@@ -62,14 +62,14 @@ public class DxvkCachePoolRestClient extends AbstractRestClient {
 				.path("missingCacheEntries")
 				.request(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(cacheInfo, MediaType.APPLICATION_JSON), TYPE_CACHE_ENTRY_SET);
+				.post(Entity.json(cacheInfo), TYPE_CACHE_ENTRY_SET);
 	}
 
 	public void store(DxvkStateCache dxvkStateCache) {
 		getWebTarget()
 				.path("store")
 				.request()
-				.post(Entity.entity(dxvkStateCache, MediaType.APPLICATION_JSON));
+				.post(Entity.json(dxvkStateCache));
 	}
 
 }
