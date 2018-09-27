@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedInteger;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -26,6 +28,10 @@ import java.util.Set;
  * @author poison
  */
 public class DxvkStateCacheIO {
+
+	private static final ImmutableMap<Integer, Integer> STATE_HEADER_VERSION_SIZE=ImmutableMap.<Integer, Integer>builder()
+			.put(2, 1824)
+			.build();
 
 	/**
 	 * @param args the command line arguments
@@ -38,6 +44,10 @@ public class DxvkStateCacheIO {
 				write(os, c);
 			}
 		}
+	}
+
+	public static Integer getEntrySize(int version) {
+		return Optional.ofNullable(STATE_HEADER_VERSION_SIZE.get(version)).orElseThrow(() -> new IllegalArgumentException("unknown version: "+version));
 	}
 
 	public static DxvkStateCache parse(final Path path) throws IOException {
