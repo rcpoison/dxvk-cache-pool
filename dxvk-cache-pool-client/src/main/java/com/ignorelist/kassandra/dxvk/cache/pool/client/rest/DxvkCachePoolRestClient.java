@@ -68,7 +68,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient {
 	public void store(DxvkStateCache dxvkStateCache) {
 		getWebTarget()
 				.path("store")
-				.request(MediaType.APPLICATION_JSON)
+				.request()
 				.post(Entity.entity(dxvkStateCache, MediaType.APPLICATION_JSON));
 	}
 
