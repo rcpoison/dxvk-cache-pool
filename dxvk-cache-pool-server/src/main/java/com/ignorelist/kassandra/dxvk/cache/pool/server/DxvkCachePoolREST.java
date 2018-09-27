@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -40,6 +41,7 @@ public class DxvkCachePoolREST {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Set<DxvkStateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<ExecutableInfo> executableInfos) {
+		DxvkStateCacheIO.getEntrySize(version);
 		if (null==executableInfos) {
 			throw new IllegalArgumentException("missing executableInfos");
 		}
@@ -54,6 +56,7 @@ public class DxvkCachePoolREST {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public DxvkStateCache getStateCache(@PathParam("version") int version, ExecutableInfo executableInfo) {
+		DxvkStateCacheIO.getEntrySize(version);
 		if (null==executableInfo) {
 			throw new IllegalArgumentException("missing executableInfo");
 		}
@@ -68,6 +71,7 @@ public class DxvkCachePoolREST {
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
 		}
+		DxvkStateCacheIO.getEntrySize(cacheInfo.getVersion());
 		return cacheStorage.getMissingEntries(cacheInfo);
 	}
 
