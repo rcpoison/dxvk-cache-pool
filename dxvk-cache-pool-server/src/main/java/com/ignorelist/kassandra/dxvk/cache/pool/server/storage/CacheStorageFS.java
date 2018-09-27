@@ -88,6 +88,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 
 	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> getStorageCache() throws IOException {
 		if (null==storageCache) {
+			Files.createDirectories(storageRoot);
 			ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> m=new ConcurrentHashMap<>();
 			ImmutableSet<String> versions=Files.list(storageRoot)
 					.filter(Files::isDirectory)
