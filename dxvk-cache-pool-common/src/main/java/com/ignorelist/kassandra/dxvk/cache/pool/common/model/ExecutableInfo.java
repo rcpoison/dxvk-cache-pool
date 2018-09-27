@@ -10,6 +10,7 @@ import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -89,7 +90,8 @@ public class ExecutableInfo implements Serializable {
 	@Override
 	public int hashCode() {
 		int hash=3;
-		hash=19*hash+Arrays.hashCode(this.hash);
+		hash=67*hash+Objects.hashCode(this.path);
+		hash=67*hash+Arrays.hashCode(this.hash);
 		return hash;
 	}
 
@@ -105,6 +107,9 @@ public class ExecutableInfo implements Serializable {
 			return false;
 		}
 		final ExecutableInfo other=(ExecutableInfo) obj;
+		if (!Objects.equals(this.path, other.path)) {
+			return false;
+		}
 		if (!Arrays.equals(this.hash, other.hash)) {
 			return false;
 		}
