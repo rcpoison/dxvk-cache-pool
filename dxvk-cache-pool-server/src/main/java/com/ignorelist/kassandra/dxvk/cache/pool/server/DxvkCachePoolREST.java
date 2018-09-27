@@ -8,8 +8,10 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorage;
 import java.nio.file.Paths;
 import java.util.Set;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -22,6 +24,11 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("pool")
 public class DxvkCachePoolREST {
+
+	@Inject
+	private Configuration configuration;
+	@Inject
+	private CacheStorage cacheStorage;
 
 	@GET
 	@Path("executableInfo")

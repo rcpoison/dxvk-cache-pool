@@ -5,10 +5,13 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
@@ -37,10 +40,12 @@ public class DxvkCachePoolServer implements Closeable {
 	private static final Logger LOG=Logger.getLogger(DxvkCachePoolServer.class.getName());
 
 	private final Configuration configuration;
+	private final CacheStorage cacheStorage;
 	private Server server;
 
-	public DxvkCachePoolServer(final Configuration configuration) {
+	public DxvkCachePoolServer(final Configuration configuration, final CacheStorage cacheStorage) {
 		this.configuration=configuration;
+		this.cacheStorage=cacheStorage;
 	}
 
 	public synchronized void start() throws Exception {
@@ -63,7 +68,7 @@ public class DxvkCachePoolServer implements Closeable {
 	private ResourceConfig buildResourceConfig() {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(DxvkCachePoolREST.class);
-		resourceConfig.register(new ServerBinder(configuration));
+		resourceConfig.register(new ServerBinder(configuration, cacheStorage));
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
 	}
@@ -101,7 +106,8 @@ public class DxvkCachePoolServer implements Closeable {
 		} catch (ParseException|EOFException e) {
 			System.exit(1);
 		}
-		try (DxvkCachePoolServer js=new DxvkCachePoolServer(configuration)) {
+		CacheStorage storage=new CacheStorageFS(Paths.get(System.getProperty("user.home"), ".local", "share", "dxvk-cache-pool-server", "storage"));
+		try (DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
 			js.start();
 			js.join();
 		}
