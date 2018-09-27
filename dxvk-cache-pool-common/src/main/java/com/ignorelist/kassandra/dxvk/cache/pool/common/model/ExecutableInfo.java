@@ -7,11 +7,9 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
 import com.google.common.io.BaseEncoding;
-import com.google.common.io.ByteStreams;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
@@ -81,6 +79,7 @@ public class ExecutableInfo implements Serializable {
 		this.path=path;
 	}
 
+	@XmlTransient
 	public byte[] getHash() {
 		return hash;
 	}
@@ -127,10 +126,9 @@ public class ExecutableInfo implements Serializable {
 	}
 
 	public static ExecutableInfo build(Path path) {
-		try (HashingInputStream hashStream=new HashingInputStream(Hashing.sha256(), Files.newInputStream(path))) {
-			ByteStreams.exhaust(hashStream);
+		try {
 			ExecutableInfo executableInfo=new ExecutableInfo(path);
-			executableInfo.setHash(hashStream.hash().asBytes());
+			executableInfo.setHash(Util.hash(Hashing.sha256(), path).asBytes());
 			return executableInfo;
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
