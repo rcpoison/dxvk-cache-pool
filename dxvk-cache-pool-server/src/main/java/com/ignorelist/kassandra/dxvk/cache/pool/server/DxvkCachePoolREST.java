@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -46,6 +47,8 @@ public class DxvkCachePoolREST {
 			throw new IllegalArgumentException("missing executableInfos");
 		}
 		return executableInfos.parallelStream()
+				.filter(i -> Util.PREDICATE_EXE.apply(i.getPath()))
+				.filter(i -> null!=i.getPath().getParent())
 				.map(cacheStorage::getCacheDescriptor)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
