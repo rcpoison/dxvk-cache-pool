@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingInputStream;
@@ -19,6 +21,25 @@ import java.nio.file.Path;
  * @author poison
  */
 public final class Util {
+
+	public static final class FileExtPredicate implements Predicate<Path> {
+
+		private final String ext;
+
+		public FileExtPredicate(String ext) {
+			this.ext=ext;
+		}
+
+		@Override
+		public boolean apply(Path input) {
+			return input.getFileName().toString().endsWith(ext);
+		}
+
+	}
+
+	public static final String DXVK_CACHE_EXT=".dxvk-cache";
+	public static final Predicate<Path> PREDICATE_CACHE=new FileExtPredicate(DXVK_CACHE_EXT);
+	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new FileExtPredicate(".exe"), new FileExtPredicate(".EXE"));
 
 	private Util() {
 	}
