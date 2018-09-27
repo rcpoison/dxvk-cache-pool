@@ -42,20 +42,18 @@ public class DxvkStateCacheIO {
 
 	private static DxvkStateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
 		/*
+		struct DxvkStateCacheHeader {
+		  char     magic[4]   = { 'D', 'X', 'V', 'K' };
+		  uint32_t version    = 1;
+		  uint32_t entrySize  = sizeof(DxvkStateCacheEntry);
+		};
 
-  struct DxvkStateCacheHeader {
-    char     magic[4]   = { 'D', 'X', 'V', 'K' };
-    uint32_t version    = 1;
-    uint32_t entrySize  = sizeof(DxvkStateCacheEntry);
-  };
-
-  struct DxvkStateCacheEntry {
-    DxvkStateCacheKey             shaders;
-    DxvkGraphicsPipelineStateInfo state;
-    DxvkRenderPassFormat          format;
-    Sha1Hash                      hash;
-  };
-
+		struct DxvkStateCacheEntry {
+		  DxvkStateCacheKey             shaders;
+		  DxvkGraphicsPipelineStateInfo state;
+		  DxvkRenderPassFormat          format;
+		  Sha1Hash                      hash;
+		};
 		 */
 		byte[] magicBytes=new byte[4];
 		inputStream.read(magicBytes);
@@ -77,7 +75,7 @@ public class DxvkStateCacheIO {
 		dxvkStateCache.setEntrySize(entrySize);
 
 		Set<DxvkStateCacheEntry> cacheEntries=new LinkedHashSet<>();
-		
+
 		while (true) {
 			byte[] entry=new byte[entrySize];
 			final int bytesRead=inputStream.read(entry);
