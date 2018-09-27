@@ -60,7 +60,7 @@ public class DxvkCachePoolServer implements Closeable {
 		server.setRequestLog(new RequestLog() {
 			@Override
 			public void log(Request request, Response response) {
-				LOG.info(request.toString());
+				LOG.info(() -> request.getRemoteHost()+" "+request.getMethod()+" "+request.getContentLength()+" "+request.getPathInfo()+" "+response.getStatus());
 			}
 		});
 		server.start();
