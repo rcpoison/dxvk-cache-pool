@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -144,7 +145,38 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public DxvkStateCache getCache(ExecutableInfo executableInfo) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		final Lock readLock=getReadLock(executableInfo);
+		readLock.lock();
+		try {
+			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(executableInfo);
+			if (null==cacheDescriptor) {
+				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
+			}
+			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
+
+			DxvkStateCache cache=new DxvkStateCache();
+			cache.setExecutableInfo(executableInfo);
+			cache.setVersion(cacheDescriptor.getVersion());
+			cache.setEntrySize(cacheDescriptor.getEntrySize());
+			final ImmutableSet<DxvkStateCacheEntry> cacheEntries=cacheDescriptor.getEntries().parallelStream()
+					.map(e -> readEntry(targetDirectory, e))
+					.collect(ImmutableSet.toImmutableSet());
+			cache.setEntries(cacheEntries);
+			return cache;
+		} finally {
+			readLock.unlock();
+		}
+	}
+
+	private DxvkStateCacheEntry readEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
+		final Path entryFile=targetDirectory.resolve(BASE16.encode(cacheEntryInfo.getHash()));
+		try (InputStream entryStream=Files.newInputStream(entryFile)) {
+			final byte[] entryData=ByteStreams.toByteArray(entryStream);
+			return new DxvkStateCacheEntry(cacheEntryInfo, entryData);
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			throw new IllegalStateException("failed to read entry: "+cacheEntryInfo, ex);
+		}
 	}
 
 	@Override
