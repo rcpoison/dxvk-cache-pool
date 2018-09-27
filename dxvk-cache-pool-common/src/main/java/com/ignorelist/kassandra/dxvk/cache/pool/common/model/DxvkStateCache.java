@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
@@ -56,6 +57,20 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 
 	public void setEntries(Set<DxvkStateCacheEntry> entries) {
 		this.entries=entries;
+	}
+
+	public DxvkStateCacheInfo toInfo() {
+		DxvkStateCacheInfo info=new DxvkStateCacheInfo();
+		info.setVersion(getVersion());
+		info.setEntrySize(getEntrySize());
+		info.setExecutableInfo(getExecutableInfo());
+		if (null!=getEntries()) {
+			final ImmutableSet<DxvkStateCacheEntryInfo> entryInfos=getEntries().stream()
+					.map(DxvkStateCacheEntry::getDescriptor)
+					.collect(ImmutableSet.toImmutableSet());
+			info.setEntries(entryInfos);
+		}
+		return info;
 	}
 
 	@Override
