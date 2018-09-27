@@ -58,7 +58,7 @@ public class FsScanner {
 
 	public static Path buildCachePath(ExecutableInfo executableInfo) {
 		final String fileNameString=executableInfo.getPath().getFileName().toString();
-		String cacheFileName=fileNameString.substring(0, fileNameString.lastIndexOf('.'))+DXVK_CACHE_EXT;
+		String cacheFileName=Util.removeFileExtension(fileNameString)+DXVK_CACHE_EXT;
 		return executableInfo.getPath().resolveSibling(cacheFileName);
 	}
 

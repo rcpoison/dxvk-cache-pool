@@ -34,4 +34,17 @@ public final class Util {
 		ByteStreams.exhaust(hashingInputStream);
 		return hashingInputStream.hash();
 	}
+
+	public static Path removeFileExtension(Path path) {
+		String fileName=removeFileExtension(path.getFileName().toString());
+		return path.resolveSibling(fileName);
+	}
+
+	public static String removeFileExtension(String fileName) {
+		final int lastIndexOf=fileName.lastIndexOf('.');
+		if (-1==lastIndexOf) {
+			return fileName;
+		}
+		return fileName.substring(0, lastIndexOf);
+	}
 }
