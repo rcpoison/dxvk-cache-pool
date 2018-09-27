@@ -87,7 +87,7 @@ public class DxvkStateCacheIO {
 			if (bytesRead!=entrySize) {
 				throw new IllegalStateException("wrong entry size, parser broken or file currupt. entrySize:"+entrySize+", bytesRead: "+bytesRead);
 			}
-			DxvkStateCacheEntry cacheEntry=new DxvkStateCacheEntry(version, entry);
+			DxvkStateCacheEntry cacheEntry=new DxvkStateCacheEntry(entry);
 			cacheEntries.add(cacheEntry);
 		}
 		dxvkStateCache.setEntries(cacheEntries);

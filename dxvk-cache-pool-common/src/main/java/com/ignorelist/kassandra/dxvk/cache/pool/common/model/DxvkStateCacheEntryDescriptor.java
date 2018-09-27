@@ -16,23 +16,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class DxvkStateCacheEntryDescriptor implements Serializable {
 
-	private int version;
 	private byte[] hash;
 
 	public DxvkStateCacheEntryDescriptor() {
 	}
 
-	public DxvkStateCacheEntryDescriptor(int version, byte[] hash) {
-		this.version=version;
+	public DxvkStateCacheEntryDescriptor(byte[] hash) {
 		this.hash=hash;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version=version;
 	}
 
 	public byte[] getHash() {
@@ -45,9 +35,8 @@ public class DxvkStateCacheEntryDescriptor implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int hash=7;
-		hash=41*hash+this.version;
-		hash=41*hash+Arrays.hashCode(this.hash);
+		int hash=5;
+		hash=53*hash+Arrays.hashCode(this.hash);
 		return hash;
 	}
 
@@ -63,9 +52,6 @@ public class DxvkStateCacheEntryDescriptor implements Serializable {
 			return false;
 		}
 		final DxvkStateCacheEntryDescriptor other=(DxvkStateCacheEntryDescriptor) obj;
-		if (this.version!=other.version) {
-			return false;
-		}
 		if (!Arrays.equals(this.hash, other.hash)) {
 			return false;
 		}

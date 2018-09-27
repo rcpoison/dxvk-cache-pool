@@ -65,7 +65,7 @@ public class CacheStorageFS implements CacheStorage {
 										.map(Path::getFileName)
 										.map(Path::toString)
 										.map(base16::decode)
-										.map(h -> new DxvkStateCacheEntryDescriptor(version, h))
+										.map(h -> new DxvkStateCacheEntryDescriptor(h))
 										.collect(ImmutableSet.toImmutableSet());
 								cacheDescriptor.setEntries(entryDescriptors);
 								return cacheDescriptor;
