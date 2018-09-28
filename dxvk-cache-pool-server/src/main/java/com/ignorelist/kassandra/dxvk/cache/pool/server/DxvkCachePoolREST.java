@@ -6,7 +6,9 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,7 +33,7 @@ import javax.ws.rs.core.MediaType;
  * @author poison
  */
 @Path("pool")
-public class DxvkCachePoolREST {
+public class DxvkCachePoolREST implements CacheStorage {
 
 	@Inject
 	private Configuration configuration;
@@ -55,10 +58,20 @@ public class DxvkCachePoolREST {
 	}
 
 	@POST
+	@Path("cacheDescriptor/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public DxvkStateCacheInfo getCacheDescriptor(@PathParam("version") int version, ExecutableInfo executableInfo) {
+		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(executableInfo)));
+	}
+
+	@POST
 	@Path("stateCache/{version}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public DxvkStateCache getStateCache(@PathParam("version") int version, ExecutableInfo executableInfo) {
+	@Override
+	public DxvkStateCache getCache(@PathParam("version") int version, ExecutableInfo executableInfo) {
 		DxvkStateCacheIO.getEntrySize(version);
 		if (null==executableInfo) {
 			throw new IllegalArgumentException("missing executableInfo");
@@ -70,6 +83,7 @@ public class DxvkCachePoolREST {
 	@Path("missingCacheEntries")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Override
 	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
@@ -81,6 +95,7 @@ public class DxvkCachePoolREST {
 	@POST
 	@Path("store")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Override
 	public void store(DxvkStateCache dxvkStateCache) throws IOException {
 		if (null==dxvkStateCache) {
 			throw new IllegalArgumentException("missing dxvkStateCache");
@@ -93,6 +108,18 @@ public class DxvkCachePoolREST {
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(entyCopies);
 		cacheStorage.store(dxvkStateCache);
+	}
+
+	@GET
+	@Path("find/{version}/{subString}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<ExecutableInfo> findExecutables(@PathParam("version") int version, @PathParam("subString") String subString) {
+		DxvkStateCacheIO.getEntrySize(version);
+		if (Strings.isNullOrEmpty(subString)) {
+			throw new IllegalArgumentException("search string must not be empty");
+		}
+		return cacheStorage.findExecutables(version, subString);
 	}
 
 }
