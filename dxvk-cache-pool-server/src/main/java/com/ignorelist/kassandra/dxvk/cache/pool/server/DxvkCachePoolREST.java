@@ -9,7 +9,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
@@ -125,6 +124,18 @@ public class DxvkCachePoolREST implements CacheStorage {
 
 	@Override
 	public void close() throws IOException {
+	}
+
+	@GET
+	@Path("cacheDescriptorForBaseName/{version}/{baseName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public DxvkStateCacheInfo getCacheDescriptorForBaseName(@PathParam("version") int version, @PathParam("baseName") String baseName) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (Strings.isNullOrEmpty(baseName)) {
+			throw new IllegalArgumentException("baseName must not be empty");
+		}
+		return cacheStorage.getCacheDescriptorForBaseName(version, baseName);
 	}
 
 }

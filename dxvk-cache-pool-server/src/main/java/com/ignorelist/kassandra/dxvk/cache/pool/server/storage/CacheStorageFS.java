@@ -218,13 +218,7 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	/**
-	 * Provides view of merged DxvkStateCacheEntryInfo's for all executables matching the passed baseName (case insensitive)
-	 *
-	 * @param version DXVK state cache version
-	 * @param baseName base name (no directory or suffix)
-	 * @return view of merged DxvkStateCacheEntryInfo's for all executables matching the passed baseName
-	 */
+	@Override
 	public DxvkStateCacheInfo getCacheDescriptorForBaseName(final int version, final String baseName) {
 		try {
 			ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> executableWrappers=findExecutableWrappersForBaseName(version, baseName);

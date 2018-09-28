@@ -92,4 +92,14 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 				.get(TYPE_EXECUTABLE_INFO_SET);
 	}
 
+	@Override
+	public DxvkStateCacheInfo getCacheDescriptorForBaseName(int version, String baseName) {
+		return getWebTarget()
+				.path("cacheDescriptorForBaseName")
+				.path(Integer.toString(version))
+				.path(baseName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(DxvkStateCacheInfo.class);
+	}
+
 }
