@@ -1,0 +1,45 @@
+@import java.util.*
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.Util
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.model.*
+@import com.google.common.base.Strings
+
+@args (Set<DxvkStateCacheInfo> entries, int pages, int page, String search)
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>DXVK cache pool</title>
+	</head>
+	<body>
+		<h1>Download</h1>
+		<form action="/index.html" method="get">
+			<input type="text" name="search" value="@search">
+			<input type="submit" value="Search">
+		</form>
+		@if (pages>1) {
+		<ul>
+			@for (int p=0; p < pages; ++p) {
+			<li>
+				@if (p==page) {
+					@p
+				} else {
+					<a href="/index.html?search=@search&page=@page">@p</a>
+				}
+			</li>
+			}
+		</ul>
+		}
+		@if (!entries.isEmpty()) {
+		<ul>
+			@for (entry : entries) {
+			<li>
+				@entry.getExecutableInfo().getRelativePath()
+				<a href="d/@Util.removeFileExtension(entry.getExecutableInfo().getRelativePath().toString())@Util.DXVK_CACHE_EXT">@entry.getLastModified()</a>
+			</li>
+			}
+		</ul>
+		} else {
+		<div>Pool is empty.</div>
+		}
+	</body>
+</html>

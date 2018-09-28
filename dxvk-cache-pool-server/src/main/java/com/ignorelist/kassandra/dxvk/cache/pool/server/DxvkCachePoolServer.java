@@ -69,6 +69,7 @@ public class DxvkCachePoolServer implements Closeable {
 	private ResourceConfig buildResourceConfig() {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(DxvkCachePoolREST.class);
+		resourceConfig.register(DxvkCachePoolHome.class);
 		resourceConfig.register(new ServerBinder(configuration, cacheStorage));
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
