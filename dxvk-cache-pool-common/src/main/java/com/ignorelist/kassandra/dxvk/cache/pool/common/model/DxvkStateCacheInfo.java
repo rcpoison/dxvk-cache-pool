@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,12 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
+
+	public static final Comparator<DxvkStateCacheInfo> COMPARATOR_EXE_NAME=Comparator
+			.comparing(DxvkStateCacheInfo::getExecutableInfo, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.thenComparing(DxvkStateCacheInfo::getLastModified, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.thenComparingInt(DxvkStateCacheInfo::getVersion);
+
 
 	@NotNull
 	private ExecutableInfo executableInfo;
