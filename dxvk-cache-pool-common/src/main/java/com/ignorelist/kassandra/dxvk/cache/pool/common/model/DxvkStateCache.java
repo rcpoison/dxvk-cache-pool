@@ -84,6 +84,21 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		return cache;
 	}
 
+	public void patch(Set<DxvkStateCacheEntry> other) {
+		if (null==other||other.isEmpty()) {
+			return;
+		}
+		ImmutableSet<DxvkStateCacheEntry> combined=ImmutableSet.<DxvkStateCacheEntry>builder()
+				.addAll(getEntries())
+				.addAll(other)
+				.build();
+		setEntries(combined);
+	}
+
+	public void patch(DxvkStateCache other) {
+		patch(other.getEntries());
+	}
+
 	@Override
 	public int hashCode() {
 		int hash=7;
