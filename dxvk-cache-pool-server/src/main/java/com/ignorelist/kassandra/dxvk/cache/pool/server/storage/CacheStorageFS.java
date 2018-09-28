@@ -136,7 +136,7 @@ public class CacheStorageFS implements CacheStorage {
 		cacheInfo.setVersion(version);
 		final ExecutableInfo ei=new ExecutableInfo(relativePath);
 		cacheInfo.setExecutableInfo(ei);
-		Set<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
+		final Set<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
 				.map(Path::toString)
 				.map(BASE16::decode)
@@ -159,7 +159,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<ExecutableInfo> findExecutables(int version, String subString) {
+	public Set<ExecutableInfo> findExecutables(final int version, final String subString) {
 		try {
 			return getStorageCache(version).keySet().stream()
 					.map(Equivalence.Wrapper::get)
@@ -172,7 +172,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache) {
+	public Set<DxvkStateCacheEntry> getMissingEntries(final DxvkStateCacheInfo existingCache) {
 		final ExecutableInfo executableInfo=existingCache.getExecutableInfo();
 		final Lock readLock=getReadLock(executableInfo);
 		readLock.lock();
@@ -199,7 +199,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
+	public DxvkStateCacheInfo getCacheDescriptor(final int version, final ExecutableInfo executableInfo) {
 		try {
 			return getStorageCache(version).get(equivalence.wrap(executableInfo));
 		} catch (Exception ex) {
@@ -256,7 +256,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public DxvkStateCache getCache(int version, ExecutableInfo executableInfo) {
+	public DxvkStateCache getCache(final int version, final ExecutableInfo executableInfo) {
 		final Lock readLock=getReadLock(executableInfo);
 		readLock.lock();
 		try {
@@ -270,7 +270,7 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setExecutableInfo(executableInfo);
 			cache.setVersion(cacheDescriptor.getVersion());
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
-			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
+			final ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
 					-> cacheDescriptor.getEntries().parallelStream()
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
@@ -295,7 +295,7 @@ public class CacheStorageFS implements CacheStorage {
 	public DxvkStateCache getCacheForBaseName(final int version, final String baseName) {
 		try {
 			// using getCache() instead of direct access as locking is based on ExecutableInfo and here we only have the baseName
-			ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> executableWrappers=findExecutableWrappersForBaseName(version, baseName);
+			final ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> executableWrappers=findExecutableWrappersForBaseName(version, baseName);
 			if (executableWrappers.isEmpty()) {
 				throw new NoSuchElementException();
 			}
@@ -304,7 +304,7 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 			cache.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
 			// TODO: DxvkStateCacheEntry proxy to stream entries without reading everything into the heap
-			ImmutableSet<DxvkStateCacheEntry> cacheEntries=executableWrappers.stream()
+			final ImmutableSet<DxvkStateCacheEntry> cacheEntries=executableWrappers.stream()
 					.map(Equivalence.Wrapper::get)
 					.map(e -> this.getCache(version, e))
 					.map(DxvkStateCache::getEntries)
@@ -360,7 +360,7 @@ public class CacheStorageFS implements CacheStorage {
 
 			final Path targetDirectory=buildTargetDirectory(cache);
 			Files.createDirectories(targetDirectory);
-			ImmutableSet<DxvkStateCacheEntry> newEntries=cache.getEntries().stream()
+			final ImmutableSet<DxvkStateCacheEntry> newEntries=cache.getEntries().stream()
 					.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
 					.collect(ImmutableSet.toImmutableSet());
 			ForkJoinTask<?> task=getThreadPool().submit(()
@@ -379,7 +379,7 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	private Path buildTargetDirectory(DxvkStateCacheMeta cache) {
+	private Path buildTargetDirectory(final DxvkStateCacheMeta cache) {
 		final ExecutableInfo executableInfo=cache.getExecutableInfo();
 		final Path targetPath=storageRoot
 				.resolve(Integer.toString(cache.getVersion()))
