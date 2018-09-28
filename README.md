@@ -1,6 +1,13 @@
-# DXVK cache pool
+# DXVK cache pool (WIP)
 
-Client/server to share dxvk pipeline cache.
+Client/server to share DXVK pipeline caches.
+
+Client:
+- Fetches missing DxvkStateCacheEntry's and patches the .dxvk-cache.
+- Submits local DxvkStateCacheEntry's not present on server.
+
+Server:
+- Provides REST interface to access caches.
 
 ## Building
 
@@ -19,6 +26,23 @@ dxvk-cache-client
 dxvk-cache-server
 ```
 
+## Usage
+
+```bash
+$ ./dxvk-cache-client -h
+usage: dxvk-cache-client  directory... [-h] [--host <url>]
+ -h,--help         show this help
+    --host <url>   Server URL
+```
+
+```bash
+$ ./dxvk-cache-server -h
+usage: dvxk-cache-pool-server [-h] [--port <port>] [--versions <version>]
+ -h,--help                 show this help
+    --port <port>          Server port
+    --versions <version>   DXVK state cache versions to accept
+```
+
 ## Implementation problems
 
 ### Identifying a game
@@ -26,7 +50,7 @@ dxvk-cache-server
 Possible Solutions:
 
 - ~~SHA1 of the exe.~~ Don't want to loose the cache if the application is updated. Games built using an engine can have the same exact binary.
-- ~~Just the exe's filename.~~ I don't know how many ShooterGame.exe and Start.exe are out there.
+- ~~Just the exe's filename.~~ I don't know how many ShooterGame.exe are out there.
 - ~~Steam game id.~~ The most robust and my preferred solution, but would make it exclusive to Steam.
 - Exe name plus parent directory. Still suboptimal but right now what I opted for. Assumes users don't go around changing the installation folder name. Should work well for Steam.
 
@@ -35,12 +59,6 @@ Possible Solutions:
 
 There is none.
 
-- Anybody can submit entries. Nothing prevents anybody from poisoning the cache. Even authentication and a network of trust would be of little help as:
+- Anybody can submit entries. Nothing prevents cache poisoning. Even authentication and a network of trust would be of little help as:
 - Currently there is no way to validate the DxvkStateCacheEntry struct and its members. Doing so would be hard to impossible.
 
-Securing the service would probably require all of the following:
-- Implement authentication for submission.
-- Require the same cache entry to be submitted by different users before considering it a candidate. Otherwise one could simply submit valid entries from different games and create a huge state cache.
-- Parse DxvkStateCacheEntry struct.
-- Verify Sha1Hash.
-- Validate DxvkStateCacheKey, DxvkGraphicsPipelineStateInfo, DxvkRenderPassFormat?
