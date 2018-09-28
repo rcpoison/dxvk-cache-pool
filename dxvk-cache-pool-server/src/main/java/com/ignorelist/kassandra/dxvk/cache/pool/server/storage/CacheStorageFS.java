@@ -63,7 +63,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 
 	private final Path storageRoot;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
-	private ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> storageCache;
+	private ConcurrentMap<Integer, ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo>> storageCache;
 	private ForkJoinPool storageThreadPool;
 
 	public CacheStorageFS(Path storageRoot) {
@@ -78,7 +78,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	public void init() throws IOException {
-		getStorageCache();
+		getStorageCache(0);
 	}
 
 	private Lock getReadLock(ExecutableInfo key) {
@@ -93,34 +93,37 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		return writeLock;
 	}
 
-	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> getStorageCache() throws IOException {
+	private synchronized ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> getStorageCache(int version) throws IOException {
 		if (null==storageCache) {
 			Files.createDirectories(storageRoot);
-			ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> m=new ConcurrentHashMap<>();
+
 			ImmutableSet<String> versions=Files.list(storageRoot)
 					.filter(Files::isDirectory)
 					.map(Path::getFileName)
 					.map(Path::toString)
 					.collect(ImmutableSet.toImmutableSet());
+			ConcurrentMap<Integer, ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo>> m=new ConcurrentHashMap<>();
 			for (String versionString : versions) {
 				try {
-					final int version=Integer.parseInt(versionString);
+					ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
+					final int currentVersion=Integer.parseInt(versionString);
 					final Path versionDirectory=storageRoot.resolve(versionString);
 					final ImmutableSetMultimap<Path, Path> entriesInRelativePath=Files.walk(versionDirectory)
 							.filter(Files::isRegularFile)
 							.filter(p -> SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
 					entriesInRelativePath.asMap().entrySet().parallelStream()
-							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), version))
+							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), currentVersion))
 							.peek(d -> LOG.info(() -> "loaded: "+d.getExecutableInfo().getRelativePath()+" with "+d.getEntries().size()+" entries"))
-							.forEach(d -> m.put(equivalence.wrap(d.getExecutableInfo()), d));
+							.forEach(d -> infoForVersion.put(equivalence.wrap(d.getExecutableInfo()), d));
+					m.put(currentVersion, infoForVersion);
 				} catch (Exception e) {
 					LOG.log(Level.WARNING, null, e);
 				}
 			}
 			storageCache=m;
 		}
-		return storageCache;
+		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
 	}
 
 	private static DxvkStateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
@@ -151,19 +154,9 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	@Override
-	public Set<DxvkStateCacheInfo> getCacheDescriptors() {
-		try {
-			return ImmutableSet.copyOf(getStorageCache().values());
-		} catch (IOException ex) {
-			LOG.log(Level.SEVERE, null, ex);
-			return ImmutableSet.of();
-		}
-	}
-
-	@Override
 	public Set<ExecutableInfo> findExecutables(int version, String subString) {
 		try {
-			return getStorageCache().keySet().stream()
+			return getStorageCache(version).keySet().stream()
 					.map(Equivalence.Wrapper::get)
 					.filter(e -> e.getRelativePath().toString().toLowerCase().contains(subString.toLowerCase()))
 					.collect(ImmutableSet.toImmutableSet());
@@ -179,7 +172,8 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		final Lock readLock=getReadLock(executableInfo);
 		readLock.lock();
 		try {
-			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(existingCache.getVersion(), executableInfo);
+			final int version=existingCache.getVersion();
+			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(version, executableInfo);
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
 			}
@@ -202,7 +196,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	@Override
 	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
 		try {
-			return getStorageCache().get(equivalence.wrap(executableInfo));
+			return getStorageCache(version).get(equivalence.wrap(executableInfo));
 		} catch (Exception ex) {
 			LOG.log(Level.INFO, null, ex);
 			return null;
@@ -269,9 +263,10 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		final Lock writeLock=getWriteLock(executableInfo);
 		writeLock.lock();
 		try {
-			final DxvkStateCacheInfo descriptor=getStorageCache().computeIfAbsent(executableInfoWrapper, w -> {
+			final int version=cache.getVersion();
+			final DxvkStateCacheInfo descriptor=getStorageCache(version).computeIfAbsent(executableInfoWrapper, w -> {
 				DxvkStateCacheInfo d=new DxvkStateCacheInfo();
-				d.setVersion(cache.getVersion());
+				d.setVersion(version);
 				d.setEntrySize(cache.getEntrySize());
 				d.setExecutableInfo(executableInfo);
 				d.setEntries(Sets.newConcurrentHashSet());

@@ -18,8 +18,6 @@ import java.util.Set;
  */
 public interface CacheStorage {
 
-	Set<DxvkStateCacheInfo> getCacheDescriptors();
-
 	DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo);
 
 	DxvkStateCache getCache(int version, ExecutableInfo executableInfo);
