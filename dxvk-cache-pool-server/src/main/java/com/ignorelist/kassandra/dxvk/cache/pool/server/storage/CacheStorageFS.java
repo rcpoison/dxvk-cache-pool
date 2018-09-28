@@ -178,7 +178,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
 			}
-			final Sets.SetView<DxvkStateCacheEntryInfo> missingEntries=Sets.difference(cacheDescriptor.getEntries(), existingCache.getEntries());
+			final Set<DxvkStateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
 			final Path targetDirectory=buildTargetDirectory(existingCache);
 			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
 					-> missingEntries.parallelStream()

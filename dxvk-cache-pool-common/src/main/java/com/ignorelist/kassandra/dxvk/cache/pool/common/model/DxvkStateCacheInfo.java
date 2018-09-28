@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Comparator;
@@ -24,7 +26,6 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 			.comparing(DxvkStateCacheInfo::getExecutableInfo, Comparator.nullsFirst(Comparator.naturalOrder()))
 			.thenComparing(DxvkStateCacheInfo::getLastModified, Comparator.nullsFirst(Comparator.naturalOrder()))
 			.thenComparingInt(DxvkStateCacheInfo::getVersion);
-
 
 	@NotNull
 	private ExecutableInfo executableInfo;
@@ -78,6 +79,16 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
 	public void setLastModified(Instant lastModified) {
 		this.lastModified=lastModified;
+	}
+
+	/**
+	 * get entries contained in this instance but missing in the passed instance
+	 *
+	 * @param other instance to check for missing entries
+	 * @return entries contained in this instance but missing in the passed instance
+	 */
+	public ImmutableSet<DxvkStateCacheEntryInfo> getMissingEntries(DxvkStateCacheInfo other) {
+		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
 	}
 
 	@Override
