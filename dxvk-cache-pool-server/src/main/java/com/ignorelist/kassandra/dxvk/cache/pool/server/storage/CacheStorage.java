@@ -20,14 +20,14 @@ public interface CacheStorage {
 
 	Set<DxvkStateCacheInfo> getCacheDescriptors();
 
-	DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo);
+	DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo);
 
-	DxvkStateCache getCache(ExecutableInfo executableInfo);
+	DxvkStateCache getCache(int version, ExecutableInfo executableInfo);
 
 	void store(DxvkStateCache cache) throws IOException;
 
 	Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache);
 
-	Set<ExecutableInfo> findExecutables(String subString);
+	Set<ExecutableInfo> findExecutables(int version, String subString);
 
 }

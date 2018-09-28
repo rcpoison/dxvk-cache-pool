@@ -161,7 +161,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	@Override
-	public Set<ExecutableInfo> findExecutables(String subString) {
+	public Set<ExecutableInfo> findExecutables(int version, String subString) {
 		try {
 			return getStorageCache().keySet().stream()
 					.map(Equivalence.Wrapper::get)
@@ -179,7 +179,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 		final Lock readLock=getReadLock(executableInfo);
 		readLock.lock();
 		try {
-			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(executableInfo);
+			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(existingCache.getVersion(), executableInfo);
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
 			}
@@ -200,7 +200,7 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(ExecutableInfo executableInfo) {
+	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
 		try {
 			return getStorageCache().get(equivalence.wrap(executableInfo));
 		} catch (Exception ex) {
@@ -210,11 +210,11 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	@Override
-	public DxvkStateCache getCache(ExecutableInfo executableInfo) {
+	public DxvkStateCache getCache(int version, ExecutableInfo executableInfo) {
 		final Lock readLock=getReadLock(executableInfo);
 		readLock.lock();
 		try {
-			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(executableInfo);
+			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(version, executableInfo);
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+executableInfo);
 			}

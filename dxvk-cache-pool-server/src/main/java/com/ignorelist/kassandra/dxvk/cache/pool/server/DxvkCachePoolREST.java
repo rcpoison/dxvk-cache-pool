@@ -49,7 +49,7 @@ public class DxvkCachePoolREST {
 		return executableInfos.parallelStream()
 				.filter(i -> Util.PREDICATE_EXE.apply(i.getPath()))
 				.filter(i -> null!=i.getPath().getParent())
-				.map(cacheStorage::getCacheDescriptor)
+				.map(e -> cacheStorage.getCacheDescriptor(version, e))
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 	}
@@ -63,7 +63,7 @@ public class DxvkCachePoolREST {
 		if (null==executableInfo) {
 			throw new IllegalArgumentException("missing executableInfo");
 		}
-		return cacheStorage.getCache(executableInfo);
+		return cacheStorage.getCache(version, executableInfo);
 	}
 
 	@POST
