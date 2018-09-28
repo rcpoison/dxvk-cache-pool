@@ -142,7 +142,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("cacheForBaseName/{version}/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public DxvkStateCache getCacheForBaseName(int version, String baseName) {
+	public DxvkStateCache getCacheForBaseName(@PathParam("version") int version, @PathParam("baseName") String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (Strings.isNullOrEmpty(baseName)) {
 			throw new IllegalArgumentException("baseName must not be empty");
