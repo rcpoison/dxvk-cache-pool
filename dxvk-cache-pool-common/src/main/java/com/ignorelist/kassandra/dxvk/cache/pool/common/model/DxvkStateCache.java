@@ -73,6 +73,17 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		return info;
 	}
 
+	public DxvkStateCache copy() {
+		DxvkStateCache cache=new DxvkStateCache();
+		cache.setVersion(getVersion());
+		cache.setEntrySize(getEntrySize());
+		cache.setExecutableInfo(getExecutableInfo());
+		if (null!=getEntries()) {
+			cache.setEntries(ImmutableSet.copyOf(getEntries()));
+		}
+		return cache;
+	}
+
 	@Override
 	public int hashCode() {
 		int hash=7;
