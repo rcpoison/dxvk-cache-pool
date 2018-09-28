@@ -151,7 +151,7 @@ public class DxvkCachePoolServer implements Closeable {
 
 	private static void printHelp(Options options) throws IOException {
 		HelpFormatter formatter=new HelpFormatter();
-		formatter.printHelp("dvxk-cache-pool-server", options, true);
+		formatter.printHelp("dvxk-cache-server", options, true);
 	}
 
 	private static Options buildOptions() {

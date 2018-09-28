@@ -37,7 +37,7 @@ usage: dxvk-cache-client  directory... [-h] [--host <url>]
 
 ```bash
 $ ./dxvk-cache-server -h
-usage: dvxk-cache-pool-server [-h] [--port <port>] [--versions <version>]
+usage: dvxk-cache-server [-h] [--port <port>] [--versions <version>]
  -h,--help                 show this help
     --port <port>          Server port
     --versions <version>   DXVK state cache versions to accept

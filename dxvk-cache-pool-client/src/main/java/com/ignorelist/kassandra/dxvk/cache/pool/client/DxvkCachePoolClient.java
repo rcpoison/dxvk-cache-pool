@@ -83,7 +83,7 @@ public class DxvkCachePoolClient {
 
 	private static void printHelp(Options options) throws IOException {
 		HelpFormatter formatter=new HelpFormatter();
-		formatter.printHelp("dvxk-cache-pool-client  directory...", options, true);
+		formatter.printHelp("dvxk-cache-client  directory...", options, true);
 	}
 
 	private static Options buildOptions() {
