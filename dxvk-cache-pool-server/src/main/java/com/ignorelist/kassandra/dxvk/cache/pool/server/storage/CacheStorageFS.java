@@ -35,7 +35,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -212,7 +211,7 @@ public class CacheStorageFS implements CacheStorage {
 	private ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> findExecutableWrappersForBaseName(final int version, final String baseName) {
 		try {
 			return getStorageCache(version).keySet().stream()
-					.filter(w -> Objects.equals(Util.baseName(w.get().getPath()).toLowerCase(), baseName.toLowerCase()))
+					.filter(w -> Util.baseName(w.get().getPath()).equalsIgnoreCase(baseName.toLowerCase()))
 					.collect(ImmutableSet.toImmutableSet());
 		} catch (Exception ex) {
 			throw new IllegalStateException(ex);
