@@ -15,6 +15,8 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -28,9 +30,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -204,6 +209,53 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
+	private ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> findExecutableWrappersForBaseName(final int version, final String baseName) {
+		try {
+			return getStorageCache(version).keySet().stream()
+					.filter(w -> Objects.equals(Util.baseName(w.get().getPath()).toLowerCase(), baseName.toLowerCase()))
+					.collect(ImmutableSet.toImmutableSet());
+		} catch (Exception ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+
+	/**
+	 * Provides view of merged DxvkStateCacheEntryInfo's for all executables matching the passed baseName (case insensitive)
+	 *
+	 * @param version DXVK state cache version
+	 * @param baseName base name (no directory or suffix)
+	 * @return view of merged DxvkStateCacheEntryInfo's for all executables matching the passed baseName
+	 */
+	public DxvkStateCacheInfo getCacheDescriptorForBaseName(final int version, final String baseName) {
+		try {
+			ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> executableWrappers=findExecutableWrappersForBaseName(version, baseName);
+			if (executableWrappers.isEmpty()) {
+				throw new NoSuchElementException();
+			}
+			DxvkStateCacheInfo cacheInfo=new DxvkStateCacheInfo();
+			cacheInfo.setVersion(version);
+			cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
+			cacheInfo.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
+			final ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> s=getStorageCache(version);
+			final Instant lastModified=executableWrappers.stream()
+					.map(s::get)
+					.map(DxvkStateCacheInfo::getLastModified)
+					.max(Instant::compareTo)
+					.get();
+			cacheInfo.setLastModified(lastModified);
+			final ImmutableSet<DxvkStateCacheEntryInfo> entryInfos=executableWrappers.stream()
+					.map(s::get)
+					.map(DxvkStateCacheInfo::getEntries)
+					.flatMap(Collection::stream)
+					.collect(ImmutableSet.toImmutableSet());
+			cacheInfo.setEntries(entryInfos);
+			return cacheInfo;
+		} catch (Exception ex) {
+			LOG.log(Level.INFO, null, ex);
+			return null;
+		}
+	}
+
 	@Override
 	public DxvkStateCache getCache(int version, ExecutableInfo executableInfo) {
 		final Lock readLock=getReadLock(executableInfo);
@@ -231,6 +283,39 @@ public class CacheStorageFS implements CacheStorage {
 			throw new RuntimeException(e);
 		} finally {
 			readLock.unlock();
+		}
+	}
+
+	/**
+	 * Provides view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
+	 *
+	 * @param version DXVK state cache version
+	 * @param baseName base name (no directory or suffix)
+	 * @return view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
+	 */
+	public DxvkStateCache getCacheForBaseName(final int version, final String baseName) {
+		try {
+			// using getCache() instead of direct access as locking is based on ExecutableInfo and here we only have the baseName
+			ImmutableSet<ExecutableInfo> executables=findExecutableWrappersForBaseName(version, baseName).stream()
+					.map(Equivalence.Wrapper::get)
+					.collect(ImmutableSet.toImmutableSet());
+			if (executables.isEmpty()) {
+				throw new NoSuchElementException();
+			}
+			DxvkStateCache cache=new DxvkStateCache();
+			cache.setVersion(version);
+			cache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
+			cache.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
+			ImmutableSet<DxvkStateCacheEntry> cacheEntries=executables.stream()
+					.map(e -> this.getCache(version, e))
+					.map(DxvkStateCache::getEntries)
+					.flatMap(Collection::stream)
+					.collect(ImmutableSet.toImmutableSet());
+			cache.setEntries(cacheEntries);
+			return cache;
+		} catch (Exception ex) {
+			LOG.log(Level.INFO, null, ex);
+			return null;
 		}
 	}
 

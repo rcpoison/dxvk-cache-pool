@@ -78,5 +78,5 @@ public final class Util {
 	public static String baseName(Path path) {
 		return removeFileExtension(path.getFileName().toString());
 	}
-	
+
 }
