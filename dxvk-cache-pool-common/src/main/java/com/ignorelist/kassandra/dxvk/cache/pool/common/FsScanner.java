@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  *
@@ -52,7 +53,7 @@ public class FsScanner {
 
 	}
 
-	public static FsScanner scan(ImmutableSet<Path> baseDirectories) {
+	public static FsScanner scan(Set<Path> baseDirectories) {
 		// walking the FS is slow, only do it once.
 		final ImmutableSet<Path> paths=baseDirectories.parallelStream()
 				.map(FsScanner::scan)
