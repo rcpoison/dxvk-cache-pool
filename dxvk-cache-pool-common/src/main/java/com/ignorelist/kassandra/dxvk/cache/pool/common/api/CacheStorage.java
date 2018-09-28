@@ -38,4 +38,13 @@ public interface CacheStorage extends Closeable {
 	 */
 	DxvkStateCacheInfo getCacheDescriptorForBaseName(final int version, final String baseName);
 
+	/**
+	 * Provides view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
+	 *
+	 * @param version DXVK state cache version
+	 * @param baseName base name (no directory or suffix)
+	 * @return view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
+	 */
+	DxvkStateCache getCacheForBaseName(final int version, final String baseName);
+
 }

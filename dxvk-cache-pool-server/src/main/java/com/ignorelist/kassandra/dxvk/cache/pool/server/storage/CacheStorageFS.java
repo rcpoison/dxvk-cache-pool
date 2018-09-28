@@ -279,13 +279,7 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	/**
-	 * Provides view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
-	 *
-	 * @param version DXVK state cache version
-	 * @param baseName base name (no directory or suffix)
-	 * @return view of merged DxvkStateCacheEntry's for all executables matching the passed baseName (case insensitive)
-	 */
+	@Override
 	public DxvkStateCache getCacheForBaseName(final int version, final String baseName) {
 		try {
 			// using getCache() instead of direct access as locking is based on ExecutableInfo and here we only have the baseName
