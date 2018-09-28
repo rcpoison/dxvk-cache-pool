@@ -28,4 +28,6 @@ public interface CacheStorage {
 
 	Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache);
 
+	Set<ExecutableInfo> findExecutables(String subString);
+
 }

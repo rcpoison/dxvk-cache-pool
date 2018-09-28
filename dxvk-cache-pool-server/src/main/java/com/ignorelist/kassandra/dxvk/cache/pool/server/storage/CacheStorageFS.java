@@ -161,6 +161,19 @@ public class CacheStorageFS implements CacheStorage, Closeable {
 	}
 
 	@Override
+	public Set<ExecutableInfo> findExecutables(String subString) {
+		try {
+			return getStorageCache().keySet().stream()
+					.map(Equivalence.Wrapper::get)
+					.filter(e -> e.getRelativePath().toString().toLowerCase().contains(subString.toLowerCase()))
+					.collect(ImmutableSet.toImmutableSet());
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			return ImmutableSet.of();
+		}
+	}
+
+	@Override
 	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache) {
 		final ExecutableInfo executableInfo=existingCache.getExecutableInfo();
 		final Lock readLock=getReadLock(executableInfo);
