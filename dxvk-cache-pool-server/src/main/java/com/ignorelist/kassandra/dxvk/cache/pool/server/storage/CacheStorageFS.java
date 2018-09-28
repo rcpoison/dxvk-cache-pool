@@ -303,6 +303,7 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setVersion(version);
 			cache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 			cache.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
+			// TODO: DxvkStateCacheEntry proxy to stream entries without reading everything into the heap
 			ImmutableSet<DxvkStateCacheEntry> cacheEntries=executableWrappers.stream()
 					.map(Equivalence.Wrapper::get)
 					.map(e -> this.getCache(version, e))
