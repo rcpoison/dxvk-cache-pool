@@ -11,7 +11,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 
@@ -41,16 +40,6 @@ public class FsScanner {
 		final String fileNameString=executableInfo.getPath().getFileName().toString();
 		String cacheFileName=Util.removeFileExtension(fileNameString)+Util.DXVK_CACHE_EXT;
 		return executableInfo.getPath().resolveSibling(cacheFileName);
-	}
-
-	/**
-	 * @param args the command line arguments
-	 */
-	public static void main(String[] args) throws IOException {
-		FsScanner fsScanner=scan(ImmutableSet.of(Paths.get("/usr/local/games/SteamLibrary/Steam/")));
-
-		fsScanner.getCachePaths().forEach(System.err::println);
-
 	}
 
 	public static FsScanner scan(Set<Path> baseDirectories) {
