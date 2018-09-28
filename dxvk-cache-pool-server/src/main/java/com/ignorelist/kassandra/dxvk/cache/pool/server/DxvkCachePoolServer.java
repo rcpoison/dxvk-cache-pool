@@ -5,13 +5,13 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
+import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,9 +108,8 @@ public class DxvkCachePoolServer implements Closeable {
 		} catch (ParseException|EOFException e) {
 			System.exit(1);
 		}
-		final Path storagePath=Paths.get(System.getProperty("user.home"), ".local", "share", "dxvk-cache-pool-server", "storage");
 
-		try (CacheStorageFS storage=new CacheStorageFS(storagePath); DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
+		try (CacheStorageFS storage=new CacheStorageFS(configuration.getStorage()); DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
 			storage.init();
 			js.start();
 			js.join();
@@ -134,7 +133,20 @@ public class DxvkCachePoolServer implements Closeable {
 			throw new EOFException();
 		}
 
-		return new Configuration();
+		Configuration cfg=new Configuration();
+		if (commandLine.hasOption("port")) {
+			cfg.setPort(Integer.parseInt(commandLine.getOptionValue("port")));
+		}
+		if (commandLine.hasOption("storage")) {
+			cfg.setStorage(Paths.get(commandLine.getOptionValue("storage")));
+		}
+		if (commandLine.hasOption("versions")) {
+			ImmutableSet<Integer> acceptsVersions=ImmutableSet.copyOf(commandLine.getOptionValues("versions")).stream()
+					.map(Integer::parseInt)
+					.collect(ImmutableSet.toImmutableSet());
+			cfg.setVersions(acceptsVersions);
+		}
+		return cfg;
 	}
 
 	private static void printHelp(Options options) throws IOException {
@@ -146,7 +158,7 @@ public class DxvkCachePoolServer implements Closeable {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
 		options.addOption(Option.builder().longOpt("port").numberOfArgs(1).argName("port").desc("Server port").build());
-		options.addOption(Option.builder().longOpt("storage").numberOfArgs(1).argName("path").desc("Storage path").build());
+		options.addOption(Option.builder().longOpt("versions").hasArgs().argName("version").desc("DXVK state cache versions to accept").build());
 		return options;
 	}
 
