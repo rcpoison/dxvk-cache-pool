@@ -68,4 +68,15 @@ public final class Util {
 		}
 		return fileName.substring(0, lastIndexOf);
 	}
+
+	/**
+	 * remove directory and suffix
+	 *
+	 * @param path
+	 * @return name without directory and suffix
+	 */
+	public static String baseName(Path path) {
+		return removeFileExtension(path.getFileName().toString());
+	}
+	
 }
