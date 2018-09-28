@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.google.common.base.Equivalence;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
@@ -158,7 +159,7 @@ public class CacheStorageFS implements CacheStorage {
 		try {
 			return getStorageCache(version).keySet().stream()
 					.map(Equivalence.Wrapper::get)
-					.filter(e -> e.getRelativePath().toString().toLowerCase().contains(subString.toLowerCase()))
+					.filter(e -> Strings.isNullOrEmpty(subString)||e.getRelativePath().toString().toLowerCase().contains(subString.toLowerCase()))
 					.collect(ImmutableSet.toImmutableSet());
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, null, ex);
