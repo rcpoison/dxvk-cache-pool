@@ -29,13 +29,6 @@ import java.util.Set;
  */
 public class DxvkStateCacheIO {
 
-	private static final ImmutableMap<Integer, Integer> STATE_HEADER_VERSION_SIZE=ImmutableMap.<Integer, Integer>builder()
-			.put(2, 1824)
-			.build();
-
-	public static Integer getEntrySize(int version) {
-		return Optional.ofNullable(STATE_HEADER_VERSION_SIZE.get(version)).orElseThrow(() -> new IllegalArgumentException("unknown version: "+version));
-	}
 
 	public static DxvkStateCache parse(final Path path) throws IOException {
 		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {

@@ -5,7 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 
 /**
@@ -15,7 +15,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 public class DxvkStateCacheValidator {
 
 	public void validate(DxvkStateCache cache) {
-		final int entrySize=DxvkStateCacheIO.getEntrySize(cache.getVersion());
+		final int entrySize=StateCacheHeaderInfo.getEntrySize(cache.getVersion());
 		if (entrySize!=cache.getEntrySize()) {
 			throw new IllegalArgumentException("expected entrySize:"+entrySize+", got:"+cache.getEntrySize());
 		}

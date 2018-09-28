@@ -10,6 +10,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -45,7 +46,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Set<DxvkStateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<ExecutableInfo> executableInfos) {
-		DxvkStateCacheIO.getEntrySize(version);
+		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==executableInfos) {
 			throw new IllegalArgumentException("missing executableInfos");
 		}
@@ -72,7 +73,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public DxvkStateCache getCache(@PathParam("version") int version, ExecutableInfo executableInfo) {
-		DxvkStateCacheIO.getEntrySize(version);
+		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==executableInfo) {
 			throw new IllegalArgumentException("missing executableInfo");
 		}
@@ -88,7 +89,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
 		}
-		DxvkStateCacheIO.getEntrySize(cacheInfo.getVersion());
+		StateCacheHeaderInfo.getEntrySize(cacheInfo.getVersion());
 		return cacheStorage.getMissingEntries(cacheInfo);
 	}
 
@@ -115,7 +116,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public Set<ExecutableInfo> findExecutables(@PathParam("version") int version, @PathParam("subString") String subString) {
-		DxvkStateCacheIO.getEntrySize(version);
+		StateCacheHeaderInfo.getEntrySize(version);
 		if (Strings.isNullOrEmpty(subString)) {
 			throw new IllegalArgumentException("search string must not be empty");
 		}
