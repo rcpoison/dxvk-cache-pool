@@ -10,6 +10,7 @@ import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
@@ -22,7 +23,11 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * @author poison
  */
 @XmlRootElement
-public class ExecutableInfo implements Serializable {
+public class ExecutableInfo implements Serializable, Comparable<ExecutableInfo> {
+
+	private static final Comparator<ExecutableInfo> COMPARATOR_DEFAULT=Comparator
+			.comparing(ExecutableInfo::getRelativePath, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.thenComparing(ExecutableInfo::getPath, Comparator.nullsFirst(Comparator.naturalOrder()));
 
 	@NotNull
 	private Path path;
@@ -114,6 +119,11 @@ public class ExecutableInfo implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public int compareTo(ExecutableInfo o) {
+		return COMPARATOR_DEFAULT.compare(this, o);
 	}
 
 	@Override
