@@ -19,7 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -33,19 +32,6 @@ public class DxvkStateCacheIO {
 	private static final ImmutableMap<Integer, Integer> STATE_HEADER_VERSION_SIZE=ImmutableMap.<Integer, Integer>builder()
 			.put(2, 1824)
 			.build();
-
-	/**
-	 * @param args the command line arguments
-	 */
-	public static void main(String[] args) throws IOException {
-		final Path path=Paths.get("/usr/local/games/SteamLibrary/Steam/SteamApps/common/Beat Saber/Beat Saber.dxvk-cache");
-		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
-			DxvkStateCache c=parse(is);
-			try (OutputStream os=Files.newOutputStream(path.resolveSibling("xxx"))) {
-				write(os, c);
-			}
-		}
-	}
 
 	public static Integer getEntrySize(int version) {
 		return Optional.ofNullable(STATE_HEADER_VERSION_SIZE.get(version)).orElseThrow(() -> new IllegalArgumentException("unknown version: "+version));
