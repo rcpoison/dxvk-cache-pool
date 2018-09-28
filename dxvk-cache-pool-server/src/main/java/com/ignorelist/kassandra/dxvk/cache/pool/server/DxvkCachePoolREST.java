@@ -122,4 +122,8 @@ public class DxvkCachePoolREST implements CacheStorage {
 		return cacheStorage.findExecutables(version, subString);
 	}
 
+	@Override
+	public void close() throws IOException {
+	}
+
 }

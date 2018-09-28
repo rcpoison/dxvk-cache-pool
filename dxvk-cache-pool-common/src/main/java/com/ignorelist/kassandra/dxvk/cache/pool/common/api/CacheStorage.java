@@ -9,6 +9,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ import java.util.Set;
  *
  * @author poison
  */
-public interface CacheStorage {
+public interface CacheStorage extends Closeable {
 
 	DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo);
 

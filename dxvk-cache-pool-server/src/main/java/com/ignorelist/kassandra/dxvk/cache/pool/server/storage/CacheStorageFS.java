@@ -22,7 +22,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
 import java.io.ByteArrayInputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,7 +53,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * @author poison
  */
-public class CacheStorageFS implements CacheStorage, Closeable {
+public class CacheStorageFS implements CacheStorage {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
 	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{64}", Pattern.CASE_INSENSITIVE);
