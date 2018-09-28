@@ -14,7 +14,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
-import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import java.io.IOException;
 import java.util.Set;
 import javax.inject.Inject;

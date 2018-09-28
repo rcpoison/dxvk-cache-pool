@@ -5,7 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import java.io.Closeable;
 import java.io.EOFException;

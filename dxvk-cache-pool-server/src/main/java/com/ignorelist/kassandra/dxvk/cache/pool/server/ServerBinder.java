@@ -1,6 +1,6 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**

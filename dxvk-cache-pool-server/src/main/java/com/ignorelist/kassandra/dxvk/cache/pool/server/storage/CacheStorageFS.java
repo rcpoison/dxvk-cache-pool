@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.google.common.base.Equivalence;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
