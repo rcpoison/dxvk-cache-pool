@@ -10,6 +10,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestCli
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceRelativePath;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +47,9 @@ public class DxvkCachePoolClient {
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
+			if (commandLine.hasOption("verbose")) {
+				c.setVerbose(true);
+			}
 			ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.filter(p -> {
@@ -77,7 +81,18 @@ public class DxvkCachePoolClient {
 			final ImmutableSet<ExecutableInfo> executables=fs.getExecutables();
 			System.err.println("looking up state caches for "+executables.size()+" executables");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(2, executables);
-			System.err.println("found "+cacheDescriptors.size()+" matching state caches");
+			System.err.println("found "+cacheDescriptors.size()+" matching state caches:");
+			if (c.isVerbose()) {
+				cacheDescriptors.forEach(d -> {
+					System.err.println(" > "+d.getExecutableInfo().getRelativePath()+", "+d.getEntries().size()+" entries");
+				});
+			}
+			if (cacheDescriptors.isEmpty()) {
+				return;
+			}
+			final ExecutableInfoEquivalenceRelativePath equivalenceRelativePath=new ExecutableInfoEquivalenceRelativePath();
+			//Multimaps.index(executables, ExecutableInfoEquivalenceRelativePath::wrap);
+
 		}
 	}
 
@@ -89,7 +104,7 @@ public class DxvkCachePoolClient {
 	private static Options buildOptions() {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
-		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
+		options.addOption(Option.builder().longOpt("verbose").desc("verbose output").build());
 		return options;
 	}
 

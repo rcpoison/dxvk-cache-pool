@@ -16,6 +16,7 @@ public class Configuration {
 
 	private String host="http://localhost:16969";
 	private Set<Path> paths;
+	private boolean verbose=false;
 
 	public String getHost() {
 		return host;
@@ -31,6 +32,14 @@ public class Configuration {
 
 	public void setPaths(Set<Path> paths) {
 		this.paths=paths;
+	}
+
+	public boolean isVerbose() {
+		return verbose;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose=verbose;
 	}
 
 }
