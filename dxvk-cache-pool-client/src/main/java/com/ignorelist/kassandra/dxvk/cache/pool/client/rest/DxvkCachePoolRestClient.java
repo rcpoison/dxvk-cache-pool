@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -19,7 +20,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author poison
  */
-public class DxvkCachePoolRestClient extends AbstractRestClient {
+public class DxvkCachePoolRestClient extends AbstractRestClient implements CacheStorage {
 
 	private static final String PATH="pool";
 
@@ -44,32 +45,51 @@ public class DxvkCachePoolRestClient extends AbstractRestClient {
 				.path("cacheDescriptors")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.json(executableInfos), TYPE_CACHE_INFO_SET);
 	}
 
-	public DxvkStateCache getStateCache(int version, ExecutableInfo executableInfo) {
+	@Override
+	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
+		return getWebTarget()
+				.path("cacheDescriptor")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(executableInfo), DxvkStateCacheInfo.class);
+	}
+
+	@Override
+	public DxvkStateCache getCache(int version, ExecutableInfo executableInfo) {
 		return getWebTarget()
 				.path("stateCache")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.json(executableInfo), DxvkStateCache.class);
 	}
 
+	@Override
 	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
 		return getWebTarget()
 				.path("missingCacheEntries")
 				.request(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.json(cacheInfo), TYPE_CACHE_ENTRY_SET);
 	}
 
+	@Override
 	public void store(DxvkStateCache dxvkStateCache) {
 		getWebTarget()
 				.path("store")
 				.request()
 				.post(Entity.json(dxvkStateCache));
+	}
+
+	@Override
+	public Set<ExecutableInfo> findExecutables(int version, String subString) {
+		return getWebTarget()
+				.path("cacheDescriptors")
+				.path(Integer.toString(version))
+				.path(subString)
+				.request(MediaType.APPLICATION_JSON)
+				.get(TYPE_EXECUTABLE_INFO_SET);
 	}
 
 }

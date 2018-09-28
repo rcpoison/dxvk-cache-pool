@@ -27,7 +27,7 @@ public class DxvkCachePoolClient {
 		DxvkStateCache cache=DxvkStateCacheIO.parse(path);
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient("http://localhost:16969")) {
 			restClient.store(cache);
-			DxvkStateCache stateCache=restClient.getStateCache(cache.getVersion(), cache.getExecutableInfo());
+			DxvkStateCache stateCache=restClient.getCache(cache.getVersion(), cache.getExecutableInfo());
 			System.err.println(Objects.equals(cache, stateCache));
 		}
 		
