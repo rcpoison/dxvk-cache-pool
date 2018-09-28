@@ -26,8 +26,15 @@ public final class StateCacheHeaderInfo {
 		return Optional.ofNullable(STATE_HEADER_VERSION_SIZE.get(version)).orElseThrow(() -> new IllegalArgumentException("unknown version: "+version));
 	}
 
-	public ImmutableSet<Integer> getKnownVersions() {
+	public static ImmutableSet<Integer> getKnownVersions() {
 		return STATE_HEADER_VERSION_SIZE.keySet();
+	}
+
+	public static int getLatestVersion() {
+		return STATE_HEADER_VERSION_SIZE.keySet().stream()
+				.mapToInt(Integer::intValue)
+				.max()
+				.getAsInt();
 	}
 
 }
