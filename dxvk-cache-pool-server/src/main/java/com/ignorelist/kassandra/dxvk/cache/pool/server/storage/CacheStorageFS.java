@@ -296,17 +296,16 @@ public class CacheStorageFS implements CacheStorage {
 	public DxvkStateCache getCacheForBaseName(final int version, final String baseName) {
 		try {
 			// using getCache() instead of direct access as locking is based on ExecutableInfo and here we only have the baseName
-			ImmutableSet<ExecutableInfo> executables=findExecutableWrappersForBaseName(version, baseName).stream()
-					.map(Equivalence.Wrapper::get)
-					.collect(ImmutableSet.toImmutableSet());
-			if (executables.isEmpty()) {
+			ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> executableWrappers=findExecutableWrappersForBaseName(version, baseName);
+			if (executableWrappers.isEmpty()) {
 				throw new NoSuchElementException();
 			}
 			DxvkStateCache cache=new DxvkStateCache();
 			cache.setVersion(version);
 			cache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 			cache.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
-			ImmutableSet<DxvkStateCacheEntry> cacheEntries=executables.stream()
+			ImmutableSet<DxvkStateCacheEntry> cacheEntries=executableWrappers.stream()
+					.map(Equivalence.Wrapper::get)
 					.map(e -> this.getCache(version, e))
 					.map(DxvkStateCache::getEntries)
 					.flatMap(Collection::stream)
