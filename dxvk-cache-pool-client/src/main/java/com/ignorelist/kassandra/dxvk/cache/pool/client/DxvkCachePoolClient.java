@@ -104,6 +104,7 @@ public class DxvkCachePoolClient {
 	private static Options buildOptions() {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
+		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("verbose output").build());
 		return options;
 	}
