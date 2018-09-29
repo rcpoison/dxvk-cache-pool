@@ -9,6 +9,7 @@
 		<module>dxvk-cache-pool-common</module>
 		<module>dxvk-cache-pool-client</module>
 		<module>dxvk-cache-pool-server</module>
+		<module>dxvk-cache-pool-test</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
