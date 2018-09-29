@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -83,6 +84,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		this.lastModified=lastModified;
 	}
 
+	@XmlTransient
 	public Instant getLastModifiedInstant() {
 		if (null==lastModified) {
 			return null;
