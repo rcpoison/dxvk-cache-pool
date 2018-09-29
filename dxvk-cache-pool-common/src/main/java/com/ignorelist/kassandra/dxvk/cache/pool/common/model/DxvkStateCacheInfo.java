@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -36,6 +37,8 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	public DxvkStateCacheInfo() {
 	}
 
+	@NotNull
+	@Size(min=1, max=256)
 	@Override
 	public String getBaseName() {
 		return baseName;
