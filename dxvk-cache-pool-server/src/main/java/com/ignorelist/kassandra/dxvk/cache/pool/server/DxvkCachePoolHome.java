@@ -10,11 +10,9 @@ import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import java.io.OutputStream;
 import java.util.Optional;
 import java.util.Set;
@@ -55,7 +53,7 @@ public class DxvkCachePoolHome {
 	@Path("{a:(|index.html)}")
 	@Produces(MediaType.TEXT_HTML)
 	public Response list(@QueryParam("page") int page, @QueryParam("search") String search) {
-		final Set<ExecutableInfo> executables=cacheStorage.findExecutables(VERSION, search);
+		final Set<String> executables=cacheStorage.findExecutables(VERSION, search);
 		final int lastPage=executables.size()/PAGE_SIZE;
 		final int offset=PAGE_SIZE*Math.min(Math.max(page, 0), lastPage);
 		ImmutableSet<DxvkStateCacheInfo> executablesForPage=executables.stream()
@@ -69,23 +67,20 @@ public class DxvkCachePoolHome {
 	}
 
 	@GET
-	@Path("d/{parent}/{filename:(.*\\.dxvk-cache)}")
+	@Path("d/{filename:(.*\\.dxvk-cache)}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response download(@PathParam("parent") String parent, @PathParam("filename") String filename) {
-		if (Strings.isNullOrEmpty(parent)) {
-			throw new IllegalArgumentException("parent may not be empty");
-		}
-		if (Strings.isNullOrEmpty(filename)) {
+	public Response download(@PathParam("filename") String baseName) {
+		if (Strings.isNullOrEmpty(baseName)) {
 			throw new IllegalArgumentException("filename may not be empty");
 		}
-		final Optional<ExecutableInfo> executableInfo=cacheStorage.findExecutables(VERSION, parent+"/"+Util.removeFileExtension(filename)).stream()
+		final Optional<String> executableBaseName=cacheStorage.findExecutables(VERSION, baseName).stream()
 				.findFirst();
-		if (!executableInfo.isPresent()) {
+		if (!executableBaseName.isPresent()) {
 			throw new IllegalArgumentException("no executable entry found");
 		}
-		final DxvkStateCache cache=cacheStorage.getCache(2, executableInfo.get());
+		final DxvkStateCache cache=cacheStorage.getCache(2, executableBaseName.get());
 		if (null==cache) {
-			throw new IllegalStateException("cache not found for: "+executableInfo);
+			throw new IllegalStateException("cache not found for: "+executableBaseName);
 		}
 		final StreamingOutput streamingOutput=(OutputStream output) -> {
 			DxvkStateCacheIO.write(output, cache);

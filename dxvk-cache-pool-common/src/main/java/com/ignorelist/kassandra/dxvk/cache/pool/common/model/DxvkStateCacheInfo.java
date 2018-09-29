@@ -22,12 +22,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
 	public static final Comparator<DxvkStateCacheInfo> COMPARATOR_EXE_NAME=Comparator
-			.comparing(DxvkStateCacheInfo::getExecutableInfo, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.comparing(DxvkStateCacheInfo::getBaseName, Comparator.nullsFirst(Comparator.naturalOrder()))
 			.thenComparing(DxvkStateCacheInfo::getLastModified, Comparator.nullsFirst(Comparator.naturalOrder()))
 			.thenComparingInt(DxvkStateCacheInfo::getVersion);
 
 	@NotNull
-	private ExecutableInfo executableInfo;
+	private String baseName;
 	private int version;
 	private int entrySize;
 	private Long lastModified;
@@ -37,12 +37,12 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	}
 
 	@Override
-	public ExecutableInfo getExecutableInfo() {
-		return executableInfo;
+	public String getBaseName() {
+		return baseName;
 	}
 
-	public void setExecutableInfo(ExecutableInfo executableInfo) {
-		this.executableInfo=executableInfo;
+	public void setBaseName(String executableInfo) {
+		this.baseName=executableInfo;
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	@Override
 	public int hashCode() {
 		int hash=3;
-		hash=97*hash+Objects.hashCode(this.executableInfo);
+		hash=97*hash+Objects.hashCode(this.baseName);
 		hash=97*hash+this.version;
 		hash=97*hash+Objects.hashCode(this.entries);
 		return hash;
@@ -113,7 +113,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		if (this.version!=other.version) {
 			return false;
 		}
-		if (!Objects.equals(this.executableInfo, other.executableInfo)) {
+		if (!Objects.equals(this.baseName, other.baseName)) {
 			return false;
 		}
 		if (!Objects.equals(this.entries, other.entries)) {
@@ -124,7 +124,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
 	@Override
 	public String toString() {
-		return "DxvkStateCacheInfo{"+"executableInfo="+executableInfo+", version="+version+", entrySize="+entrySize+", lastModified="+lastModified+'}';
+		return "DxvkStateCacheInfo{"+"executableInfo="+baseName+", version="+version+", entrySize="+entrySize+", lastModified="+lastModified+'}';
 	}
 
 }

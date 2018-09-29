@@ -9,7 +9,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import java.util.Set;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -24,7 +23,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 
 	private static final String PATH="pool";
 
-	private static final GenericType<Set<ExecutableInfo>> TYPE_EXECUTABLE_INFO_SET=new GenericType<Set<ExecutableInfo>>() {
+	private static final GenericType<Set<String>> TYPE_STRING_SETn=new GenericType<Set<String>>() {
 	};
 	private static final GenericType<Set<DxvkStateCacheInfo>> TYPE_CACHE_INFO_SET=new GenericType<Set<DxvkStateCacheInfo>>() {
 	};
@@ -40,38 +39,30 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 		return super.getWebTarget().path(PATH);
 	}
 
-	public Set<DxvkStateCacheInfo> getCacheDescriptors(int version, Set<ExecutableInfo> executableInfos) {
+	public Set<DxvkStateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
 		return getWebTarget()
 				.path("cacheDescriptors")
-				.path(Integer.toString(version))
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(executableInfos), TYPE_CACHE_INFO_SET);
-	}
-
-	public Set<DxvkStateCacheInfo> getCacheDescriptorsForBaseNames(int version, Set<String> baseNames) {
-		return getWebTarget()
-				.path("cacheDescriptorsForBaseNames")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
 				.post(Entity.json(baseNames), TYPE_CACHE_INFO_SET);
 	}
 
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
+	public DxvkStateCacheInfo getCacheDescriptor(int version, String baseName) {
 		return getWebTarget()
 				.path("cacheDescriptor")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(executableInfo), DxvkStateCacheInfo.class);
+				.post(Entity.json(baseName), DxvkStateCacheInfo.class);
 	}
 
 	@Override
-	public DxvkStateCache getCache(int version, ExecutableInfo executableInfo) {
+	public DxvkStateCache getCache(int version, String baseName) {
 		return getWebTarget()
 				.path("stateCache")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(executableInfo), DxvkStateCache.class);
+				.post(Entity.json(baseName), DxvkStateCache.class);
 	}
 
 	@Override
@@ -91,33 +82,13 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public Set<ExecutableInfo> findExecutables(int version, String subString) {
+	public Set<String> findExecutables(int version, String subString) {
 		return getWebTarget()
 				.path("cacheDescriptors")
 				.path(Integer.toString(version))
 				.path(subString)
 				.request(MediaType.APPLICATION_JSON)
-				.get(TYPE_EXECUTABLE_INFO_SET);
-	}
-
-	@Override
-	public DxvkStateCacheInfo getCacheDescriptorForBaseName(int version, String baseName) {
-		return getWebTarget()
-				.path("cacheDescriptorForBaseName")
-				.path(Integer.toString(version))
-				.path(baseName)
-				.request(MediaType.APPLICATION_JSON)
-				.get(DxvkStateCacheInfo.class);
-	}
-
-	@Override
-	public DxvkStateCache getCacheForBaseName(int version, String baseName) {
-		return getWebTarget()
-				.path("cacheForBaseName")
-				.path(Integer.toString(version))
-				.path(baseName)
-				.request(MediaType.APPLICATION_JSON)
-				.get(DxvkStateCache.class);
+				.get(TYPE_STRING_SETn);
 	}
 
 }

@@ -13,7 +13,7 @@ public interface DxvkStateCacheMeta {
 
 	int getEntrySize();
 
-	ExecutableInfo getExecutableInfo();
+	String getBaseName();
 
 	int getVersion();
 
