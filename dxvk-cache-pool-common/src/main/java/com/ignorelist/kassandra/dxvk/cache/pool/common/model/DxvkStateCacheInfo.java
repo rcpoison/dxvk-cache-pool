@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  *
@@ -73,6 +74,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		this.entries=entries;
 	}
 
+	@XmlJavaTypeAdapter(InstantAdapter.class)
 	public Instant getLastModified() {
 		return lastModified;
 	}
