@@ -33,7 +33,7 @@
 		<ul>
 			@for (entry : entries) {
 			<li>
-				@entry.getBaseName()
+				@entry.getBaseName() (@entry.getEntries().size()) 
 				<a href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
 			</li>
 			}
