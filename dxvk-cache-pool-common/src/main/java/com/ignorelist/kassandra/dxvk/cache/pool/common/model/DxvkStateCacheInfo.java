@@ -29,9 +29,8 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	@NotNull
 	private ExecutableInfo executableInfo;
 	private int version;
-	@NotNull
 	private int entrySize;
-	private long lastModified;
+	private Long lastModified;
 	private Set<DxvkStateCacheEntryInfo> entries;
 
 	public DxvkStateCacheInfo() {
@@ -72,11 +71,11 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		this.entries=entries;
 	}
 
-	public long getLastModified() {
+	public Long getLastModified() {
 		return lastModified;
 	}
 
-	public void setLastModified(long lastModified) {
+	public void setLastModified(Long lastModified) {
 		this.lastModified=lastModified;
 	}
 
