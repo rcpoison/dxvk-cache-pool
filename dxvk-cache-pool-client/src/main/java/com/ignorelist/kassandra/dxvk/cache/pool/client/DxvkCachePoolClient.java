@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestClient;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -93,13 +95,14 @@ public class DxvkCachePoolClient {
 		FsScanner fs=FsScanner.scan(pathsToScan);
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
-			final ImmutableSet<Path> executables=fs.getExecutables();
-			final ImmutableSet<String> baseNames=executables.stream()
+			final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
+					.stream()
+					.flatMap(Collection::stream)
 					.map(Util::baseName)
 					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
-			System.err.println("found "+cacheDescriptors.size()+" matching state caches");
+			System.err.println("found "+cacheDescriptors.size()+" matching baseNames");
 			if (c.isVerbose()) {
 				cacheDescriptors.forEach(d -> {
 					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");

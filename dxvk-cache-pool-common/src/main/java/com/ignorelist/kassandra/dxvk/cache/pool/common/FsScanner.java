@@ -34,7 +34,7 @@ public class FsScanner {
 		return executables;
 	}
 
-	public ImmutableSet<Path> getCachePaths() {
+	public ImmutableSet<Path> getStateCaches() {
 		return cachePaths;
 	}
 
