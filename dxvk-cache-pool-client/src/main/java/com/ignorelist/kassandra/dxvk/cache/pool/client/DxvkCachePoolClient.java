@@ -246,7 +246,7 @@ public class DxvkCachePoolClient {
 		options.addOption("h", "help", false, "show this help");
 		options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
-		options.addOption(Option.builder().longOpt("verbose").desc("verbose output").build());
+		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
 		return options;
 	}
 
