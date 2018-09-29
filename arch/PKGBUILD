@@ -1,0 +1,35 @@
+_pkgname=dxvk-cache-pool
+pkgname=("dxvk-cache-server-git" "dxvk-cache-client-git")
+pkgver=r149.0291c01
+pkgrel=1
+pkgdesc='Client/server to share DXVK pipeline caches.'
+arch=('any')
+url='https://github.com/rcpoison/dxvk-cache-pool'
+license=('Apache')
+depends=('java-runtime=8')
+makedepends=('git' 'maven' 'java-environment>=8')
+source=('git+https://github.com/rcpoison/dxvk-cache-pool.git')
+sha1sums=('SKIP')
+
+pkgver() {
+  cd "$_pkgname"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+
+build() {
+  cd "$_pkgname"
+  ./build.sh
+}
+
+package_dxvk-cache-server-git() {
+  cd "$_pkgname"
+  install -Dm755 dxvk-cache-server -t "$pkgdir"/usr/bin
+  install -Dm644 dxvk-cache-server.service -t "$pkgdir"/usr/lib/systemd/system/
+}
+
+package_dxvk-cache-client-git() {
+  cd "$_pkgname"
+  install -Dm755 dxvk-cache-client -t "$pkgdir"/usr/bin
+  install -Dm755 dxvk.sh -t "$pkgdir"/etc/profile.d
+}
