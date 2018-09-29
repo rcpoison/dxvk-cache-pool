@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 
-	private ExecutableInfo executableInfo;
+	private String baseName;
 	private int version;
 	private int entrySize;
 	private Set<DxvkStateCacheEntry> entries;
@@ -25,12 +25,12 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	}
 
 	@Override
-	public ExecutableInfo getExecutableInfo() {
-		return executableInfo;
+	public String getBaseName() {
+		return baseName;
 	}
 
-	public void setExecutableInfo(ExecutableInfo executableInfo) {
-		this.executableInfo=executableInfo;
+	public void setBaseName(String baseName) {
+		this.baseName=baseName;
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		DxvkStateCacheInfo info=new DxvkStateCacheInfo();
 		info.setVersion(getVersion());
 		info.setEntrySize(getEntrySize());
-		info.setExecutableInfo(getExecutableInfo());
+		info.setBaseName(getBaseName());
 		if (null!=getEntries()) {
 			final ImmutableSet<DxvkStateCacheEntryInfo> entryInfos=getEntries().stream()
 					.map(DxvkStateCacheEntry::getDescriptor)
@@ -77,7 +77,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		DxvkStateCache cache=new DxvkStateCache();
 		cache.setVersion(getVersion());
 		cache.setEntrySize(getEntrySize());
-		cache.setExecutableInfo(getExecutableInfo());
+		cache.setBaseName(getBaseName());
 		if (null!=getEntries()) {
 			cache.setEntries(ImmutableSet.copyOf(getEntries()));
 		}
@@ -102,7 +102,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	@Override
 	public int hashCode() {
 		int hash=7;
-		hash=89*hash+Objects.hashCode(this.executableInfo);
+		hash=89*hash+Objects.hashCode(this.baseName);
 		hash=89*hash+this.version;
 		hash=89*hash+Objects.hashCode(this.entries);
 		return hash;
@@ -123,7 +123,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		if (this.version!=other.version) {
 			return false;
 		}
-		if (!Objects.equals(this.executableInfo, other.executableInfo)) {
+		if (!Objects.equals(this.baseName, other.baseName)) {
 			return false;
 		}
 		if (!Objects.equals(this.entries, other.entries)) {

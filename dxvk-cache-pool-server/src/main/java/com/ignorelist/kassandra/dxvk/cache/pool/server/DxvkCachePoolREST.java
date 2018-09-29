@@ -10,11 +10,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import java.io.IOException;
@@ -44,31 +42,13 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("cacheDescriptors/{version}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<DxvkStateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<ExecutableInfo> executableInfos) {
-		StateCacheHeaderInfo.getEntrySize(version);
-		if (null==executableInfos) {
-			throw new IllegalArgumentException("missing executableInfos");
-		}
-		return executableInfos.parallelStream()
-				.filter(i -> Util.PREDICATE_EXE.apply(i.getPath()))
-				.filter(i -> null!=i.getPath().getParent())
-				.map(e -> cacheStorage.getCacheDescriptor(version, e))
-				.filter(Predicates.notNull())
-				.collect(ImmutableSet.toImmutableSet());
-	}
-
-	@POST
-	@Path("cacheDescriptorsForBaseNames/{version}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Set<DxvkStateCacheInfo> getCacheDescriptorsForBaseNames(@PathParam("version") int version, Set<String> baseNames) {
+	public Set<DxvkStateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<String> baseNames) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseNames) {
-			throw new IllegalArgumentException("missing baseNames");
+			throw new IllegalArgumentException("missing executableInfos");
 		}
 		return baseNames.parallelStream()
-				.filter(Predicates.notNull())
-				.map(n -> cacheStorage.getCacheDescriptorForBaseName(version, n))
+				.map(bN -> cacheStorage.getCacheDescriptor(version, bN))
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 	}
@@ -78,8 +58,8 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(@PathParam("version") int version, ExecutableInfo executableInfo) {
-		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(executableInfo)));
+	public DxvkStateCacheInfo getCacheDescriptor(@PathParam("version") int version, String baseName) {
+		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(baseName)));
 	}
 
 	@POST
@@ -87,12 +67,12 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public DxvkStateCache getCache(@PathParam("version") int version, ExecutableInfo executableInfo) {
+	public DxvkStateCache getCache(@PathParam("version") int version, String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
-		if (null==executableInfo) {
+		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");
 		}
-		return cacheStorage.getCache(version, executableInfo);
+		return cacheStorage.getCache(version, baseName);
 	}
 
 	@POST
@@ -130,7 +110,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("find/{version}/{subString}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public Set<ExecutableInfo> findExecutables(@PathParam("version") int version, @PathParam("subString") String subString) {
+	public Set<String> findExecutables(@PathParam("version") int version, @PathParam("subString") String subString) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (Strings.isNullOrEmpty(subString)) {
 			throw new IllegalArgumentException("search string must not be empty");
@@ -140,30 +120,6 @@ public class DxvkCachePoolREST implements CacheStorage {
 
 	@Override
 	public void close() throws IOException {
-	}
-
-	@GET
-	@Path("cacheDescriptorForBaseName/{version}/{baseName}")
-	@Produces(MediaType.APPLICATION_JSON)
-	@Override
-	public DxvkStateCacheInfo getCacheDescriptorForBaseName(@PathParam("version") int version, @PathParam("baseName") String baseName) {
-		StateCacheHeaderInfo.getEntrySize(version);
-		if (Strings.isNullOrEmpty(baseName)) {
-			throw new IllegalArgumentException("baseName must not be empty");
-		}
-		return cacheStorage.getCacheDescriptorForBaseName(version, baseName);
-	}
-
-	@GET
-	@Path("cacheForBaseName/{version}/{baseName}")
-	@Produces(MediaType.APPLICATION_JSON)
-	@Override
-	public DxvkStateCache getCacheForBaseName(@PathParam("version") int version, @PathParam("baseName") String baseName) {
-		StateCacheHeaderInfo.getEntrySize(version);
-		if (Strings.isNullOrEmpty(baseName)) {
-			throw new IllegalArgumentException("baseName must not be empty");
-		}
-		return cacheStorage.getCacheForBaseName(version, baseName);
 	}
 
 }

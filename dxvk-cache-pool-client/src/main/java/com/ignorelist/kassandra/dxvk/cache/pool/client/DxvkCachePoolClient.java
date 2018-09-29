@@ -5,16 +5,11 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
-import com.google.common.base.Equivalence;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestClient;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.ExecutableInfoEquivalenceBaseName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,29 +79,20 @@ public class DxvkCachePoolClient {
 		FsScanner fs=FsScanner.scan(c.getPaths());
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
-			final ImmutableSet<ExecutableInfo> executables=fs.getExecutables();
+			final ImmutableSet<Path> executables=fs.getExecutables();
 			final ImmutableSet<String> baseNames=executables.stream()
-					.map(ExecutableInfo::getbaseName)
-					.filter(Predicates.notNull())
+					.map(Util::baseName)
 					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
-			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptorsForBaseNames(2, baseNames);
+			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(2, baseNames);
 			System.err.println("found "+cacheDescriptors.size()+" matching state caches");
 			if (c.isVerbose()) {
 				cacheDescriptors.forEach(d -> {
-					System.err.println(" -> "+d.getExecutableInfo().getRelativePath()+", "+d.getEntries().size()+" entries");
+					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
 				});
 			}
 			if (cacheDescriptors.isEmpty()) {
 				return;
-			}
-			
-			final ExecutableInfoEquivalenceBaseName equivalenceBaseName=new ExecutableInfoEquivalenceBaseName();
-			ImmutableListMultimap<Equivalence.Wrapper<ExecutableInfo>, ExecutableInfo> executablesByBaseName=Multimaps.index(executables, equivalenceBaseName::wrap);
-			if (c.isVerbose()) {
-				executablesByBaseName.asMap().entrySet().stream()
-						.filter(e -> e.getValue().size()>1)
-						.forEach(e -> System.err.println(" !> clashing: "+e.getKey().get().getbaseName()+" : "+e.getKey().get().getRelativePath()));
 			}
 
 		}
