@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
@@ -80,6 +81,13 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
 	public void setLastModified(Long lastModified) {
 		this.lastModified=lastModified;
+	}
+
+	public Instant getLastModifiedInstant() {
+		if (null==lastModified) {
+			return null;
+		}
+		return Instant.ofEpochMilli(lastModified);
 	}
 
 	/**
