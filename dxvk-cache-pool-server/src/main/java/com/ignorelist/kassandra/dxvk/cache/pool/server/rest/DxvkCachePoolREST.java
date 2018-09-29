@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.server;
+package com.ignorelist.kassandra.dxvk.cache.pool.server.rest;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -15,6 +15,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
 import java.util.Set;
 import javax.inject.Inject;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.server;
+package com.ignorelist.kassandra.dxvk.cache.pool.server.rest;
 
 import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.OutputStreamOutput;

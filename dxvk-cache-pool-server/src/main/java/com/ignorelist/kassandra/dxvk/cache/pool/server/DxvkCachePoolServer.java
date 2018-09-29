@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.DxvkCachePoolREST;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.DxvkCachePoolHome;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
