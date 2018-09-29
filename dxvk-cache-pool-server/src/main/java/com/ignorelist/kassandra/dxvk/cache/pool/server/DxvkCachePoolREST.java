@@ -58,6 +58,22 @@ public class DxvkCachePoolREST implements CacheStorage {
 	}
 
 	@POST
+	@Path("cacheDescriptorsForBaseNames/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Set<DxvkStateCacheInfo> getCacheDescriptorsForBaseNames(@PathParam("version") int version, Set<String> baseNames) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (null==baseNames) {
+			throw new IllegalArgumentException("missing baseNames");
+		}
+		return baseNames.parallelStream()
+				.filter(Predicates.notNull())
+				.map(n -> cacheStorage.getCacheDescriptorForBaseName(version, n))
+				.filter(Predicates.notNull())
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@POST
 	@Path("cacheDescriptor/{version}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

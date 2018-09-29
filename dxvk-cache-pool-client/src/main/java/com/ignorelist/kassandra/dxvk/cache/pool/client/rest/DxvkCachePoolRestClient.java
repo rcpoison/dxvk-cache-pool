@@ -48,6 +48,14 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 				.post(Entity.json(executableInfos), TYPE_CACHE_INFO_SET);
 	}
 
+	public Set<DxvkStateCacheInfo> getCacheDescriptorsForBaseNames(int version, Set<String> baseNames) {
+		return getWebTarget()
+				.path("cacheDescriptorsForBaseNames")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(baseNames), TYPE_CACHE_INFO_SET);
+	}
+
 	@Override
 	public DxvkStateCacheInfo getCacheDescriptor(int version, ExecutableInfo executableInfo) {
 		return getWebTarget()

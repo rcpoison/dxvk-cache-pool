@@ -153,7 +153,7 @@ public class CacheStorageFS implements CacheStorage {
 				})
 				.max(FileTime::compareTo);
 		if (lastModified.isPresent()) {
-			cacheInfo.setLastModified(lastModified.get().toInstant());
+			cacheInfo.setLastModified(lastModified.get().toMillis());
 		}
 		return cacheInfo;
 	}
@@ -230,11 +230,11 @@ public class CacheStorageFS implements CacheStorage {
 			cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 			cacheInfo.setExecutableInfo(new ExecutableInfo(Paths.get(baseName)));
 			final ConcurrentMap<Equivalence.Wrapper<ExecutableInfo>, DxvkStateCacheInfo> s=getStorageCache(version);
-			final Instant lastModified=executableWrappers.stream()
+			final long lastModified=executableWrappers.stream()
 					.map(s::get)
-					.map(DxvkStateCacheInfo::getLastModified)
-					.max(Instant::compareTo)
-					.get();
+					.mapToLong(DxvkStateCacheInfo::getLastModified)
+					.max()
+					.getAsLong();
 			cacheInfo.setLastModified(lastModified);
 			final ImmutableSet<DxvkStateCacheEntryInfo> entryInfos=executableWrappers.stream()
 					.map(s::get)
@@ -357,7 +357,7 @@ public class CacheStorageFS implements CacheStorage {
 			task.get();
 
 			descriptor.getEntries().addAll(newEntries.stream().map(DxvkStateCacheEntry::getDescriptor).collect(ImmutableSet.toImmutableSet()));
-			descriptor.setLastModified(Instant.now());
+			descriptor.setLastModified(Instant.now().toEpochMilli());
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {

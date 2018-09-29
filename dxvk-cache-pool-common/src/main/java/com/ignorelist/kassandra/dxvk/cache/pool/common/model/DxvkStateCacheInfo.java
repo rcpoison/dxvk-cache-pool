@@ -8,13 +8,11 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  *
@@ -33,7 +31,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	private int version;
 	@NotNull
 	private int entrySize;
-	private Instant lastModified;
+	private long lastModified;
 	private Set<DxvkStateCacheEntryInfo> entries;
 
 	public DxvkStateCacheInfo() {
@@ -74,12 +72,11 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		this.entries=entries;
 	}
 
-	@XmlJavaTypeAdapter(InstantAdapter.class)
-	public Instant getLastModified() {
+	public long getLastModified() {
 		return lastModified;
 	}
 
-	public void setLastModified(Instant lastModified) {
+	public void setLastModified(long lastModified) {
 		this.lastModified=lastModified;
 	}
 
@@ -124,6 +121,11 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "DxvkStateCacheInfo{"+"executableInfo="+executableInfo+", version="+version+", entrySize="+entrySize+", lastModified="+lastModified+'}';
 	}
 
 }
