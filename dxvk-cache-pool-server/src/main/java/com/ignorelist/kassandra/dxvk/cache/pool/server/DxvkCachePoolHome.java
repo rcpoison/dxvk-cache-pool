@@ -10,6 +10,7 @@ import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -35,7 +36,7 @@ import views.index;
 public class DxvkCachePoolHome {
 
 	private static final int PAGE_SIZE=1024;
-	private static final int VERSION=2;
+	private static final int VERSION=StateCacheHeaderInfo.getLatestVersion();
 
 	@Inject
 	private CacheStorage cacheStorage;
