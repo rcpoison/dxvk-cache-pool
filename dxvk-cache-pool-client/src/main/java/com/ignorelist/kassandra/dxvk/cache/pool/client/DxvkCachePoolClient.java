@@ -44,12 +44,21 @@ public class DxvkCachePoolClient {
 				printHelp(options);
 				System.exit(0);
 			}
+			if (commandLine.hasOption("t")) {
+				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("t")));
+			} else {
+				System.err.println("target path is required");
+				System.err.println();
+				printHelp(options);
+				System.exit(1);
+			}
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
 			if (commandLine.hasOption("verbose")) {
 				c.setVerbose(true);
 			}
+
 			ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.filter(p -> {
@@ -77,7 +86,11 @@ public class DxvkCachePoolClient {
 
 	private static void merge(Configuration c) throws IOException {
 		System.err.println("scanning directories");
-		FsScanner fs=FsScanner.scan(c.getGamePaths());
+		final ImmutableSet<Path> pathsToScan=ImmutableSet.<Path>builder()
+				.addAll(c.getGamePaths())
+				.add(c.getCacheTargetPath())
+				.build();
+		FsScanner fs=FsScanner.scan(pathsToScan);
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
 			final ImmutableSet<Path> executables=fs.getExecutables();
@@ -107,6 +120,7 @@ public class DxvkCachePoolClient {
 	private static Options buildOptions() {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
+		options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("verbose output").build());
 		return options;
