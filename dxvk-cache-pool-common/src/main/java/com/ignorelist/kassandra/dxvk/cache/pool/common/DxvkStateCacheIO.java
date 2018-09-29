@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -17,8 +18,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,8 +95,7 @@ public class DxvkStateCacheIO {
 		dxvkStateCache.setVersion(version);
 		dxvkStateCache.setEntrySize(entrySize);
 
-		Set<DxvkStateCacheEntry> cacheEntries=new LinkedHashSet<>();
-
+		List<byte[]> bareEntries=new ArrayList<>();
 		while (true) {
 			byte[] entry=new byte[entrySize];
 			final int bytesRead=inputStream.read(entry);
@@ -105,9 +105,11 @@ public class DxvkStateCacheIO {
 			if (bytesRead!=entrySize) {
 				throw new IllegalStateException("wrong entry size, parser broken or file currupt. entrySize:"+entrySize+", bytesRead: "+bytesRead);
 			}
-			DxvkStateCacheEntry cacheEntry=new DxvkStateCacheEntry(entry);
-			cacheEntries.add(cacheEntry);
+			bareEntries.add(entry);
 		}
+		ImmutableSet<DxvkStateCacheEntry> cacheEntries=bareEntries.parallelStream()
+				.map(DxvkStateCacheEntry::new)
+				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(cacheEntries);
 		return dxvkStateCache;
 	}
