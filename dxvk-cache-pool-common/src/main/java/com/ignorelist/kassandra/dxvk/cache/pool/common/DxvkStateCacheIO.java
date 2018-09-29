@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -26,6 +28,17 @@ import java.util.Set;
  */
 public class DxvkStateCacheIO {
 
+	private static final Logger LOG=Logger.getLogger(DxvkStateCacheIO.class.getName());
+
+	/**
+	 * parse Parse DxvkStateCache and its entries.
+	 *
+	 * Will set basename base on the passed Path
+	 *
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
 	public static DxvkStateCache parse(final Path path) throws IOException {
 		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
 			final DxvkStateCache cache=parse(is);
@@ -34,6 +47,14 @@ public class DxvkStateCacheIO {
 		}
 	}
 
+	/**
+	 * Parse DxvkStateCache and its entries. Will not set basename of course.
+	 *
+	 * @param inputStream
+	 * @return
+	 * @throws UnsupportedOperationException
+	 * @throws IOException
+	 */
 	public static DxvkStateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
 		/*
 		struct DxvkStateCacheHeader {
@@ -58,6 +79,9 @@ public class DxvkStateCacheIO {
 		byte[] versionBytes=new byte[4];
 		inputStream.read(versionBytes);
 		int version=parseUnsignedInt(versionBytes);
+		if (!StateCacheHeaderInfo.getKnownVersions().contains(version)) {
+			LOG.log(Level.WARNING, "unknon version encountered: {0}", version);
+		}
 
 		byte[] entrySizeBytes=new byte[4];
 		inputStream.read(entrySizeBytes);
