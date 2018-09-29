@@ -43,7 +43,7 @@ public class DxvkCachePoolClient {
 
 	private final Configuration configuration;
 
-	public DxvkCachePoolClient(Configuration c) {
+	private DxvkCachePoolClient(Configuration c) {
 		this.configuration=c;
 	}
 
@@ -104,30 +104,47 @@ public class DxvkCachePoolClient {
 		return fs;
 	}
 
-	private void merge() throws IOException {
-		final FsScanner fs=scan();
+	private ImmutableMap<String, DxvkStateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-			final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
-					.stream()
-					.flatMap(Collection::stream)
-					.map(Util::baseName)
-					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
 			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
-
-			System.err.println("found "+cacheDescriptors.size()+" matching caches");
-			if (configuration.isVerbose()) {
-				cacheDescriptors.forEach(d -> {
-					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
-				});
-			}
-			if (!cacheDescriptors.isEmpty()) {
-				final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
-			}
-
-			uploadUnknown(fs, cacheDescriptorsByBaseName);
+			return cacheDescriptorsByBaseName;
 		}
+	}
+
+	private void merge() throws IOException {
+		final FsScanner fs=scan();
+		final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
+				.stream()
+				.flatMap(Collection::stream)
+				.map(Util::baseName)
+				.collect(ImmutableSet.toImmutableSet());
+
+		ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
+		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
+		if (configuration.isVerbose()) {
+			cacheDescriptorsByBaseName.values().forEach(d -> {
+				System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
+			});
+		}
+
+		if (!cacheDescriptorsByBaseName.isEmpty()) {
+			// create new caches
+			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
+			Map<String, DxvkStateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
+			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
+			try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
+				for (DxvkStateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
+					final String baseName=cacheInfo.getBaseName();
+					DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
+					final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
+					DxvkStateCacheIO.write(targetPath, cache);
+				}
+			}
+		}
+
+		uploadUnknown(fs, cacheDescriptorsByBaseName);
 	}
 
 	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
