@@ -16,7 +16,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -211,7 +210,7 @@ public class CacheStorageFS implements CacheStorage {
 	private ImmutableSet<Equivalence.Wrapper<ExecutableInfo>> findExecutableWrappersForBaseName(final int version, final String baseName) {
 		try {
 			return getStorageCache(version).keySet().stream()
-					.filter(w -> Util.baseName(w.get().getPath()).equalsIgnoreCase(baseName.toLowerCase()))
+					.filter(w -> w.get().getbaseName().equalsIgnoreCase(baseName.toLowerCase()))
 					.collect(ImmutableSet.toImmutableSet());
 		} catch (Exception ex) {
 			throw new IllegalStateException(ex);
@@ -244,7 +243,7 @@ public class CacheStorageFS implements CacheStorage {
 			cacheInfo.setEntries(entryInfos);
 			return cacheInfo;
 		} catch (Exception ex) {
-			LOG.log(Level.INFO, null, ex);
+			LOG.log(Level.FINE, null, ex);
 			return null;
 		}
 	}

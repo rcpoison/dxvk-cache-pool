@@ -6,7 +6,6 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Equivalence;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.util.Objects;
 
 /**
@@ -17,12 +16,12 @@ public class ExecutableInfoEquivalenceBaseName extends Equivalence<ExecutableInf
 
 	@Override
 	protected boolean doEquivalent(ExecutableInfo a, ExecutableInfo b) {
-		return Objects.equals(Util.baseName(a.getPath()), Util.baseName(b.getPath()));
+		return Objects.equals(a.getbaseName(), b.getbaseName());
 	}
 
 	@Override
 	protected int doHash(ExecutableInfo t) {
-		return Objects.hashCode(Util.baseName(t.getPath()));
+		return Objects.hashCode(t.getbaseName());
 	}
 
 }
