@@ -5,12 +5,10 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
-import com.google.common.io.ByteStreams;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -56,20 +54,18 @@ public class DxvkStateCacheIONGTest {
 	 */
 	@Test
 	public void testReadWriteRoundtrip() throws Exception {
-		try (InputStream stateCacheStream=new GZIPInputStream(DxvkStateCacheIONGTest.class.getResourceAsStream("/BeatSaber.dxvk-cache.gz"))) {
-			final byte[] stateCacheData=ByteStreams.toByteArray(stateCacheStream);
-			Assert.assertEquals(stateCacheData.length, 1008684);
+		final byte[] stateCacheData=TestUtil.readStateCacheData();
+		Assert.assertEquals(stateCacheData.length, 1008684);
 
-			DxvkStateCache stateCache=DxvkStateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
-			Assert.assertEquals(stateCache.getVersion(), 2);
-			Assert.assertEquals(stateCache.getEntrySize(), StateCacheHeaderInfo.getEntrySize(2).intValue());
-			Assert.assertEquals(stateCache.getEntries().size(), 553);
+		DxvkStateCache stateCache=DxvkStateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
+		Assert.assertEquals(stateCache.getVersion(), 2);
+		Assert.assertEquals(stateCache.getEntrySize(), StateCacheHeaderInfo.getEntrySize(2).intValue());
+		Assert.assertEquals(stateCache.getEntries().size(), 553);
 
-			final ByteArrayOutputStream baos=new ByteArrayOutputStream();
-			DxvkStateCacheIO.write(baos, stateCache);
+		final ByteArrayOutputStream baos=new ByteArrayOutputStream();
+		DxvkStateCacheIO.write(baos, stateCache);
 
-			Assert.assertEquals(baos.toByteArray(), stateCacheData);
-		}
+		Assert.assertEquals(baos.toByteArray(), stateCacheData);
 	}
 
 }
