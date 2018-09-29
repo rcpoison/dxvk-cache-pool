@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -84,7 +85,7 @@ public class FsScanner {
 
 	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited) {
 		try {
-			final ImmutableSet<Path> paths=Files.walk(baseDirectory)
+			final ImmutableSet<Path> paths=Files.walk(baseDirectory, FileVisitOption.FOLLOW_LINKS)
 					.map(Path::toAbsolutePath)
 					.peek(p -> visited.incrementAndGet())
 					.filter(p -> null!=p.getParent())
