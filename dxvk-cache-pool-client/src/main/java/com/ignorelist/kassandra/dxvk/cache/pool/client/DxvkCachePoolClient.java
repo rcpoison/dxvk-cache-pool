@@ -157,9 +157,10 @@ public class DxvkCachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final DxvkStateCache localCache=DxvkStateCacheIO.parse(cacheFile);
-						
+
 						final int localCacheEntriesSize=localCache.getEntries().size();
-						final Set<DxvkStateCacheEntry> missingEntries=restClient.getMissingEntries(localCache.toInfo());
+						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
+						final Set<DxvkStateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
 						if (missingEntries.isEmpty()) {
 							System.err.println(" -> "+baseName+" is up to date with "+localCacheEntriesSize+" entries");
 						} else {
@@ -170,9 +171,15 @@ public class DxvkCachePoolClient {
 							Files.move(tmpFile, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 						}
 
+						final DxvkStateCache missingOnServer=localCache.diff(cacheInfo);
+						if (!missingOnServer.getEntries().isEmpty()) {
+							System.err.println(" -> "+baseName+" sending "+missingOnServer.getEntries().size()+" missing entries to remote");
+							restClient.store(missingOnServer);
+						}
 					}
 				}
 			}
+
 		}
 
 		uploadUnknown(fs, cacheDescriptorsByBaseName);

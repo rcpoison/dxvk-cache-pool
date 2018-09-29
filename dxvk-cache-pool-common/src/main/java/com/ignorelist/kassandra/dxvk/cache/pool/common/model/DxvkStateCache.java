@@ -5,7 +5,9 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.Objects;
@@ -129,6 +131,24 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	public DxvkStateCache diff(DxvkStateCache other) {
 		DxvkStateCache diff=copyShallow();
 		diff.setEntries(getMissingEntries(other));
+		return diff;
+	}
+
+	/**
+	 * get instance with entries contained in this instance but missing in the passed instance
+	 *
+	 * @param other instance to check for missing entries
+	 * @return instance with entries contained in this instance but missing in the passed instance
+	 */
+	public DxvkStateCache diff(DxvkStateCacheInfo other) {
+		DxvkStateCacheInfo info=toInfo();
+		ImmutableSet<DxvkStateCacheEntryInfo> missingEntryInfos=info.getMissingEntries(other);
+		ImmutableMap<DxvkStateCacheEntryInfo, DxvkStateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), DxvkStateCacheEntry::getDescriptor);
+		ImmutableSet<DxvkStateCacheEntry> missingEntries=missingEntryInfos.stream()
+				.map(indexByInfo::get)
+				.collect(ImmutableSet.toImmutableSet());
+		DxvkStateCache diff=copyShallow();
+		diff.setEntries(missingEntries);
 		return diff;
 	}
 
