@@ -5,18 +5,27 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestClient;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -90,7 +99,7 @@ public class DxvkCachePoolClient {
 	}
 
 	private static void merge(Configuration c) throws IOException {
-		FsScanner fs=scan(c);
+		final FsScanner fs=scan(c);
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
 			final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
 					.stream()
@@ -99,17 +108,41 @@ public class DxvkCachePoolClient {
 					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
+			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
+
 			System.err.println("found "+cacheDescriptors.size()+" matching caches");
 			if (c.isVerbose()) {
 				cacheDescriptors.forEach(d -> {
 					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
 				});
 			}
-			if (cacheDescriptors.isEmpty()) {
-				return;
+			if (!cacheDescriptors.isEmpty()) {
+				final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
 			}
 
+			// upload unkown caches
+			ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
+			ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));
+			System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
+			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
+				System.err.println(" > uploading "+entry.getKey());
+				DxvkStateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
+				restClient.store(cache);
+			}
 		}
+	}
+
+	private static DxvkStateCache readMerged(Set<Path> paths) throws IOException {
+		DxvkStateCache cache=null;
+		for (Path path : paths) {
+			DxvkStateCache parsed=DxvkStateCacheIO.parse(path);
+			if (null==cache) {
+				cache=parsed;
+			} else {
+				cache.patch(parsed);
+			}
+		}
+		return cache;
 	}
 
 	private static void printHelp(Options options) throws IOException {

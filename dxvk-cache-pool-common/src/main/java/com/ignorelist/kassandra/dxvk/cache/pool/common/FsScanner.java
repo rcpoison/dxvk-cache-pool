@@ -9,6 +9,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +47,10 @@ public class FsScanner {
 		return cachePaths.stream()
 				.filter(p -> p.getParent().equals(targetPath))
 				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	public Set<Path> getStateCachesNotInTarget() {
+		return Sets.difference(cachePaths, getStateCachesInTarget());
 	}
 
 	public ImmutableMap<String, Path> getBaseNameToCacheTarget() {
