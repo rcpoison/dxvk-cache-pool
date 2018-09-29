@@ -6,7 +6,9 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +22,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class FsScanner {
 
+	private final Path targetPath;
 	private final ImmutableSet<Path> executables;
 	private final ImmutableSet<Path> cachePaths;
 	private final int visitedFiles;
 
-	private FsScanner(ImmutableSet<Path> executables, ImmutableSet<Path> caches, int visitedFiles) {
+	private FsScanner(Path targetPath, ImmutableSet<Path> executables, ImmutableSet<Path> caches, int visitedFiles) {
+		this.targetPath=targetPath;
 		this.executables=executables;
 		this.cachePaths=caches;
 		this.visitedFiles=visitedFiles;
@@ -38,14 +42,28 @@ public class FsScanner {
 		return cachePaths;
 	}
 
+	public ImmutableSet<Path> getStateCachesInTarget() {
+		return cachePaths.stream()
+				.filter(p -> p.getParent().equals(targetPath))
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	public ImmutableMap<String, Path> getBaseNameToCacheTarget() {
+		return Maps.uniqueIndex(getStateCachesInTarget(), Util::baseName);
+	}
+
 	public int getVisitedFiles() {
 		return visitedFiles;
 	}
 
-	public static FsScanner scan(Set<Path> baseDirectories) {
+	public static FsScanner scan(Path targetPath, Set<Path> baseDirectories) {
 		// walking the FS is slow, only do it once.
 		final AtomicInteger visited=new AtomicInteger();
-		final ImmutableSet<Path> paths=baseDirectories.parallelStream()
+		final ImmutableSet<Path> pathsToScan=ImmutableSet.<Path>builder()
+				.addAll(baseDirectories)
+				.add(targetPath)
+				.build();
+		final ImmutableSet<Path> paths=pathsToScan.parallelStream()
 				.map(s -> FsScanner.scan(s, visited))
 				.flatMap(Collection::stream)
 				.collect(ImmutableSet.toImmutableSet());
@@ -56,7 +74,7 @@ public class FsScanner {
 		ImmutableSet<Path> exec=paths.stream()
 				.filter(Util.PREDICATE_EXE)
 				.collect(ImmutableSet.toImmutableSet());
-		return new FsScanner(exec, cachePaths, visited.get());
+		return new FsScanner(targetPath, exec, cachePaths, visited.get());
 	}
 
 	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited) {

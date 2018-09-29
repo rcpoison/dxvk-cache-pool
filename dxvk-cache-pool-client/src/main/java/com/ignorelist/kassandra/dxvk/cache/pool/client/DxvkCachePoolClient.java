@@ -71,10 +71,6 @@ public class DxvkCachePoolClient {
 						return false;
 					})
 					.collect(ImmutableSet.toImmutableSet());
-			if (paths.isEmpty()) {
-				System.err.println("no valid directories passed");
-				System.exit(1);
-			}
 			c.setGamePaths(paths);
 		} catch (ParseException pe) {
 			System.err.println(pe.getMessage());
@@ -86,14 +82,15 @@ public class DxvkCachePoolClient {
 		merge(c);
 	}
 
-	private static void merge(Configuration c) throws IOException {
+	private static FsScanner scan(Configuration c) {
 		System.err.println("scanning directories");
-		final ImmutableSet<Path> pathsToScan=ImmutableSet.<Path>builder()
-				.addAll(c.getGamePaths())
-				.add(c.getCacheTargetPath())
-				.build();
-		FsScanner fs=FsScanner.scan(pathsToScan);
+		FsScanner fs=FsScanner.scan(c.getCacheTargetPath(), c.getGamePaths());
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
+		return fs;
+	}
+
+	private static void merge(Configuration c) throws IOException {
+		FsScanner fs=scan(c);
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
 			final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
 					.stream()
@@ -102,7 +99,7 @@ public class DxvkCachePoolClient {
 					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
-			System.err.println("found "+cacheDescriptors.size()+" matching baseNames");
+			System.err.println("found "+cacheDescriptors.size()+" matching caches");
 			if (c.isVerbose()) {
 				cacheDescriptors.forEach(d -> {
 					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
