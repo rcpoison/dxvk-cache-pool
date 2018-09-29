@@ -14,7 +14,7 @@ import java.util.Set;
  */
 public class Configuration {
 
-	private String host="http://localhost:16969";
+	private String host="http://kassandra.ignorelist.com:16969/";
 	private Path cacheTargetPath;
 	private Set<Path> gamePaths;
 	private boolean verbose=false;
