@@ -1,0 +1,9 @@
+[Unit]
+Description=Server to share DXVK pipeline caches.
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/dxvk-cache-server
+
+[Install]
+WantedBy=multi-user.target
