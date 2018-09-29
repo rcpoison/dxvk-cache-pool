@@ -36,6 +36,8 @@ See [PKGBUILD](arch/PKGBUILD)
 
 ## Usage
 
+Both client and server require Java >= 8.
+
 ### Client
 
 ```bash
