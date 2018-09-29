@@ -5,7 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
-import com.google.common.collect.ImmutableSet;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -18,7 +18,7 @@ public class Configuration {
 
 	private int port=16969;
 	private Path storage=Paths.get(System.getProperty("user.home"), ".local", "share", "dxvk-cache-pool-server", "storage");
-	private Set<Integer> versions=ImmutableSet.of(2);
+	private Set<Integer> versions=StateCacheHeaderInfo.getKnownVersions();
 
 	public int getPort() {
 		return port;
