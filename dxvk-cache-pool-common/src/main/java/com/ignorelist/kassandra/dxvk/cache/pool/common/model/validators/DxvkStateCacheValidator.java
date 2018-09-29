@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 
 /**
@@ -25,5 +26,10 @@ public class DxvkStateCacheValidator {
 		if (!allValidLength) {
 			throw new IllegalArgumentException("illegal entry size found");
 		}
+
+		if (!Util.isSafeBaseName(cache.getBaseName())) {
+			throw new IllegalArgumentException("illegal baseName: "+cache.getBaseName());
+		}
+
 	}
 }

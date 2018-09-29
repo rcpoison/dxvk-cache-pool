@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -40,6 +41,7 @@ public final class Util {
 	public static final String DXVK_CACHE_EXT=".dxvk-cache";
 	public static final Predicate<Path> PREDICATE_CACHE=new FileExtPredicate(DXVK_CACHE_EXT);
 	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new FileExtPredicate(".exe"), new FileExtPredicate(".EXE"));
+	private static final Pattern SAFE_BASE_NAME=Pattern.compile("^[\\w. -]+$", Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CHARACTER_CLASS);
 
 	private Util() {
 	}
@@ -77,6 +79,10 @@ public final class Util {
 	 */
 	public static String baseName(Path path) {
 		return removeFileExtension(path.getFileName().toString());
+	}
+
+	public static boolean isSafeBaseName(String baseName) {
+		return SAFE_BASE_NAME.matcher(baseName).matches();
 	}
 
 }
