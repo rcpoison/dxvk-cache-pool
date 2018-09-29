@@ -85,4 +85,12 @@ public final class Util {
 		return SAFE_BASE_NAME.matcher(baseName).matches();
 	}
 
+	public static String cacheFileNameForBaseName(String baseName) {
+		return baseName+DXVK_CACHE_EXT;
+	}
+
+	public static Path cacheFileForBaseName(Path targetPath, String baseName) {
+		return targetPath.resolve(cacheFileNameForBaseName(baseName));
+	}
+
 }
