@@ -19,11 +19,13 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -106,7 +108,7 @@ public class DxvkCachePoolClient {
 
 	private ImmutableMap<String, DxvkStateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
+			System.err.println("looking up state caches for "+baseNames.size()+" possible games");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
 			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
 			return cacheDescriptorsByBaseName;
@@ -134,12 +136,41 @@ public class DxvkCachePoolClient {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
 			Map<String, DxvkStateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
-			try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-				for (DxvkStateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
-					final String baseName=cacheInfo.getBaseName();
-					DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
-					final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-					DxvkStateCacheIO.write(targetPath, cache);
+			if (!entriesWithoutLocalCache.isEmpty()) {
+				try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
+					for (DxvkStateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
+						final String baseName=cacheInfo.getBaseName();
+						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
+						System.err.println(" -> writing  "+baseName+" to "+targetPath);
+						final DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
+						DxvkStateCacheIO.write(targetPath, cache);
+					}
+				}
+			}
+
+			// merge existing caches
+			Map<String, DxvkStateCacheInfo> entriesLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, baseNameToCacheTarget::containsKey);
+			System.err.println("updating "+entriesLocalCache.size()+" caches");
+			if (!entriesLocalCache.isEmpty()) {
+				try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
+					for (DxvkStateCacheInfo cacheInfo : entriesLocalCache.values()) {
+						final String baseName=cacheInfo.getBaseName();
+						final Path cacheFile=baseNameToCacheTarget.get(baseName);
+						final DxvkStateCache localCache=DxvkStateCacheIO.parse(cacheFile);
+						
+						final int localCacheEntriesSize=localCache.getEntries().size();
+						final Set<DxvkStateCacheEntry> missingEntries=restClient.getMissingEntries(localCache.toInfo());
+						if (missingEntries.isEmpty()) {
+							System.err.println(" -> "+baseName+" is up to date with "+localCacheEntriesSize+" entries");
+						} else {
+							System.err.println(" -> patching "+baseName+" with "+localCacheEntriesSize+", adding "+missingEntries.size()+" entries");
+							localCache.patch(missingEntries);
+							final Path tmpFile=cacheFile.resolveSibling(baseName+".tmp");
+							DxvkStateCacheIO.write(tmpFile, localCache);
+							Files.move(tmpFile, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+						}
+
+					}
 				}
 			}
 		}
