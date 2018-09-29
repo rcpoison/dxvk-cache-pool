@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -22,10 +23,12 @@ public class FsScanner {
 
 	private final ImmutableSet<ExecutableInfo> executables;
 	private final ImmutableSet<Path> cachePaths;
+	private final int visitedFiles;
 
-	private FsScanner(ImmutableSet<ExecutableInfo> executables, ImmutableSet<Path> caches) {
+	private FsScanner(ImmutableSet<ExecutableInfo> executables, ImmutableSet<Path> caches, int visitedFiles) {
 		this.executables=executables;
 		this.cachePaths=caches;
+		this.visitedFiles=visitedFiles;
 	}
 
 	public ImmutableSet<ExecutableInfo> getExecutables() {
@@ -36,6 +39,10 @@ public class FsScanner {
 		return cachePaths;
 	}
 
+	public int getVisitedFiles() {
+		return visitedFiles;
+	}
+
 	public static Path buildCachePath(ExecutableInfo executableInfo) {
 		final String fileNameString=executableInfo.getPath().getFileName().toString();
 		String cacheFileName=Util.removeFileExtension(fileNameString)+Util.DXVK_CACHE_EXT;
@@ -44,10 +51,12 @@ public class FsScanner {
 
 	public static FsScanner scan(Set<Path> baseDirectories) {
 		// walking the FS is slow, only do it once.
+		final AtomicInteger visited=new AtomicInteger();
 		final ImmutableSet<Path> paths=baseDirectories.parallelStream()
-				.map(FsScanner::scan)
+				.map(s -> FsScanner.scan(s, visited))
 				.flatMap(Collection::stream)
 				.collect(ImmutableSet.toImmutableSet());
+
 		ImmutableSet<Path> cachePaths=paths.stream()
 				.filter(Util.PREDICATE_CACHE)
 				.collect(ImmutableSet.toImmutableSet());
@@ -55,13 +64,14 @@ public class FsScanner {
 				.filter(Util.PREDICATE_EXE)
 				.map(ExecutableInfo::build)
 				.collect(ImmutableSet.toImmutableSet());
-		return new FsScanner(exec, cachePaths);
+		return new FsScanner(exec, cachePaths, visited.get());
 	}
 
-	private static ImmutableSet<Path> scan(Path baseDirectory) {
+	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited) {
 		try {
 			final ImmutableSet<Path> paths=Files.walk(baseDirectory)
 					.map(Path::toAbsolutePath)
+					.peek(p -> visited.incrementAndGet())
 					.filter(p -> null!=p.getParent())
 					.filter(p -> !p.getParent().endsWith("system32"))
 					.filter(p -> !p.getParent().endsWith("syswow64"))
