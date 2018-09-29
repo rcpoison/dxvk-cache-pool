@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -81,6 +82,13 @@ public class ExecutableInfo implements Serializable, Comparable<ExecutableInfo> 
 
 	public void setPath(Path path) {
 		this.path=path;
+	}
+
+	public String getbaseName() {
+		if (null==path) {
+			return null;
+		}
+		return Util.baseName(path);
 	}
 
 	@XmlTransient
