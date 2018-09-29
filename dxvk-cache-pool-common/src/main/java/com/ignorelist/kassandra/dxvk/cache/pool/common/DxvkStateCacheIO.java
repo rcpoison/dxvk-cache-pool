@@ -87,8 +87,8 @@ public class DxvkStateCacheIO {
 		byte[] entrySizeBytes=new byte[4];
 		inputStream.read(entrySizeBytes);
 		final int entrySize=parseUnsignedInt(entrySizeBytes);
-		if (entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX) {
-			throw new IllegalArgumentException("header corrupt? entry size exceeds "+StateCacheHeaderInfo.ENTRY_SIZE_MAX+": "+entrySize);
+		if (0==entrySize||entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX||(StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize)) {
+			throw new IllegalStateException("header corrupt? entry size: "+entrySize);
 		}
 
 		DxvkStateCache dxvkStateCache=new DxvkStateCache();
@@ -121,9 +121,14 @@ public class DxvkStateCacheIO {
 	}
 
 	public static void write(final OutputStream out, DxvkStateCache cache) throws IOException {
+		final int version=cache.getVersion();
+		final int entrySize=cache.getEntrySize();
+		if (StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize) {
+			throw new IllegalStateException("wrong entry size "+entrySize+" for version "+version);
+		}
 		out.write("DXVK".getBytes(Charsets.US_ASCII));
-		out.write(toUnsignedIntBytes(cache.getVersion()));
-		out.write(toUnsignedIntBytes(cache.getEntrySize()));
+		out.write(toUnsignedIntBytes(version));
+		out.write(toUnsignedIntBytes(entrySize));
 		cache.getEntries().stream()
 				.map(DxvkStateCacheEntry::getEntry)
 				.forEachOrdered(e -> {
