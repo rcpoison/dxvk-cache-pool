@@ -31,7 +31,7 @@ dxvk-cache-server
 
 Archlinux:
 
-See [PKGBUILD](PKGBUILD)
+See [PKGBUILD](arch/PKGBUILD)
 
 
 ## Usage
