@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
@@ -73,11 +74,21 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		return info;
 	}
 
-	public DxvkStateCache copy() {
+	/**
+	 * copy without entries
+	 *
+	 * @return
+	 */
+	public DxvkStateCache copyShallow() {
 		DxvkStateCache cache=new DxvkStateCache();
 		cache.setVersion(getVersion());
 		cache.setEntrySize(getEntrySize());
 		cache.setBaseName(getBaseName());
+		return cache;
+	}
+
+	public DxvkStateCache copy() {
+		DxvkStateCache cache=copyShallow();
 		if (null!=getEntries()) {
 			cache.setEntries(ImmutableSet.copyOf(getEntries()));
 		}
@@ -97,6 +108,28 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 
 	public void patch(DxvkStateCache other) {
 		patch(other.getEntries());
+	}
+
+	/**
+	 * get entries contained in this instance but missing in the passed instance
+	 *
+	 * @param other instance to check for missing entries
+	 * @return entries contained in this instance but missing in the passed instance
+	 */
+	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCache other) {
+		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
+	}
+
+	/**
+	 * get instance with entries contained in this instance but missing in the passed instance
+	 *
+	 * @param other instance to check for missing entries
+	 * @return instance with entries contained in this instance but missing in the passed instance
+	 */
+	public DxvkStateCache diff(DxvkStateCache other) {
+		DxvkStateCache diff=copyShallow();
+		diff.setEntries(getMissingEntries(other));
+		return diff;
 	}
 
 	@Override
