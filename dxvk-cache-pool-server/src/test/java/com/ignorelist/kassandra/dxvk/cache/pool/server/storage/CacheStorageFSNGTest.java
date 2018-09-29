@@ -92,6 +92,8 @@ public class CacheStorageFSNGTest {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			DxvkStateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache.toInfo());
+			assertEquals(result.getVersion(), cache.getVersion());
+			assertEquals(result.getEntrySize(), cache.getEntrySize());
 		}
 	}
 
@@ -100,6 +102,8 @@ public class CacheStorageFSNGTest {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			DxvkStateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache);
+			assertEquals(result.getVersion(), cache.getVersion());
+			assertEquals(result.getEntrySize(), cache.getEntrySize());
 		}
 	}
 

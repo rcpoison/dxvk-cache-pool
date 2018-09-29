@@ -14,6 +14,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
@@ -126,6 +127,7 @@ public class CacheStorageFS implements CacheStorage {
 	private static DxvkStateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
 		DxvkStateCacheInfo cacheInfo=new DxvkStateCacheInfo();
 		cacheInfo.setVersion(version);
+		cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 		cacheInfo.setBaseName(Util.baseName(relativePath));
 		final Set<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
