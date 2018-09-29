@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -63,8 +64,17 @@ public class DxvkCachePoolClient {
 				printHelp(options);
 				System.exit(0);
 			}
+
+			final Path envDxvkCachePath=getEnvDxvkCachePath();
+
 			if (commandLine.hasOption("t")) {
-				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("t")));
+				final Path targetPath=Paths.get(commandLine.getOptionValue("t"));
+				if (!Files.isDirectory(targetPath)) {
+					System.err.println("target path does not exist");
+				}
+				c.setCacheTargetPath(targetPath);
+			} else if (null!=envDxvkCachePath) {
+				c.setCacheTargetPath(envDxvkCachePath);
 			} else {
 				System.err.println("target path is required");
 				System.err.println();
@@ -97,6 +107,20 @@ public class DxvkCachePoolClient {
 		}
 		DxvkCachePoolClient client=new DxvkCachePoolClient(c);
 		client.merge();
+	}
+
+	private static Path getEnvDxvkCachePath() throws IOException {
+		String envDxvkCache=System.getenv("DXVK_STATE_CACHE_PATH");
+		if (!Strings.isNullOrEmpty(envDxvkCache)) {
+			String envDxvkCacheResolved=envDxvkCache.replaceFirst("^~/", System.getProperty("user.home")+"/");
+			try {
+				return Paths.get(envDxvkCacheResolved);
+			} catch (Exception e) {
+				System.err.println("failed to resolve DXVK_STATE_CACHE_PATH '"+envDxvkCache+"':"+e.getMessage());
+			}
+		}
+		System.err.println("warning: DXVK_STATE_CACHE_PATH is not set or could not be resolved. You should set it as a global environment variable for the sync to have any effect.");
+		return null;
 	}
 
 	private FsScanner scan() {
