@@ -41,6 +41,12 @@ import org.apache.commons.cli.ParseException;
  */
 public class DxvkCachePoolClient {
 
+	private final Configuration configuration;
+
+	public DxvkCachePoolClient(Configuration c) {
+		this.configuration=c;
+	}
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -87,20 +93,20 @@ public class DxvkCachePoolClient {
 			printHelp(options);
 			System.exit(1);
 		}
-
-		merge(c);
+		DxvkCachePoolClient client=new DxvkCachePoolClient(c);
+		client.merge();
 	}
 
-	private static FsScanner scan(Configuration c) {
+	private FsScanner scan() {
 		System.err.println("scanning directories");
-		FsScanner fs=FsScanner.scan(c.getCacheTargetPath(), c.getGamePaths());
+		FsScanner fs=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
 		return fs;
 	}
 
-	private static void merge(Configuration c) throws IOException {
-		final FsScanner fs=scan(c);
-		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
+	private void merge() throws IOException {
+		final FsScanner fs=scan();
+		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
 			final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
 					.stream()
 					.flatMap(Collection::stream)
@@ -111,7 +117,7 @@ public class DxvkCachePoolClient {
 			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
 
 			System.err.println("found "+cacheDescriptors.size()+" matching caches");
-			if (c.isVerbose()) {
+			if (configuration.isVerbose()) {
 				cacheDescriptors.forEach(d -> {
 					System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
 				});
@@ -120,12 +126,18 @@ public class DxvkCachePoolClient {
 				final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
 			}
 
-			// upload unkown caches
-			ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
-			ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));
-			System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
+			uploadUnknown(fs, cacheDescriptorsByBaseName);
+		}
+	}
+
+	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
+		// upload unkown caches
+		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
+		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));
+		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
+		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
-				System.err.println(" > uploading "+entry.getKey());
+				System.err.println(" -> uploading "+entry.getKey());
 				DxvkStateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
 				restClient.store(cache);
 			}
