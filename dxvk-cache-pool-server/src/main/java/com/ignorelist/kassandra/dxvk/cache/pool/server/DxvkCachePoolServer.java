@@ -157,6 +157,7 @@ public class DxvkCachePoolServer implements Closeable {
 	private static Options buildOptions() {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
+		options.addOption(Option.builder().longOpt("storage").numberOfArgs(1).argName("path").desc("Storage path").build());
 		options.addOption(Option.builder().longOpt("port").numberOfArgs(1).argName("port").desc("Server port").build());
 		options.addOption(Option.builder().longOpt("versions").hasArgs().argName("version").desc("DXVK state cache versions to accept").build());
 		return options;
