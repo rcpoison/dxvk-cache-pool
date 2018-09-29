@@ -26,7 +26,6 @@ import java.util.Set;
  */
 public class DxvkStateCacheIO {
 
-
 	public static DxvkStateCache parse(final Path path) throws IOException {
 		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
 			final DxvkStateCache cache=parse(is);
@@ -59,12 +58,14 @@ public class DxvkStateCacheIO {
 		byte[] versionBytes=new byte[4];
 		inputStream.read(versionBytes);
 		int version=parseUnsignedInt(versionBytes);
-		System.err.println(version);
 
 		byte[] entrySizeBytes=new byte[4];
 		inputStream.read(entrySizeBytes);
 		final int entrySize=parseUnsignedInt(entrySizeBytes);
-		System.err.println(entrySize);
+		if (entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX) {
+			throw new IllegalArgumentException("header corrupt? entry size exceeds "+StateCacheHeaderInfo.ENTRY_SIZE_MAX+": "+entrySize);
+		}
+
 		DxvkStateCache dxvkStateCache=new DxvkStateCache();
 		dxvkStateCache.setVersion(version);
 		dxvkStateCache.setEntrySize(entrySize);

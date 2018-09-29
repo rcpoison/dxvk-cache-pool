@@ -18,6 +18,7 @@ public final class StateCacheHeaderInfo {
 	private static final ImmutableMap<Integer, Integer> STATE_HEADER_VERSION_SIZE=ImmutableMap.<Integer, Integer>builder()
 			.put(2, 1824)
 			.build();
+	public	static final int ENTRY_SIZE_MAX=8192;
 
 	private StateCacheHeaderInfo() {
 	}
