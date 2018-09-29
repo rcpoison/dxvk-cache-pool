@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.google.common.base.Stopwatch;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +29,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
@@ -202,6 +204,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public DxvkStateCache getCache(final int version, final String baseName) {
+		final Stopwatch stopwatch=Stopwatch.createStarted();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
 		try {
@@ -220,6 +223,9 @@ public class CacheStorageFS implements CacheStorage {
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
 			cache.setEntries(task.get());
+			
+			final Duration elapsed=stopwatch.elapsed();
+			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
 			return cache;
 		} catch (RuntimeException e) {
 			throw e;
@@ -255,6 +261,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public void store(final DxvkStateCache cache) throws IOException {
+		final Stopwatch stopwatch=Stopwatch.createStarted();
 		final String baseName=cache.getBaseName();
 		final Lock writeLock=getWriteLock(baseName);
 		writeLock.lock();
@@ -278,9 +285,13 @@ public class CacheStorageFS implements CacheStorage {
 					-> newEntries.parallelStream()
 							.forEach(e -> writeCacheEntry(targetDirectory, e)));
 			task.get();
-
-			descriptor.getEntries().addAll(newEntries.stream().map(DxvkStateCacheEntry::getDescriptor).collect(ImmutableSet.toImmutableSet()));
+			final ImmutableSet<DxvkStateCacheEntryInfo> descriptors=newEntries.stream()
+					.map(DxvkStateCacheEntry::getDescriptor)
+					.collect(ImmutableSet.toImmutableSet());
+			descriptor.getEntries().addAll(descriptors);
 			descriptor.setLastModified(Instant.now().toEpochMilli());
+			final Duration elapsed=stopwatch.elapsed();
+			LOG.log(Level.INFO, "{0} stored {1} entries in {2}ms", new Object[]{baseName, descriptors.size(), elapsed.toMillis()});
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
