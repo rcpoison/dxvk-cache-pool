@@ -55,6 +55,12 @@
 			<groupId>com.fizzed</groupId>
 			<artifactId>rocker-runtime</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>dxvk-cache-pool-test</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
