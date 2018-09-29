@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestClient;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.IOException;
@@ -63,7 +64,7 @@ public class DxvkCachePoolClient {
 				System.err.println("no valid directories passed");
 				System.exit(1);
 			}
-			c.setPaths(paths);
+			c.setGamePaths(paths);
 		} catch (ParseException pe) {
 			System.err.println(pe.getMessage());
 			System.err.println();
@@ -76,7 +77,7 @@ public class DxvkCachePoolClient {
 
 	private static void merge(Configuration c) throws IOException {
 		System.err.println("scanning directories");
-		FsScanner fs=FsScanner.scan(c.getPaths());
+		FsScanner fs=FsScanner.scan(c.getGamePaths());
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(c.getHost())) {
 			final ImmutableSet<Path> executables=fs.getExecutables();
@@ -84,7 +85,7 @@ public class DxvkCachePoolClient {
 					.map(Util::baseName)
 					.collect(ImmutableSet.toImmutableSet());
 			System.err.println("looking up state caches for "+baseNames.size()+" baseNames");
-			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(2, baseNames);
+			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
 			System.err.println("found "+cacheDescriptors.size()+" matching state caches");
 			if (c.isVerbose()) {
 				cacheDescriptors.forEach(d -> {

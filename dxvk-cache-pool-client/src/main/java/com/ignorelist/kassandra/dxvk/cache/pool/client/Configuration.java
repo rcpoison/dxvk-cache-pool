@@ -15,7 +15,8 @@ import java.util.Set;
 public class Configuration {
 
 	private String host="http://localhost:16969";
-	private Set<Path> paths;
+	private Path cacheTargetPath;
+	private Set<Path> gamePaths;
 	private boolean verbose=false;
 
 	public String getHost() {
@@ -26,12 +27,20 @@ public class Configuration {
 		this.host=host;
 	}
 
-	public Set<Path> getPaths() {
-		return paths;
+	public Path getCacheTargetPath() {
+		return cacheTargetPath;
 	}
 
-	public void setPaths(Set<Path> paths) {
-		this.paths=paths;
+	public void setCacheTargetPath(Path cacheTargetPath) {
+		this.cacheTargetPath=cacheTargetPath;
+	}
+
+	public Set<Path> getGamePaths() {
+		return gamePaths;
+	}
+
+	public void setGamePaths(Set<Path> gamePaths) {
+		this.gamePaths=gamePaths;
 	}
 
 	public boolean isVerbose() {
