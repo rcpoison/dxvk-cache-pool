@@ -26,6 +26,6 @@ public interface CacheStorage extends Closeable {
 
 	Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo existingCache);
 
-	Set<String> findExecutables(int version, String subString);
+	Set<String> findBaseNames(int version, String subString);
 
 }

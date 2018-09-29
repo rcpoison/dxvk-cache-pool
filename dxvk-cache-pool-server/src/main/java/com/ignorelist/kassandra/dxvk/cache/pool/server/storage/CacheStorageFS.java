@@ -150,7 +150,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<String> findExecutables(final int version, final String subString) {
+	public Set<String> findBaseNames(final int version, final String subString) {
 		try {
 			return getStorageCache(version).keySet().stream()
 					.filter(e -> Strings.isNullOrEmpty(subString)||e.toLowerCase().contains(subString.toLowerCase()))

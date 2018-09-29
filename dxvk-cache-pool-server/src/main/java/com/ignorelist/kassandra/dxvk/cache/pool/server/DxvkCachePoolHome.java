@@ -54,7 +54,7 @@ public class DxvkCachePoolHome {
 	@Path("{a:(|index.html)}")
 	@Produces(MediaType.TEXT_HTML)
 	public Response list(@QueryParam("page") int page, @QueryParam("search") String search) {
-		final Set<String> executables=cacheStorage.findExecutables(VERSION, search);
+		final Set<String> executables=cacheStorage.findBaseNames(VERSION, search);
 		final int lastPage=executables.size()/PAGE_SIZE;
 		final int offset=PAGE_SIZE*Math.min(Math.max(page, 0), lastPage);
 		ImmutableSet<DxvkStateCacheInfo> executablesForPage=executables.stream()
@@ -74,7 +74,7 @@ public class DxvkCachePoolHome {
 		if (Strings.isNullOrEmpty(baseName)) {
 			throw new IllegalArgumentException("filename may not be empty");
 		}
-		final Optional<String> executableBaseName=cacheStorage.findExecutables(VERSION, baseName).stream()
+		final Optional<String> executableBaseName=cacheStorage.findBaseNames(VERSION, baseName).stream()
 				.findFirst();
 		if (!executableBaseName.isPresent()) {
 			throw new IllegalArgumentException("no executable entry found");

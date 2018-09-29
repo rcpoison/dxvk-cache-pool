@@ -110,12 +110,12 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("find/{version}/{subString}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public Set<String> findExecutables(@PathParam("version") int version, @PathParam("subString") String subString) {
+	public Set<String> findBaseNames(@PathParam("version") int version, @PathParam("subString") String subString) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (Strings.isNullOrEmpty(subString)) {
 			throw new IllegalArgumentException("search string must not be empty");
 		}
-		return cacheStorage.findExecutables(version, subString);
+		return cacheStorage.findBaseNames(version, subString);
 	}
 
 	@Override

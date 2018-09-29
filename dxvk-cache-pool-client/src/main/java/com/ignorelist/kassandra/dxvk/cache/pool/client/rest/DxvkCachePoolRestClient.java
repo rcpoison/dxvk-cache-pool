@@ -82,7 +82,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public Set<String> findExecutables(int version, String subString) {
+	public Set<String> findBaseNames(int version, String subString) {
 		return getWebTarget()
 				.path("cacheDescriptors")
 				.path(Integer.toString(version))
