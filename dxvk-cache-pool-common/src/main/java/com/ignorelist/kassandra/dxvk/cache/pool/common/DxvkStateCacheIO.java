@@ -133,9 +133,12 @@ public class DxvkStateCacheIO {
 				.map(DxvkStateCacheEntry::getEntry)
 				.forEachOrdered(e -> {
 					try {
+						if (entrySize!=e.length) {
+							throw new IllegalStateException("wrong entry size: "+e.length);
+						}
 						out.write(e);
 					} catch (IOException ex) {
-						throw new IllegalStateException("failed to write cache entry");
+						throw new IllegalStateException("failed to write cache entry", ex);
 					}
 				});
 
