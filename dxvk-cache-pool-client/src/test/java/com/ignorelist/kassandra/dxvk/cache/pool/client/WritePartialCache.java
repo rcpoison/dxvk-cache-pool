@@ -26,10 +26,10 @@ public class WritePartialCache {
 	public static void main(String[] args) throws IOException {
 		DxvkStateCache cache=DxvkStateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		ImmutableSet<DxvkStateCacheEntry> entries=cache.getEntries().stream()
-				.limit(100)
+				.limit(cache.getEntries().size()-32)
 				.collect(ImmutableSet.toImmutableSet());
 		cache.setEntries(entries);
-		DxvkStateCacheIO.write(Paths.get("/tmp/target/witcher3.dxvk-cache"), cache);
+		DxvkStateCacheIO.write(Paths.get("/tmp/target/Beat Saber.dxvk-cache"), cache);
 	}
 	
 }
