@@ -50,13 +50,6 @@ usage: dvxk-cache-client  directory... [-h] [--host <url>] [-t <path>]
     --verbose         verbose output
 ```
 
-#### Environment
-For everything to work you should set DXVK_STATE_CACHE_PATH as a global variable and point it to the directory you want to store your .dxvk-cache files in.
-
-See [dxvk.sh](dxvk.sh) for an example you can put directly into `/etc/profile.d/`.
-
-`dxvk-cache-client` will use DXVK_STATE_CACHE_PATH if defined, but you can override it with `-t`.
-
 #### Example
 
 Assuming you store your wine prefixes in `/usr/local/games/wine`, you can run it like:
