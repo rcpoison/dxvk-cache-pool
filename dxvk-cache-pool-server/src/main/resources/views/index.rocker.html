@@ -23,7 +23,7 @@
 				@if (p==page) {
 					@p
 				} else {
-					<a href="/index.html?search=@?search&page=@page">@p</a>
+					<a href="/index.html?search=@?search&page=@p">@p</a>
 				}
 			</li>
 			}
@@ -34,7 +34,7 @@
 			@for (entry : entries) {
 			<li>
 				@entry.getBaseName()
-				<a href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModified()</a>
+				<a href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
 			</li>
 			}
 		</ul>
