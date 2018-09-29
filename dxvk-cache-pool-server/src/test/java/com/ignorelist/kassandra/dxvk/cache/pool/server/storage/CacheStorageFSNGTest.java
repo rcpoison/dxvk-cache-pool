@@ -12,6 +12,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -57,52 +58,58 @@ public class CacheStorageFSNGTest {
 
 	@Test
 	public void testInit() throws Exception {
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		instance.init();
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			instance.init();
+		}
 	}
 
 	@Test(dependsOnMethods={"testStore"})
-	public void testFindBaseNames() {
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		Set<String> findBaseNames=instance.findBaseNames(cache.getVersion(), "beat");
-		assertEquals(findBaseNames, ImmutableSet.of(BASE_NAME));
+	public void testFindBaseNames() throws IOException {
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			Set<String> findBaseNames=instance.findBaseNames(cache.getVersion(), "beat");
+			assertEquals(findBaseNames, ImmutableSet.of(BASE_NAME));
+		}
 	}
 
 	@Test(dependsOnMethods={"testStore"})
-	public void testGetMissingEntries() {
+	public void testGetMissingEntries() throws IOException {
 		DxvkStateCacheInfo existingCache=cache.copy().toInfo();
 
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		Set<DxvkStateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
-		assertTrue(missingEntries.isEmpty());
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			Set<DxvkStateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
+			assertTrue(missingEntries.isEmpty());
 
-		DxvkStateCacheInfo empty=cache.copy().toInfo();
-		empty.setEntries(ImmutableSet.of());
-		Set<DxvkStateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
-		System.err.println(missingEntriesForEmpty.size());
-		assertEquals(missingEntriesForEmpty, cache.getEntries());
+			DxvkStateCacheInfo empty=cache.copy().toInfo();
+			empty.setEntries(ImmutableSet.of());
+			Set<DxvkStateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
+			System.err.println(missingEntriesForEmpty.size());
+			assertEquals(missingEntriesForEmpty, cache.getEntries());
+		}
 	}
 
 	@Test(dependsOnMethods={"testStore"})
-	public void testGetCacheDescriptor() {
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		DxvkStateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
-		assertEquals(result, cache.toInfo());
+	public void testGetCacheDescriptor() throws IOException {
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			DxvkStateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
+			assertEquals(result, cache.toInfo());
+		}
 	}
 
 	@Test(dependsOnMethods={"testStore"})
-	public void testGetCache() {
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		DxvkStateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
-		assertEquals(result, cache);
+	public void testGetCache() throws IOException {
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			DxvkStateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
+			assertEquals(result, cache);
+		}
 	}
 
 	@Test
 	public void testStore() throws Exception {
-		CacheStorageFS instance=new CacheStorageFS(storagePath);
-		instance.store(cache);
-		DxvkStateCache retrieved=instance.getCache(cache.getVersion(), BASE_NAME);
-		assertEquals(retrieved, cache);
+		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+			instance.store(cache);
+			DxvkStateCache retrieved=instance.getCache(cache.getVersion(), BASE_NAME);
+			assertEquals(retrieved, cache);
+		}
 	}
 
 }
