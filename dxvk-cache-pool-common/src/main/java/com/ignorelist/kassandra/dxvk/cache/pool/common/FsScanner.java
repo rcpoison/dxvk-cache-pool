@@ -26,12 +26,14 @@ public class FsScanner {
 	private final Path targetPath;
 	private final ImmutableSet<Path> executables;
 	private final ImmutableSet<Path> cachePaths;
+	private final ImmutableSet<Path> wineRoots;
 	private final int visitedFiles;
 
-	private FsScanner(Path targetPath, ImmutableSet<Path> executables, ImmutableSet<Path> caches, int visitedFiles) {
+	private FsScanner(Path targetPath, ImmutableSet<Path> executables, ImmutableSet<Path> caches, ImmutableSet<Path> wineRoots, int visitedFiles) {
 		this.targetPath=targetPath;
 		this.executables=executables;
 		this.cachePaths=caches;
+		this.wineRoots=wineRoots;
 		this.visitedFiles=visitedFiles;
 	}
 
@@ -41,6 +43,10 @@ public class FsScanner {
 
 	public ImmutableSet<Path> getStateCaches() {
 		return cachePaths;
+	}
+
+	public ImmutableSet<Path> getWineRoots() {
+		return wineRoots;
 	}
 
 	public ImmutableSet<Path> getStateCachesInTarget() {
@@ -79,7 +85,11 @@ public class FsScanner {
 		ImmutableSet<Path> exec=paths.stream()
 				.filter(Util.PREDICATE_EXE)
 				.collect(ImmutableSet.toImmutableSet());
-		return new FsScanner(targetPath, exec, cachePaths, visited.get());
+		ImmutableSet<Path> wineRoots=paths.stream()
+				.filter(Util.PREDICATE_DRIVEC_WINDOWS)
+				.map(Path::getParent)
+				.collect(ImmutableSet.toImmutableSet());
+		return new FsScanner(targetPath, exec, cachePaths, wineRoots, visited.get());
 	}
 
 	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited) {
@@ -93,8 +103,8 @@ public class FsScanner {
 					.filter(p -> !p.getParent().endsWith("syswow64"))
 					.filter(p -> !p.getParent().endsWith("fakedlls"))
 					.filter(p -> !p.getParent().endsWith("windows"))
-					.filter(Predicates.or(Util.PREDICATE_EXE, Util.PREDICATE_CACHE))
-					.filter(Files::isRegularFile)
+					.filter(Predicates.or(Util.PREDICATE_EXE, Util.PREDICATE_CACHE, Util.PREDICATE_DRIVEC_WINDOWS))
+					.filter(Predicates.or(Util.PREDICATE_DRIVEC_WINDOWS, Files::isRegularFile))
 					.collect(ImmutableSet.toImmutableSet());
 			return paths;
 		} catch (IOException ex) {

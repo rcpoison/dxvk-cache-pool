@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 /**
@@ -38,9 +39,21 @@ public final class Util {
 
 	}
 
+	private static final class WineRootPredicate implements Predicate<Path> {
+
+		private static final Path DRIVEC_WINDOWS=Paths.get("drive_c", "windows");
+
+		@Override
+		public boolean apply(Path input) {
+			return input.endsWith(DRIVEC_WINDOWS);
+		}
+
+	}
+
 	public static final String DXVK_CACHE_EXT=".dxvk-cache";
 	public static final Predicate<Path> PREDICATE_CACHE=new FileExtPredicate(DXVK_CACHE_EXT);
 	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new FileExtPredicate(".exe"), new FileExtPredicate(".EXE"));
+	public static final Predicate<Path> PREDICATE_DRIVEC_WINDOWS=new WineRootPredicate();
 	private static final Pattern SAFE_BASE_NAME=Pattern.compile("^[\\w. -]+$", Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CHARACTER_CLASS);
 
 	private Util() {
