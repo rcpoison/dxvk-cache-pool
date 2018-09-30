@@ -42,6 +42,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		this.baseName=baseName;
 	}
 
+	@XmlElement(required=true)
 	@Override
 	public int getVersion() {
 		return version;

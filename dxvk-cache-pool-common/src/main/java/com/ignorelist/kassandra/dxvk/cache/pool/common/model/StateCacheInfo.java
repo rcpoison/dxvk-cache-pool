@@ -52,6 +52,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		this.baseName=executableInfo;
 	}
 
+	@XmlElement(required=true)
 	@Override
 	public int getVersion() {
 		return version;
