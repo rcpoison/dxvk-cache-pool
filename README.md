@@ -9,7 +9,7 @@ Client:
 - Submits local DxvkStateCacheEntry's not present on server.
 
 Server:
-- Provides REST interface to access caches.
+- Centralized storage. Provides REST interface to access caches.
 
 
 Not affiliated with the DXVK project, please don't blame him if this destroys your cache files.
