@@ -64,20 +64,6 @@ public class CachePoolClient {
 				printHelp(options);
 				System.exit(0);
 			}
-//			if (commandLine.hasOption("t")) {
-//				final Path targetPath=Paths.get(commandLine.getOptionValue("t"));
-//				if (!Files.isDirectory(targetPath)) {
-//					System.err.println("target path does not exist");
-//				}
-//				c.setCacheTargetPath(targetPath);
-//			} else if (null!=envDxvkCachePath) {
-//				c.setCacheTargetPath(envDxvkCachePath);
-//			} else {
-//				System.err.println("target path is required");
-//				System.err.println();
-//				printHelp(options);
-//				System.exit(1);
-//			}
 
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
