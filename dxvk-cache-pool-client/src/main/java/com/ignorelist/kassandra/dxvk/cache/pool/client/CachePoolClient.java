@@ -42,11 +42,11 @@ import org.apache.commons.cli.ParseException;
  *
  * @author poison
  */
-public class DxvkCachePoolClient {
+public class CachePoolClient {
 
 	private final Configuration configuration;
 
-	private DxvkCachePoolClient(Configuration c) {
+	private CachePoolClient(Configuration c) {
 		this.configuration=c;
 	}
 
@@ -105,7 +105,7 @@ public class DxvkCachePoolClient {
 			printHelp(options);
 			System.exit(1);
 		}
-		DxvkCachePoolClient client=new DxvkCachePoolClient(c);
+		CachePoolClient client=new CachePoolClient(c);
 		client.merge();
 	}
 

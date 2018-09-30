@@ -62,7 +62,7 @@
 						</goals>
 						<configuration>
 							<classifier>boot</classifier>
-							<mainClass>com.ignorelist.kassandra.dxvk.cache.pool.client.DxvkCachePoolClient</mainClass>
+							<mainClass>com.ignorelist.kassandra.dxvk.cache.pool.client.CachePoolClient</mainClass>
 						</configuration>
 					</execution>
 				</executions>
