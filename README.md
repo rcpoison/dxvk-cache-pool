@@ -61,7 +61,7 @@ It doesn't affect steam/proton either, proton is doing it's own thing and overri
 
 ##### The convenient way
 
-For it to work for all wine prefixes set it up globally.
+Set it up globally.
 
 See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly into `/etc/profile.d/`. The arch package already includes it.
 
@@ -70,7 +70,7 @@ See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly
 
 If you don't want to set it up globally you have to set it before running wine, otherwise it won't use the shared caches.
 
-You can probably configure it in Lutris for the wine prefix you want to use, or create a wrapper script.
+You can probably configure it in Lutris for the wine prefix you want to use or create a wrapper script.
 
 
 ##### Why this is necessary
