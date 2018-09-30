@@ -17,19 +17,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class StateCacheEntry implements Serializable {
 
-	private StateCacheEntryInfo descriptor;
+	private StateCacheEntryInfo entryInfo;
 	private byte[] entry;
 
 	public StateCacheEntry() {
 	}
 
-	public StateCacheEntry(StateCacheEntryInfo descriptor, byte[] entry) {
-		this.descriptor=descriptor;
+	public StateCacheEntry(StateCacheEntryInfo entryInfo, byte[] entry) {
+		this.entryInfo=entryInfo;
 		this.entry=entry;
 	}
 
 	public StateCacheEntry(byte[] entry) {
-		descriptor=new StateCacheEntryInfo(entryHash(entry));
+		entryInfo=new StateCacheEntryInfo(entryHash(entry));
 		this.entry=entry;
 	}
 
@@ -37,12 +37,12 @@ public class StateCacheEntry implements Serializable {
 		return Hashing.sha256().hashBytes(entry).asBytes();
 	}
 
-	public StateCacheEntryInfo getDescriptor() {
-		return descriptor;
+	public StateCacheEntryInfo getEntryInfo() {
+		return entryInfo;
 	}
 
-	public void setDescriptor(StateCacheEntryInfo descriptor) {
-		this.descriptor=descriptor;
+	public void setEntryInfo(StateCacheEntryInfo entryInfo) {
+		this.entryInfo=entryInfo;
 	}
 
 	public byte[] getEntry() {
@@ -56,7 +56,7 @@ public class StateCacheEntry implements Serializable {
 	@Override
 	public int hashCode() {
 		int hash=7;
-		hash=37*hash+Objects.hashCode(this.descriptor);
+		hash=37*hash+Objects.hashCode(this.entryInfo);
 		return hash;
 	}
 
@@ -72,7 +72,7 @@ public class StateCacheEntry implements Serializable {
 			return false;
 		}
 		final StateCacheEntry other=(StateCacheEntry) obj;
-		if (!Objects.equals(this.descriptor, other.descriptor)) {
+		if (!Objects.equals(this.entryInfo, other.entryInfo)) {
 			return false;
 		}
 		return true;

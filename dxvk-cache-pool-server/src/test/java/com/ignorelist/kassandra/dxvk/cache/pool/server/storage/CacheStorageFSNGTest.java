@@ -104,7 +104,7 @@ public class CacheStorageFSNGTest {
 		existingCache.setEntries(entries);
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			Set<StateCacheEntryInfo> missingEntries=instance.getMissingEntries(existingCache).stream()
-					.map(StateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getEntryInfo)
 					.collect(ImmutableSet.toImmutableSet());
 			assertEquals(missingEntries, ImmutableSet.of(missing));
 			assertEquals(missingEntries.size(), 1);

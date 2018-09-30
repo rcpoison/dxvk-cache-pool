@@ -69,7 +69,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		info.setBaseName(getBaseName());
 		if (null!=getEntries()) {
 			final ImmutableSet<StateCacheEntryInfo> entryInfos=getEntries().stream()
-					.map(StateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getEntryInfo)
 					.collect(ImmutableSet.toImmutableSet());
 			info.setEntries(entryInfos);
 		}
@@ -143,7 +143,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 	public StateCache diff(StateCacheInfo other) {
 		StateCacheInfo info=toInfo();
 		ImmutableSet<StateCacheEntryInfo> missingEntryInfos=info.getMissingEntries(other);
-		ImmutableMap<StateCacheEntryInfo, StateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), StateCacheEntry::getDescriptor);
+		ImmutableMap<StateCacheEntryInfo, StateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), StateCacheEntry::getEntryInfo);
 		ImmutableSet<StateCacheEntry> missingEntries=missingEntryInfos.stream()
 				.map(indexByInfo::get)
 				.collect(ImmutableSet.toImmutableSet());

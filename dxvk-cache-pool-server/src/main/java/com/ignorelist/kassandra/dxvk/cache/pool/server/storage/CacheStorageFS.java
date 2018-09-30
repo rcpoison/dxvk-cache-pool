@@ -248,7 +248,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	private static void writeCacheEntry(final Path targetDirectory, final StateCacheEntry dxvkStateCacheEntry) {
-		final String fileName=BASE16.encode(dxvkStateCacheEntry.getDescriptor().getHash());
+		final String fileName=BASE16.encode(dxvkStateCacheEntry.getEntryInfo().getHash());
 		final Path targetFile=targetDirectory.resolve(fileName);
 		try (InputStream entryContent=new ByteArrayInputStream(dxvkStateCacheEntry.getEntry())) {
 			try (OutputStream out=new GZIPOutputStream(Files.newOutputStream(targetFile))) {
@@ -279,14 +279,14 @@ public class CacheStorageFS implements CacheStorage {
 			final Path targetDirectory=buildTargetDirectory(cache);
 			Files.createDirectories(targetDirectory);
 			final ImmutableSet<StateCacheEntry> newEntries=cache.getEntries().stream()
-					.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
+					.filter(e -> !descriptor.getEntries().contains(e.getEntryInfo()))
 					.collect(ImmutableSet.toImmutableSet());
 			ForkJoinTask<?> task=getThreadPool().submit(()
 					-> newEntries.parallelStream()
 							.forEach(e -> writeCacheEntry(targetDirectory, e)));
 			task.get();
 			final ImmutableSet<StateCacheEntryInfo> descriptors=newEntries.stream()
-					.map(StateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getEntryInfo)
 					.collect(ImmutableSet.toImmutableSet());
 			descriptor.getEntries().addAll(descriptors);
 			descriptor.setLastModified(Instant.now().toEpochMilli());
