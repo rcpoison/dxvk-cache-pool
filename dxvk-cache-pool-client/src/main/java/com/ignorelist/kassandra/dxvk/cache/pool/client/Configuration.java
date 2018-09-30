@@ -5,7 +5,11 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 /**
@@ -13,6 +17,8 @@ import java.util.Set;
  * @author poison
  */
 public class Configuration {
+
+	public static final String WINE_PREFIX_SYMLINK="dxvk-cache-pool";
 
 	private String host="http://kassandra.ignorelist.com:16969/";
 	private Path cacheTargetPath;
@@ -27,12 +33,28 @@ public class Configuration {
 		this.host=host;
 	}
 
-	public Path getCacheTargetPath() {
+	public synchronized Path getCacheTargetPath() throws IOException {
+		if (null==cacheTargetPath) {
+			Path xdgCacheHome=null;
+			try {
+				xdgCacheHome=Util.getEnvPath("XDG_CACHE_HOME");
+				System.err.println("XDG_CACHE_HOME: "+xdgCacheHome);
+				if (!Files.isDirectory(xdgCacheHome)) {
+					System.err.println("no dir");
+					xdgCacheHome=null;
+				}
+			} catch (Exception e) {
+			}
+			Path t=null;
+			if (null!=xdgCacheHome) {
+				t=xdgCacheHome.resolve(WINE_PREFIX_SYMLINK);
+			} else {
+				t=Paths.get(System.getProperty("user.home"), ".cache", WINE_PREFIX_SYMLINK);
+			}
+			Files.createDirectories(t);
+			return t;
+		}
 		return cacheTargetPath;
-	}
-
-	public void setCacheTargetPath(Path cacheTargetPath) {
-		this.cacheTargetPath=cacheTargetPath;
 	}
 
 	public Set<Path> getGamePaths() {

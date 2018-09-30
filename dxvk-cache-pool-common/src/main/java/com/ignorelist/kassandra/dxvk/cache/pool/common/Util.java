@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingInputStream;
@@ -104,6 +105,24 @@ public final class Util {
 
 	public static Path cacheFileForBaseName(Path targetPath, String baseName) {
 		return targetPath.resolve(cacheFileNameForBaseName(baseName));
+	}
+
+	public static Path parseUnixPath(String path) {
+		final String parsedPath=path.replaceFirst("^~/", System.getProperty("user.home")+"/");
+		final Path resolvedPath=Paths.get(parsedPath);
+		return resolvedPath;
+	}
+	
+	public static Path getEnvPath(final String envVar) {
+		final String envPath=System.getenv(envVar);
+		if (!Strings.isNullOrEmpty(envPath)) {
+			try {
+				return Util.parseUnixPath(envPath);
+			} catch (Exception e) {
+				System.err.println("failed to resolve '"+envVar+"' '"+envPath+"': "+e.getMessage());
+			}
+		}
+		return null;
 	}
 
 }

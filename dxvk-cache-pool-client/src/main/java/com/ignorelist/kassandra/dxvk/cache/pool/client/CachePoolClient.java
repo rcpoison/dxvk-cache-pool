@@ -6,7 +6,6 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -24,6 +23,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -66,21 +66,21 @@ public class CachePoolClient {
 			}
 
 			final Path envDxvkCachePath=getEnvDxvkCachePath();
-
-			if (commandLine.hasOption("t")) {
-				final Path targetPath=Paths.get(commandLine.getOptionValue("t"));
-				if (!Files.isDirectory(targetPath)) {
-					System.err.println("target path does not exist");
-				}
-				c.setCacheTargetPath(targetPath);
-			} else if (null!=envDxvkCachePath) {
-				c.setCacheTargetPath(envDxvkCachePath);
-			} else {
-				System.err.println("target path is required");
-				System.err.println();
-				printHelp(options);
-				System.exit(1);
-			}
+//			if (commandLine.hasOption("t")) {
+//				final Path targetPath=Paths.get(commandLine.getOptionValue("t"));
+//				if (!Files.isDirectory(targetPath)) {
+//					System.err.println("target path does not exist");
+//				}
+//				c.setCacheTargetPath(targetPath);
+//			} else if (null!=envDxvkCachePath) {
+//				c.setCacheTargetPath(envDxvkCachePath);
+//			} else {
+//				System.err.println("target path is required");
+//				System.err.println();
+//				printHelp(options);
+//				System.exit(1);
+//			}
+			
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
@@ -110,20 +110,15 @@ public class CachePoolClient {
 	}
 
 	private static Path getEnvDxvkCachePath() throws IOException {
-		String envDxvkCache=System.getenv("DXVK_STATE_CACHE_PATH");
-		if (!Strings.isNullOrEmpty(envDxvkCache)) {
-			String envDxvkCacheResolved=envDxvkCache.replaceFirst("^~/", System.getProperty("user.home")+"/");
-			try {
-				return Paths.get(envDxvkCacheResolved);
-			} catch (Exception e) {
-				System.err.println("failed to resolve DXVK_STATE_CACHE_PATH '"+envDxvkCache+"':"+e.getMessage());
-			}
+		final Path dxvkStateCachePath=Util.getEnvPath("DXVK_STATE_CACHE_PATH");
+		if (null!=dxvkStateCachePath) {
+			return dxvkStateCachePath;
 		}
-		System.err.println("warning: DXVK_STATE_CACHE_PATH is not set or could not be resolved. You should set it as a global environment variable for the sync to have any effect.");
+		System.err.println("warning: DXVK_STATE_CACHE_PATH is not set or could not be resolved. You should set it as a global environment variable for the synced .dxvk-cache files to be uses.");
 		return null;
 	}
 
-	private FsScanner scan() {
+	private FsScanner scan() throws IOException {
 		System.err.println("scanning directories");
 		FsScanner fs=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
 		System.err.println("scanned "+fs.getVisitedFiles()+" files");
@@ -139,6 +134,22 @@ public class CachePoolClient {
 		}
 	}
 
+	private void prepareWinePrefixes(final FsScanner fs) throws IOException {
+		System.err.println("preparing wine prefixes");
+
+		for (Path wineDriveC : fs.getWineRoots()) {
+			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
+			if (!Files.isSymbolicLink(symLink)) {
+				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
+					System.err.println(" -> warning: "+symLink+" exists and is a directory/file instead of a symlink. dxvk-cache-pool will not work for this wine prefix.");
+				} else {
+					System.err.println("-> creating symlink from "+symLink+" to "+configuration.getCacheTargetPath());
+					Files.createSymbolicLink(symLink, configuration.getCacheTargetPath());
+				}
+			}
+		}
+	}
+
 	private void merge() throws IOException {
 		final FsScanner fs=scan();
 		final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
@@ -146,6 +157,8 @@ public class CachePoolClient {
 				.flatMap(Collection::stream)
 				.map(Util::baseName)
 				.collect(ImmutableSet.toImmutableSet());
+
+		prepareWinePrefixes(fs);
 
 		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
 		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
@@ -244,7 +257,7 @@ public class CachePoolClient {
 	private static Options buildOptions() {
 		Options options=new Options();
 		options.addOption("h", "help", false, "show this help");
-		options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
+		//options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
 		return options;
