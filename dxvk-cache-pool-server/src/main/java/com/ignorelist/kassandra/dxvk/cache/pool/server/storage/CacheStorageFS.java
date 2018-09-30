@@ -223,7 +223,7 @@ public class CacheStorageFS implements CacheStorage {
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
 			cache.setEntries(task.get());
-			
+
 			final Duration elapsed=stopwatch.elapsed();
 			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
 			return cache;
@@ -263,6 +263,9 @@ public class CacheStorageFS implements CacheStorage {
 	public void store(final StateCache cache) throws IOException {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
 		final String baseName=cache.getBaseName();
+		if (!Util.isSafeBaseName(baseName)) {
+			throw new IllegalArgumentException("unsafe basename: "+baseName);
+		}
 		final Lock writeLock=getWriteLock(baseName);
 		writeLock.lock();
 		try {
