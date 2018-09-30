@@ -210,9 +210,16 @@ public class CachePoolClient {
 		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
-				System.err.println(" -> uploading "+entry.getKey());
-				StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
+				final String baseName=entry.getKey();
+				System.err.println(" -> uploading "+baseName);
+				final StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
 				restClient.store(cache);
+
+				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
+				if (!Files.exists(targetPath)) {
+					System.err.println(" -> "+baseName+" does not yet exist in target directory, copying to "+targetPath);
+					StateCacheIO.writeAtomic(targetPath, cache);
+				}
 			}
 		}
 	}
