@@ -78,7 +78,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	public void init() throws IOException {
-		getStorageCache(0);
+		getStorageCache(StateCacheHeaderInfo.getLatestVersion());
 	}
 
 	private Lock getReadLock(String baseName) {
