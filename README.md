@@ -18,7 +18,7 @@ Not affiliated with the DXVK project, please don't blame him if this destroys yo
 
 Prerequisites:
 - maven 3
-- openjdk >= 8
+- openjdk 8
 
 Build: 
 ```bash
@@ -38,7 +38,8 @@ See [PKGBUILD](arch/PKGBUILD)
 
 ## Usage
 
-Both client and server require Java >= 8.
+Both client and server require Java 8.
+For the moment doesn't run with Java 10.
 
 ### Client
 
