@@ -132,7 +132,7 @@ public class DxvkCachePoolClient {
 
 	private ImmutableMap<String, DxvkStateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-			System.err.println("looking up state caches for "+baseNames.size()+" possible games");
+			System.err.println("looking up remove caches for "+baseNames.size()+" possible games");
 			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
 			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
 			return cacheDescriptorsByBaseName;
@@ -151,7 +151,7 @@ public class DxvkCachePoolClient {
 		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 		if (configuration.isVerbose()) {
 			cacheDescriptorsByBaseName.values().forEach(d -> {
-				System.err.println(" -> "+d.getBaseName()+", "+d.getEntries().size()+" entries");
+				System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
 			});
 		}
 
@@ -165,7 +165,7 @@ public class DxvkCachePoolClient {
 					for (DxvkStateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-						System.err.println(" -> writing "+baseName+" to "+targetPath);
+						System.err.println(" -> "+baseName+": writing to "+targetPath);
 						final DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
 						DxvkStateCacheIO.write(targetPath, cache);
 					}
@@ -186,9 +186,9 @@ public class DxvkCachePoolClient {
 						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
 						final Set<DxvkStateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
 						if (missingEntries.isEmpty()) {
-							System.err.println(" -> "+baseName+" is up to date with "+localCacheEntriesSize+" entries");
+							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
 						} else {
-							System.err.println(" -> patching "+baseName+" with "+localCacheEntriesSize+" entries, adding "+missingEntries.size()+" entries");
+							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							localCache.patch(missingEntries);
 							final Path tmpFile=cacheFile.resolveSibling(baseName+".tmp");
 							DxvkStateCacheIO.write(tmpFile, localCache);
@@ -197,7 +197,7 @@ public class DxvkCachePoolClient {
 
 						final DxvkStateCache missingOnServer=localCache.diff(cacheInfo);
 						if (!missingOnServer.getEntries().isEmpty()) {
-							System.err.println(" -> "+baseName+" sending "+missingOnServer.getEntries().size()+" missing entries to remote");
+							System.err.println(" -> "+baseName+": sending "+missingOnServer.getEntries().size()+" missing entries to remote");
 							restClient.store(missingOnServer);
 						}
 					}
