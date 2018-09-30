@@ -31,5 +31,5 @@ package_dxvk-cache-server-git() {
 package_dxvk-cache-client-git() {
   cd "$_pkgname"
   install -Dm755 dxvk-cache-client -t "$pkgdir"/usr/bin
-  install -Dm755 dxvk.sh -t "$pkgdir"/etc/profile.d
+  install -Dm755 dxvk-cache-pool.sh -t "$pkgdir"/etc/profile.d
 }
