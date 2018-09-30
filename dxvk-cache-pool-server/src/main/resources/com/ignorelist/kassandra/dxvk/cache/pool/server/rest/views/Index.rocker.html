@@ -1,0 +1,54 @@
+@import java.util.*
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.Util
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.model.*
+@import com.google.common.base.Strings
+
+@args (Set<StateCacheInfo> entries, int pages, int page, String search)
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>DXVK cache pool</title>
+		<link rel="stylesheet" href="/s/main.css">
+	</head>
+	<body>
+		<div class="topnav">
+			<h1>DXVK cache pool</h1>
+			<div class="search-container">
+			<form action="/index.html" method="get">
+				<input type="text" name="search" value="@?search">
+				<button type="submit">Search</button>
+			</form>
+				</div>
+		</div>
+		<h2>Download</h2>
+		<div>Please use the <a href="https://github.com/rcpoison/dxvk-cache-pool/">client</a> instead.</div>
+		<div>
+		<hr/>
+		</div>
+		@if (pages>1) {
+		<div class="pagination">
+			@for (int p=0; p < pages; ++p) {
+
+			@if (p==page) {
+			<a class="active" href="#">@p</a>
+			} else {
+			<a href="/index.html?search=@?search&page=@p">@p</a>
+			}
+			}
+		</div>
+		}
+		@if (!entries.isEmpty()) {
+		<ul>
+			@for (entry : entries) {
+			<li class="entry">
+				<span class="gameName">@entry.getBaseName()</span> <span class="entryCount">(@entry.getEntries().size())</span>
+				<a class="download" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
+			</li>
+			}
+		</ul>
+		} else {
+		<div>Pool is empty.</div>
+		}
+	</body>
+</html>
