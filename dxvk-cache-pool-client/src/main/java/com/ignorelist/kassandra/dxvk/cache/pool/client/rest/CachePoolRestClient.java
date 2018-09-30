@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author poison
  */
-public class DxvkCachePoolRestClient extends AbstractRestClient implements CacheStorage {
+public class CachePoolRestClient extends AbstractRestClient implements CacheStorage {
 
 	private static final String PATH="pool";
 
@@ -30,7 +30,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	private static final GenericType<Set<StateCacheEntry>> TYPE_CACHE_ENTRY_SET=new GenericType<Set<StateCacheEntry>>() {
 	};
 
-	public DxvkCachePoolRestClient(String baseUrl) {
+	public CachePoolRestClient(String baseUrl) {
 		super(baseUrl);
 	}
 
