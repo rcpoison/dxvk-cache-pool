@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -64,8 +65,6 @@ public class CachePoolClient {
 				printHelp(options);
 				System.exit(0);
 			}
-
-			final Path envDxvkCachePath=getEnvDxvkCachePath();
 //			if (commandLine.hasOption("t")) {
 //				final Path targetPath=Paths.get(commandLine.getOptionValue("t"));
 //				if (!Files.isDirectory(targetPath)) {
@@ -80,7 +79,7 @@ public class CachePoolClient {
 //				printHelp(options);
 //				System.exit(1);
 //			}
-			
+
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
@@ -105,17 +104,13 @@ public class CachePoolClient {
 			printHelp(options);
 			System.exit(1);
 		}
+		final String expectedStateCachePath="/"+Configuration.WINE_PREFIX_SYMLINK;
+		// check env for DXVK_STATE_CACHE_PATH
+		if (!Objects.equals(System.getenv("DXVK_STATE_CACHE_PATH"), expectedStateCachePath)) {
+			System.err.println("!warning: DXVK_STATE_CACHE_PATH is set to: '"+System.getenv("DXVK_STATE_CACHE_PATH")+"', expected: '"+expectedStateCachePath+"'");
+		}
 		CachePoolClient client=new CachePoolClient(c);
 		client.merge();
-	}
-
-	private static Path getEnvDxvkCachePath() throws IOException {
-		final Path dxvkStateCachePath=Util.getEnvPath("DXVK_STATE_CACHE_PATH");
-		if (null!=dxvkStateCachePath) {
-			return dxvkStateCachePath;
-		}
-		System.err.println("warning: DXVK_STATE_CACHE_PATH is not set or could not be resolved. You should set it as a global environment variable for the synced .dxvk-cache files to be uses.");
-		return null;
 	}
 
 	private FsScanner scan() throws IOException {
