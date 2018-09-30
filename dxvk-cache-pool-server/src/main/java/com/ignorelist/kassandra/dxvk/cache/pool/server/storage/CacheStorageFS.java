@@ -18,7 +18,7 @@ import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
@@ -166,7 +166,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<DxvkStateCacheEntry> getMissingEntries(final DxvkStateCacheInfo existingCache) {
+	public Set<StateCacheEntry> getMissingEntries(final DxvkStateCacheInfo existingCache) {
 		final String baseName=existingCache.getBaseName();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
@@ -178,7 +178,7 @@ public class CacheStorageFS implements CacheStorage {
 			}
 			final Set<DxvkStateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
 			final Path targetDirectory=buildTargetDirectory(existingCache);
-			ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
+			ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
 					-> missingEntries.parallelStream()
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
@@ -218,7 +218,7 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setBaseName(baseName);
 			cache.setVersion(cacheDescriptor.getVersion());
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
-			final ForkJoinTask<ImmutableSet<DxvkStateCacheEntry>> task=getThreadPool().submit(()
+			final ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
 					-> cacheDescriptor.getEntries().parallelStream()
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
@@ -236,18 +236,18 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	private DxvkStateCacheEntry readCacheEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
+	private StateCacheEntry readCacheEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
 		final Path entryFile=targetDirectory.resolve(BASE16.encode(cacheEntryInfo.getHash()));
 		try (InputStream entryStream=new GZIPInputStream(Files.newInputStream(entryFile))) {
 			final byte[] entryData=ByteStreams.toByteArray(entryStream);
-			return new DxvkStateCacheEntry(cacheEntryInfo, entryData);
+			return new StateCacheEntry(cacheEntryInfo, entryData);
 		} catch (IOException ex) {
 			LOG.log(Level.SEVERE, null, ex);
 			throw new IllegalStateException("failed to read entry: "+cacheEntryInfo, ex);
 		}
 	}
 
-	private static void writeCacheEntry(final Path targetDirectory, final DxvkStateCacheEntry dxvkStateCacheEntry) {
+	private static void writeCacheEntry(final Path targetDirectory, final StateCacheEntry dxvkStateCacheEntry) {
 		final String fileName=BASE16.encode(dxvkStateCacheEntry.getDescriptor().getHash());
 		final Path targetFile=targetDirectory.resolve(fileName);
 		try (InputStream entryContent=new ByteArrayInputStream(dxvkStateCacheEntry.getEntry())) {
@@ -278,7 +278,7 @@ public class CacheStorageFS implements CacheStorage {
 
 			final Path targetDirectory=buildTargetDirectory(cache);
 			Files.createDirectories(targetDirectory);
-			final ImmutableSet<DxvkStateCacheEntry> newEntries=cache.getEntries().stream()
+			final ImmutableSet<StateCacheEntry> newEntries=cache.getEntries().stream()
 					.filter(e -> !descriptor.getEntries().contains(e.getDescriptor()))
 					.collect(ImmutableSet.toImmutableSet());
 			ForkJoinTask<?> task=getThreadPool().submit(()
@@ -286,7 +286,7 @@ public class CacheStorageFS implements CacheStorage {
 							.forEach(e -> writeCacheEntry(targetDirectory, e)));
 			task.get();
 			final ImmutableSet<DxvkStateCacheEntryInfo> descriptors=newEntries.stream()
-					.map(DxvkStateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getDescriptor)
 					.collect(ImmutableSet.toImmutableSet());
 			descriptor.getEntries().addAll(descriptors);
 			descriptor.setLastModified(Instant.now().toEpochMilli());

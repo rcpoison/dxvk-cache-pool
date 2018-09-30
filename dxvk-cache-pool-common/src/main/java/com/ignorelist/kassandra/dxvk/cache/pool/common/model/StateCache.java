@@ -22,7 +22,7 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 	private String baseName;
 	private int version;
 	private int entrySize;
-	private Set<DxvkStateCacheEntry> entries;
+	private Set<StateCacheEntry> entries;
 
 	public StateCache() {
 	}
@@ -54,11 +54,11 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 		this.entrySize=entrySize;
 	}
 
-	public Set<DxvkStateCacheEntry> getEntries() {
+	public Set<StateCacheEntry> getEntries() {
 		return entries;
 	}
 
-	public void setEntries(Set<DxvkStateCacheEntry> entries) {
+	public void setEntries(Set<StateCacheEntry> entries) {
 		this.entries=entries;
 	}
 
@@ -69,7 +69,7 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 		info.setBaseName(getBaseName());
 		if (null!=getEntries()) {
 			final ImmutableSet<DxvkStateCacheEntryInfo> entryInfos=getEntries().stream()
-					.map(DxvkStateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getDescriptor)
 					.collect(ImmutableSet.toImmutableSet());
 			info.setEntries(entryInfos);
 		}
@@ -97,11 +97,11 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 		return cache;
 	}
 
-	public void patch(Set<DxvkStateCacheEntry> other) {
+	public void patch(Set<StateCacheEntry> other) {
 		if (null==other||other.isEmpty()) {
 			return;
 		}
-		ImmutableSet<DxvkStateCacheEntry> combined=ImmutableSet.<DxvkStateCacheEntry>builder()
+		ImmutableSet<StateCacheEntry> combined=ImmutableSet.<StateCacheEntry>builder()
 				.addAll(getEntries())
 				.addAll(other)
 				.build();
@@ -118,7 +118,7 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
-	public Set<DxvkStateCacheEntry> getMissingEntries(StateCache other) {
+	public Set<StateCacheEntry> getMissingEntries(StateCache other) {
 		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
 	}
 
@@ -143,8 +143,8 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 	public StateCache diff(DxvkStateCacheInfo other) {
 		DxvkStateCacheInfo info=toInfo();
 		ImmutableSet<DxvkStateCacheEntryInfo> missingEntryInfos=info.getMissingEntries(other);
-		ImmutableMap<DxvkStateCacheEntryInfo, DxvkStateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), DxvkStateCacheEntry::getDescriptor);
-		ImmutableSet<DxvkStateCacheEntry> missingEntries=missingEntryInfos.stream()
+		ImmutableMap<DxvkStateCacheEntryInfo, StateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), StateCacheEntry::getDescriptor);
+		ImmutableSet<StateCacheEntry> missingEntries=missingEntryInfos.stream()
 				.map(indexByInfo::get)
 				.collect(ImmutableSet.toImmutableSet());
 		StateCache diff=copyShallow();

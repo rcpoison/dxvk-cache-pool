@@ -7,7 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.util.Set;
 import javax.ws.rs.client.Entity;
@@ -27,7 +27,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	};
 	private static final GenericType<Set<DxvkStateCacheInfo>> TYPE_CACHE_INFO_SET=new GenericType<Set<DxvkStateCacheInfo>>() {
 	};
-	private static final GenericType<Set<DxvkStateCacheEntry>> TYPE_CACHE_ENTRY_SET=new GenericType<Set<DxvkStateCacheEntry>>() {
+	private static final GenericType<Set<StateCacheEntry>> TYPE_CACHE_ENTRY_SET=new GenericType<Set<StateCacheEntry>>() {
 	};
 
 	public DxvkCachePoolRestClient(String baseUrl) {
@@ -66,7 +66,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
+	public Set<StateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
 		return getWebTarget()
 				.path("missingCacheEntries")
 				.request(MediaType.APPLICATION_JSON)

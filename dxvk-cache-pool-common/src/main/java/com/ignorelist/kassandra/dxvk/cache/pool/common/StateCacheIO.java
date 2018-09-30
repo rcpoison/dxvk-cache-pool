@@ -9,7 +9,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,10 +61,10 @@ public class StateCacheIO {
 		struct DxvkStateCacheHeader {
 		  char     magic[4]   = { 'D', 'X', 'V', 'K' };
 		  uint32_t version    = 1;
-		  uint32_t entrySize  = sizeof(DxvkStateCacheEntry);
+		  uint32_t entrySize  = sizeof(StateCacheEntry);
 		};
 
-		struct DxvkStateCacheEntry {
+		struct StateCacheEntry {
 		  DxvkStateCacheKey             shaders;
 		  DxvkGraphicsPipelineStateInfo state;
 		  DxvkRenderPassFormat          format;
@@ -107,8 +107,8 @@ public class StateCacheIO {
 			}
 			bareEntries.add(entry);
 		}
-		ImmutableSet<DxvkStateCacheEntry> cacheEntries=bareEntries.parallelStream()
-				.map(DxvkStateCacheEntry::new)
+		ImmutableSet<StateCacheEntry> cacheEntries=bareEntries.parallelStream()
+				.map(StateCacheEntry::new)
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(cacheEntries);
 		return dxvkStateCache;
@@ -130,7 +130,7 @@ public class StateCacheIO {
 		out.write(toUnsignedIntBytes(version));
 		out.write(toUnsignedIntBytes(entrySize));
 		cache.getEntries().stream()
-				.map(DxvkStateCacheEntry::getEntry)
+				.map(StateCacheEntry::getEntry)
 				.forEachOrdered(e -> {
 					try {
 						if (entrySize!=e.length) {

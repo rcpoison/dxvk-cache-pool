@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
@@ -78,7 +78,7 @@ public class CacheStorageFSNGTest {
 	public void testGetMissingEntriesMissingNone() throws IOException {
 		DxvkStateCacheInfo existingCache=cache.copy().toInfo();
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			Set<DxvkStateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
+			Set<StateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
 			assertTrue(missingEntries.isEmpty());
 
 		}
@@ -89,7 +89,7 @@ public class CacheStorageFSNGTest {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			DxvkStateCacheInfo empty=cache.copy().toInfo();
 			empty.setEntries(ImmutableSet.of());
-			Set<DxvkStateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
+			Set<StateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
 			assertEquals(missingEntriesForEmpty, cache.getEntries());
 		}
 	}
@@ -104,7 +104,7 @@ public class CacheStorageFSNGTest {
 		existingCache.setEntries(entries);
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			Set<DxvkStateCacheEntryInfo> missingEntries=instance.getMissingEntries(existingCache).stream()
-					.map(DxvkStateCacheEntry::getDescriptor)
+					.map(StateCacheEntry::getDescriptor)
 					.collect(ImmutableSet.toImmutableSet());
 			assertEquals(missingEntries, ImmutableSet.of(missing));
 			assertEquals(missingEntries.size(), 1);

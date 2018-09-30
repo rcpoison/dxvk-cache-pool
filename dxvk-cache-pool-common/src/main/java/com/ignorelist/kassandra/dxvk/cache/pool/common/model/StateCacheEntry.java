@@ -15,20 +15,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class DxvkStateCacheEntry implements Serializable {
+public class StateCacheEntry implements Serializable {
 
 	private DxvkStateCacheEntryInfo descriptor;
 	private byte[] entry;
 
-	public DxvkStateCacheEntry() {
+	public StateCacheEntry() {
 	}
 
-	public DxvkStateCacheEntry(DxvkStateCacheEntryInfo descriptor, byte[] entry) {
+	public StateCacheEntry(DxvkStateCacheEntryInfo descriptor, byte[] entry) {
 		this.descriptor=descriptor;
 		this.entry=entry;
 	}
 
-	public DxvkStateCacheEntry(byte[] entry) {
+	public StateCacheEntry(byte[] entry) {
 		descriptor=new DxvkStateCacheEntryInfo(entryHash(entry));
 		this.entry=entry;
 	}
@@ -71,7 +71,7 @@ public class DxvkStateCacheEntry implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final DxvkStateCacheEntry other=(DxvkStateCacheEntry) obj;
+		final StateCacheEntry other=(StateCacheEntry) obj;
 		if (!Objects.equals(this.descriptor, other.descriptor)) {
 			return false;
 		}

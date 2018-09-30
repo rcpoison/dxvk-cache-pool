@@ -20,7 +20,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -184,7 +184,7 @@ public class DxvkCachePoolClient {
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
-						final Set<DxvkStateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
+						final Set<StateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
 						if (missingEntries.isEmpty()) {
 							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
 						} else {

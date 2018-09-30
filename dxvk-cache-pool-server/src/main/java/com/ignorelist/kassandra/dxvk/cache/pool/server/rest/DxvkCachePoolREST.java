@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
@@ -81,7 +81,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
+	public Set<StateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
 		}
@@ -99,9 +99,9 @@ public class DxvkCachePoolREST implements CacheStorage {
 		}
 		new DxvkStateCacheValidator().validate(dxvkStateCache);
 		// don't trust passed hashes, just rebuild the entries
-		ImmutableSet<DxvkStateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
-				.map(DxvkStateCacheEntry::getEntry)
-				.map(DxvkStateCacheEntry::new)
+		ImmutableSet<StateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
+				.map(StateCacheEntry::getEntry)
+				.map(StateCacheEntry::new)
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(entyCopies);
 		cacheStorage.store(dxvkStateCache);
