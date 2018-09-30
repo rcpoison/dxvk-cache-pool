@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -199,9 +198,7 @@ public class CachePoolClient {
 						} else {
 							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							localCache.patch(missingEntries);
-							final Path tmpFile=cacheFile.resolveSibling(baseName+".tmp");
-							StateCacheIO.write(tmpFile, localCache);
-							Files.move(tmpFile, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+							StateCacheIO.writeAtomic(cacheFile, localCache);
 						}
 
 						final StateCache missingOnServer=localCache.diff(cacheInfo);

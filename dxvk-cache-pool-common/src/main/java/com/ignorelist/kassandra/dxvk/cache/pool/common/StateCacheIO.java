@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -112,6 +113,13 @@ public class StateCacheIO {
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(cacheEntries);
 		return dxvkStateCache;
+	}
+
+	public static void writeAtomic(final Path path, StateCache cache) throws IOException {
+		final String baseName=Util.baseName(path);
+		final Path tmpFile=path.resolveSibling(baseName+".tmp");
+		write(tmpFile, cache);
+		Files.move(tmpFile, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	public static void write(final Path path, StateCache cache) throws IOException {
