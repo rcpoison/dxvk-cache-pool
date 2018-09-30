@@ -57,13 +57,13 @@ public class DxvkStateCacheIONGTest {
 		final byte[] stateCacheData=TestUtil.readStateCacheData();
 		Assert.assertEquals(stateCacheData.length, 1008684);
 
-		DxvkStateCache stateCache=DxvkStateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
+		DxvkStateCache stateCache=StateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
 		Assert.assertEquals(stateCache.getVersion(), 2);
 		Assert.assertEquals(stateCache.getEntrySize(), StateCacheHeaderInfo.getEntrySize(2).intValue());
 		Assert.assertEquals(stateCache.getEntries().size(), 553);
 
 		final ByteArrayOutputStream baos=new ByteArrayOutputStream();
-		DxvkStateCacheIO.write(baos, stateCache);
+		StateCacheIO.write(baos, stateCache);
 
 		Assert.assertEquals(baos.toByteArray(), stateCacheData);
 	}

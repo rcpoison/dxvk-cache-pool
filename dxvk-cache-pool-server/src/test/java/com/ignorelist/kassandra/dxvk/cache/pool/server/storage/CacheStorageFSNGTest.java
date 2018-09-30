@@ -6,7 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
@@ -43,7 +43,7 @@ public class CacheStorageFSNGTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		storagePath=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool").resolve(UUID.randomUUID().toString());
-		cache=DxvkStateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
+		cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		cache.setBaseName(BASE_NAME);
 	}
 

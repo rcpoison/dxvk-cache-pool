@@ -9,7 +9,7 @@ import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
@@ -81,7 +81,7 @@ public class DxvkCachePoolHome {
 			throw new IllegalStateException("cache not found for: "+baseName);
 		}
 		final StreamingOutput streamingOutput=(OutputStream output) -> {
-			DxvkStateCacheIO.write(output, cache);
+			StateCacheIO.write(output, cache);
 		};
 		return Response
 				.ok(streamingOutput)

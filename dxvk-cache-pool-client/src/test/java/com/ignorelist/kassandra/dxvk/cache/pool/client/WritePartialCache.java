@@ -6,7 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
@@ -24,12 +24,12 @@ public class WritePartialCache {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) throws IOException {
-		DxvkStateCache cache=DxvkStateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
+		DxvkStateCache cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		ImmutableSet<DxvkStateCacheEntry> entries=cache.getEntries().stream()
 				.limit(cache.getEntries().size()-32)
 				.collect(ImmutableSet.toImmutableSet());
 		cache.setEntries(entries);
-		DxvkStateCacheIO.write(Paths.get("/tmp/target/Beat Saber.dxvk-cache"), cache);
+		StateCacheIO.write(Paths.get("/tmp/target/Beat Saber.dxvk-cache"), cache);
 	}
 	
 }

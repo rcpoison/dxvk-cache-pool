@@ -15,7 +15,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.DxvkCachePoolRestClient;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.DxvkStateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
@@ -167,7 +167,7 @@ public class DxvkCachePoolClient {
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
 						final DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
-						DxvkStateCacheIO.write(targetPath, cache);
+						StateCacheIO.write(targetPath, cache);
 					}
 				}
 			}
@@ -180,7 +180,7 @@ public class DxvkCachePoolClient {
 					for (DxvkStateCacheInfo cacheInfo : entriesLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
-						final DxvkStateCache localCache=DxvkStateCacheIO.parse(cacheFile);
+						final DxvkStateCache localCache=StateCacheIO.parse(cacheFile);
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
@@ -191,7 +191,7 @@ public class DxvkCachePoolClient {
 							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							localCache.patch(missingEntries);
 							final Path tmpFile=cacheFile.resolveSibling(baseName+".tmp");
-							DxvkStateCacheIO.write(tmpFile, localCache);
+							StateCacheIO.write(tmpFile, localCache);
 							Files.move(tmpFile, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 						}
 
@@ -226,7 +226,7 @@ public class DxvkCachePoolClient {
 	private static DxvkStateCache readMerged(Set<Path> paths) throws IOException {
 		DxvkStateCache cache=null;
 		for (Path path : paths) {
-			DxvkStateCache parsed=DxvkStateCacheIO.parse(path);
+			DxvkStateCache parsed=StateCacheIO.parse(path);
 			if (null==cache) {
 				cache=parsed;
 			} else {

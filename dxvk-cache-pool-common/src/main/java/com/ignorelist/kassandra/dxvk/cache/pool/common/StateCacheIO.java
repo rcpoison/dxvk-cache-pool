@@ -27,9 +27,9 @@ import java.util.logging.Logger;
  *
  * @author poison
  */
-public class DxvkStateCacheIO {
+public class StateCacheIO {
 
-	private static final Logger LOG=Logger.getLogger(DxvkStateCacheIO.class.getName());
+	private static final Logger LOG=Logger.getLogger(StateCacheIO.class.getName());
 
 	/**
 	 * Parse DxvkStateCache and its entries.
