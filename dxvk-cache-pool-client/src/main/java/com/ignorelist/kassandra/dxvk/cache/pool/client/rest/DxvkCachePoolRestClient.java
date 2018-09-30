@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import java.util.Set;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -25,7 +25,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 
 	private static final GenericType<Set<String>> TYPE_STRING_SETn=new GenericType<Set<String>>() {
 	};
-	private static final GenericType<Set<DxvkStateCacheInfo>> TYPE_CACHE_INFO_SET=new GenericType<Set<DxvkStateCacheInfo>>() {
+	private static final GenericType<Set<StateCacheInfo>> TYPE_CACHE_INFO_SET=new GenericType<Set<StateCacheInfo>>() {
 	};
 	private static final GenericType<Set<StateCacheEntry>> TYPE_CACHE_ENTRY_SET=new GenericType<Set<StateCacheEntry>>() {
 	};
@@ -39,7 +39,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 		return super.getWebTarget().path(PATH);
 	}
 
-	public Set<DxvkStateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
+	public Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
 		return getWebTarget()
 				.path("cacheDescriptors")
 				.path(Integer.toString(version))
@@ -48,12 +48,12 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(int version, String baseName) {
+	public StateCacheInfo getCacheDescriptor(int version, String baseName) {
 		return getWebTarget()
 				.path("cacheDescriptor")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(baseName), DxvkStateCacheInfo.class);
+				.post(Entity.json(baseName), StateCacheInfo.class);
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public Set<StateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
+	public Set<StateCacheEntry> getMissingEntries(StateCacheInfo cacheInfo) {
 		return getWebTarget()
 				.path("missingCacheEntries")
 				.request(MediaType.APPLICATION_JSON)

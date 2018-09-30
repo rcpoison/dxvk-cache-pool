@@ -21,7 +21,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -130,11 +130,11 @@ public class DxvkCachePoolClient {
 		return fs;
 	}
 
-	private ImmutableMap<String, DxvkStateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
+	private ImmutableMap<String, StateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
 			System.err.println("looking up remove caches for "+baseNames.size()+" possible games");
-			Set<DxvkStateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
-			ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, DxvkStateCacheInfo::getBaseName);
+			Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
+			ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
 			return cacheDescriptorsByBaseName;
 		}
 	}
@@ -147,7 +147,7 @@ public class DxvkCachePoolClient {
 				.map(Util::baseName)
 				.collect(ImmutableSet.toImmutableSet());
 
-		ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
+		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
 		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 		if (configuration.isVerbose()) {
 			cacheDescriptorsByBaseName.values().forEach(d -> {
@@ -158,11 +158,11 @@ public class DxvkCachePoolClient {
 		if (!cacheDescriptorsByBaseName.isEmpty()) {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
-			Map<String, DxvkStateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
+			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-					for (DxvkStateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
+					for (StateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
@@ -173,17 +173,17 @@ public class DxvkCachePoolClient {
 			}
 
 			// merge existing caches
-			Map<String, DxvkStateCacheInfo> entriesLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, baseNameToCacheTarget::containsKey);
+			Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
-					for (DxvkStateCacheInfo cacheInfo : entriesLocalCache.values()) {
+					for (StateCacheInfo cacheInfo : entriesLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
-						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
+						final StateCacheInfo localCacheInfo=localCache.toInfo();
 						final Set<StateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
 						if (missingEntries.isEmpty()) {
 							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
@@ -209,7 +209,7 @@ public class DxvkCachePoolClient {
 		uploadUnknown(fs, cacheDescriptorsByBaseName);
 	}
 
-	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, DxvkStateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
+	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
 		// upload unkown caches
 		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
 		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));

@@ -14,7 +14,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import java.io.OutputStream;
 import java.util.Set;
 import javax.inject.Inject;
@@ -57,7 +57,7 @@ public class DxvkCachePoolHome {
 		final Set<String> cacheInfos=cacheStorage.findBaseNames(VERSION, search);
 		final int lastPage=cacheInfos.size()/PAGE_SIZE;
 		final int offset=PAGE_SIZE*Math.min(Math.max(page, 0), lastPage);
-		ImmutableSet<DxvkStateCacheInfo> cacheInfosForPage=cacheInfos.stream()
+		ImmutableSet<StateCacheInfo> cacheInfosForPage=cacheInfos.stream()
 				.sorted()
 				.skip(offset)
 				.limit(PAGE_SIZE)

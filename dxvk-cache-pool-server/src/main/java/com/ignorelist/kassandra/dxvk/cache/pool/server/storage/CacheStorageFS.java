@@ -19,7 +19,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import java.io.ByteArrayInputStream;
@@ -63,7 +63,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	private final Path storageRoot;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
-	private ConcurrentMap<Integer, ConcurrentMap<String, DxvkStateCacheInfo>> storageCache;
+	private ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> storageCache;
 	private ForkJoinPool storageThreadPool;
 
 	public CacheStorageFS(Path storageRoot) {
@@ -93,7 +93,7 @@ public class CacheStorageFS implements CacheStorage {
 		return writeLock;
 	}
 
-	private synchronized ConcurrentMap<String, DxvkStateCacheInfo> getStorageCache(int version) throws IOException {
+	private synchronized ConcurrentMap<String, StateCacheInfo> getStorageCache(int version) throws IOException {
 		if (null==storageCache) {
 			Files.createDirectories(storageRoot);
 
@@ -102,10 +102,10 @@ public class CacheStorageFS implements CacheStorage {
 					.map(Path::getFileName)
 					.map(Path::toString)
 					.collect(ImmutableSet.toImmutableSet());
-			ConcurrentMap<Integer, ConcurrentMap<String, DxvkStateCacheInfo>> m=new ConcurrentHashMap<>();
+			ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> m=new ConcurrentHashMap<>();
 			for (String versionString : versions) {
 				try {
-					ConcurrentMap<String, DxvkStateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
+					ConcurrentMap<String, StateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
 					final int currentVersion=Integer.parseInt(versionString);
 					final Path versionDirectory=storageRoot.resolve(versionString);
 					final ImmutableSetMultimap<Path, Path> entriesInRelativePath=Files.walk(versionDirectory)
@@ -126,8 +126,8 @@ public class CacheStorageFS implements CacheStorage {
 		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
 	}
 
-	private static DxvkStateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
-		DxvkStateCacheInfo cacheInfo=new DxvkStateCacheInfo();
+	private static StateCacheInfo buildCacheDescriptor(final Path relativePath, final Collection<Path> cacheEntryPaths, int version) {
+		StateCacheInfo cacheInfo=new StateCacheInfo();
 		cacheInfo.setVersion(version);
 		cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 		cacheInfo.setBaseName(Util.baseName(relativePath));
@@ -166,13 +166,13 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public Set<StateCacheEntry> getMissingEntries(final DxvkStateCacheInfo existingCache) {
+	public Set<StateCacheEntry> getMissingEntries(final StateCacheInfo existingCache) {
 		final String baseName=existingCache.getBaseName();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
 		try {
 			final int version=existingCache.getVersion();
-			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
+			final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
 			}
@@ -193,7 +193,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(final int version, final String baseName) {
+	public StateCacheInfo getCacheDescriptor(final int version, final String baseName) {
 		try {
 			return getStorageCache(version).get(baseName);
 		} catch (Exception ex) {
@@ -208,7 +208,7 @@ public class CacheStorageFS implements CacheStorage {
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
 		try {
-			final DxvkStateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
+			final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
 			}
@@ -267,8 +267,8 @@ public class CacheStorageFS implements CacheStorage {
 		writeLock.lock();
 		try {
 			final int version=cache.getVersion();
-			final DxvkStateCacheInfo descriptor=getStorageCache(version).computeIfAbsent(baseName, w -> {
-				DxvkStateCacheInfo d=new DxvkStateCacheInfo();
+			final StateCacheInfo descriptor=getStorageCache(version).computeIfAbsent(baseName, w -> {
+				StateCacheInfo d=new StateCacheInfo();
 				d.setVersion(version);
 				d.setEntrySize(cache.getEntrySize());
 				d.setBaseName(baseName);

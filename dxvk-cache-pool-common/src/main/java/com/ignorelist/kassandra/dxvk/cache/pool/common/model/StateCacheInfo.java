@@ -22,12 +22,12 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author poison
  */
 @XmlRootElement
-public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
+public class StateCacheInfo implements DxvkStateCacheMeta, Serializable {
 
-	public static final Comparator<DxvkStateCacheInfo> COMPARATOR_EXE_NAME=Comparator
-			.comparing(DxvkStateCacheInfo::getBaseName, Comparator.nullsFirst(Comparator.naturalOrder()))
-			.thenComparing(DxvkStateCacheInfo::getLastModified, Comparator.nullsFirst(Comparator.naturalOrder()))
-			.thenComparingInt(DxvkStateCacheInfo::getVersion);
+	public static final Comparator<StateCacheInfo> COMPARATOR_EXE_NAME=Comparator
+			.comparing(StateCacheInfo::getBaseName, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.thenComparing(StateCacheInfo::getLastModified, Comparator.nullsFirst(Comparator.naturalOrder()))
+			.thenComparingInt(StateCacheInfo::getVersion);
 
 	@NotNull
 	private String baseName;
@@ -36,7 +36,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	private Long lastModified;
 	private Set<StateCacheEntryInfo> entries;
 
-	public DxvkStateCacheInfo() {
+	public StateCacheInfo() {
 	}
 
 	@NotNull
@@ -98,7 +98,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
-	public ImmutableSet<StateCacheEntryInfo> getMissingEntries(DxvkStateCacheInfo other) {
+	public ImmutableSet<StateCacheEntryInfo> getMissingEntries(StateCacheInfo other) {
 		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
 	}
 
@@ -122,7 +122,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final DxvkStateCacheInfo other=(DxvkStateCacheInfo) obj;
+		final StateCacheInfo other=(StateCacheInfo) obj;
 		if (this.version!=other.version) {
 			return false;
 		}

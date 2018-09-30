@@ -62,8 +62,8 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 		this.entries=entries;
 	}
 
-	public DxvkStateCacheInfo toInfo() {
-		DxvkStateCacheInfo info=new DxvkStateCacheInfo();
+	public StateCacheInfo toInfo() {
+		StateCacheInfo info=new StateCacheInfo();
 		info.setVersion(getVersion());
 		info.setEntrySize(getEntrySize());
 		info.setBaseName(getBaseName());
@@ -140,8 +140,8 @@ public class StateCache implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return instance with entries contained in this instance but missing in the passed instance
 	 */
-	public StateCache diff(DxvkStateCacheInfo other) {
-		DxvkStateCacheInfo info=toInfo();
+	public StateCache diff(StateCacheInfo other) {
+		StateCacheInfo info=toInfo();
 		ImmutableSet<StateCacheEntryInfo> missingEntryInfos=info.getMissingEntries(other);
 		ImmutableMap<StateCacheEntryInfo, StateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), StateCacheEntry::getDescriptor);
 		ImmutableSet<StateCacheEntry> missingEntries=missingEntryInfos.stream()

@@ -10,7 +10,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -76,7 +76,7 @@ public class CacheStorageFSNGTest {
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingNone() throws IOException {
-		DxvkStateCacheInfo existingCache=cache.copy().toInfo();
+		StateCacheInfo existingCache=cache.copy().toInfo();
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			Set<StateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
 			assertTrue(missingEntries.isEmpty());
@@ -87,7 +87,7 @@ public class CacheStorageFSNGTest {
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingAll() throws IOException {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			DxvkStateCacheInfo empty=cache.copy().toInfo();
+			StateCacheInfo empty=cache.copy().toInfo();
 			empty.setEntries(ImmutableSet.of());
 			Set<StateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
 			assertEquals(missingEntriesForEmpty, cache.getEntries());
@@ -96,7 +96,7 @@ public class CacheStorageFSNGTest {
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingPartial() throws IOException {
-		DxvkStateCacheInfo existingCache=cache.copy().toInfo();
+		StateCacheInfo existingCache=cache.copy().toInfo();
 		Set<StateCacheEntryInfo> entries=new HashSet<>(existingCache.getEntries());
 		Iterator<StateCacheEntryInfo> iterator=entries.iterator();
 		StateCacheEntryInfo missing=iterator.next();
@@ -114,7 +114,7 @@ public class CacheStorageFSNGTest {
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetCacheDescriptor() throws IOException {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			DxvkStateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
+			StateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache.toInfo());
 			assertEquals(result.getVersion(), cache.getVersion());
 			assertEquals(result.getEntrySize(), cache.getEntrySize());

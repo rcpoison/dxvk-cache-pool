@@ -12,7 +12,7 @@ import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
@@ -43,7 +43,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("cacheDescriptors/{version}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<DxvkStateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<String> baseNames) {
+	public Set<StateCacheInfo> getCacheDescriptors(@PathParam("version") int version, Set<String> baseNames) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseNames) {
 			throw new IllegalArgumentException("missing executableInfos");
@@ -59,7 +59,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public DxvkStateCacheInfo getCacheDescriptor(@PathParam("version") int version, String baseName) {
+	public StateCacheInfo getCacheDescriptor(@PathParam("version") int version, String baseName) {
 		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(baseName)));
 	}
 
@@ -81,7 +81,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public Set<StateCacheEntry> getMissingEntries(DxvkStateCacheInfo cacheInfo) {
+	public Set<StateCacheEntry> getMissingEntries(StateCacheInfo cacheInfo) {
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
 		}
