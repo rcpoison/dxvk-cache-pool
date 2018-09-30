@@ -20,9 +20,9 @@ import org.testng.annotations.Test;
  *
  * @author poison
  */
-public class DxvkStateCacheIONGTest {
+public class StateCacheIONGTest {
 
-	public DxvkStateCacheIONGTest() {
+	public StateCacheIONGTest() {
 	}
 
 	@BeforeClass
