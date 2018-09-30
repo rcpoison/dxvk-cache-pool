@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -41,6 +42,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 
 	@NotNull
 	@Size(min=1, max=256)
+	@XmlElement(required=true)
 	@Override
 	public String getBaseName() {
 		return baseName;

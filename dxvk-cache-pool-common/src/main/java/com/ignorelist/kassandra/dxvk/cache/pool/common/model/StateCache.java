@@ -12,6 +12,9 @@ import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  *
@@ -27,6 +30,9 @@ public class StateCache implements StateCacheMeta, Serializable {
 	public StateCache() {
 	}
 
+	@NotNull
+	@Size(min=1, max=256)
+	@XmlElement(required=true)
 	@Override
 	public String getBaseName() {
 		return baseName;
