@@ -34,7 +34,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	private int version;
 	private int entrySize;
 	private Long lastModified;
-	private Set<DxvkStateCacheEntryInfo> entries;
+	private Set<StateCacheEntryInfo> entries;
 
 	public DxvkStateCacheInfo() {
 	}
@@ -68,11 +68,11 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 		this.entrySize=entrySize;
 	}
 
-	public Set<DxvkStateCacheEntryInfo> getEntries() {
+	public Set<StateCacheEntryInfo> getEntries() {
 		return entries;
 	}
 
-	public void setEntries(Set<DxvkStateCacheEntryInfo> entries) {
+	public void setEntries(Set<StateCacheEntryInfo> entries) {
 		this.entries=entries;
 	}
 
@@ -98,7 +98,7 @@ public class DxvkStateCacheInfo implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
-	public ImmutableSet<DxvkStateCacheEntryInfo> getMissingEntries(DxvkStateCacheInfo other) {
+	public ImmutableSet<StateCacheEntryInfo> getMissingEntries(DxvkStateCacheInfo other) {
 		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
 	}
 

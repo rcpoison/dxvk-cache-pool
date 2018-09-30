@@ -17,19 +17,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class StateCacheEntry implements Serializable {
 
-	private DxvkStateCacheEntryInfo descriptor;
+	private StateCacheEntryInfo descriptor;
 	private byte[] entry;
 
 	public StateCacheEntry() {
 	}
 
-	public StateCacheEntry(DxvkStateCacheEntryInfo descriptor, byte[] entry) {
+	public StateCacheEntry(StateCacheEntryInfo descriptor, byte[] entry) {
 		this.descriptor=descriptor;
 		this.entry=entry;
 	}
 
 	public StateCacheEntry(byte[] entry) {
-		descriptor=new DxvkStateCacheEntryInfo(entryHash(entry));
+		descriptor=new StateCacheEntryInfo(entryHash(entry));
 		this.entry=entry;
 	}
 
@@ -37,11 +37,11 @@ public class StateCacheEntry implements Serializable {
 		return Hashing.sha256().hashBytes(entry).asBytes();
 	}
 
-	public DxvkStateCacheEntryInfo getDescriptor() {
+	public StateCacheEntryInfo getDescriptor() {
 		return descriptor;
 	}
 
-	public void setDescriptor(DxvkStateCacheEntryInfo descriptor) {
+	public void setDescriptor(StateCacheEntryInfo descriptor) {
 		this.descriptor=descriptor;
 	}
 

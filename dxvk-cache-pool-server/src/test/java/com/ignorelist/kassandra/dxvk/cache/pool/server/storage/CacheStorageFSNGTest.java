@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
@@ -97,13 +97,13 @@ public class CacheStorageFSNGTest {
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingPartial() throws IOException {
 		DxvkStateCacheInfo existingCache=cache.copy().toInfo();
-		Set<DxvkStateCacheEntryInfo> entries=new HashSet<>(existingCache.getEntries());
-		Iterator<DxvkStateCacheEntryInfo> iterator=entries.iterator();
-		DxvkStateCacheEntryInfo missing=iterator.next();
+		Set<StateCacheEntryInfo> entries=new HashSet<>(existingCache.getEntries());
+		Iterator<StateCacheEntryInfo> iterator=entries.iterator();
+		StateCacheEntryInfo missing=iterator.next();
 		iterator.remove();
 		existingCache.setEntries(entries);
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			Set<DxvkStateCacheEntryInfo> missingEntries=instance.getMissingEntries(existingCache).stream()
+			Set<StateCacheEntryInfo> missingEntries=instance.getMissingEntries(existingCache).stream()
 					.map(StateCacheEntry::getDescriptor)
 					.collect(ImmutableSet.toImmutableSet());
 			assertEquals(missingEntries, ImmutableSet.of(missing));

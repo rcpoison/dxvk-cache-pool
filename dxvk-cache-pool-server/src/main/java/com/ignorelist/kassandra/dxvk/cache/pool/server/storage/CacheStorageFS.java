@@ -20,7 +20,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -131,11 +131,11 @@ public class CacheStorageFS implements CacheStorage {
 		cacheInfo.setVersion(version);
 		cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 		cacheInfo.setBaseName(Util.baseName(relativePath));
-		final Set<DxvkStateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
+		final Set<StateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
 				.map(Path::toString)
 				.map(BASE16::decode)
-				.map(h -> new DxvkStateCacheEntryInfo(h))
+				.map(h -> new StateCacheEntryInfo(h))
 				.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
 		cacheInfo.setEntries(entryDescriptors);
 		final Optional<FileTime> lastModified=cacheEntryPaths.stream()
@@ -176,7 +176,7 @@ public class CacheStorageFS implements CacheStorage {
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
 			}
-			final Set<DxvkStateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
+			final Set<StateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
 			final Path targetDirectory=buildTargetDirectory(existingCache);
 			ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
 					-> missingEntries.parallelStream()
@@ -236,7 +236,7 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	private StateCacheEntry readCacheEntry(final Path targetDirectory, final DxvkStateCacheEntryInfo cacheEntryInfo) {
+	private StateCacheEntry readCacheEntry(final Path targetDirectory, final StateCacheEntryInfo cacheEntryInfo) {
 		final Path entryFile=targetDirectory.resolve(BASE16.encode(cacheEntryInfo.getHash()));
 		try (InputStream entryStream=new GZIPInputStream(Files.newInputStream(entryFile))) {
 			final byte[] entryData=ByteStreams.toByteArray(entryStream);
@@ -285,7 +285,7 @@ public class CacheStorageFS implements CacheStorage {
 					-> newEntries.parallelStream()
 							.forEach(e -> writeCacheEntry(targetDirectory, e)));
 			task.get();
-			final ImmutableSet<DxvkStateCacheEntryInfo> descriptors=newEntries.stream()
+			final ImmutableSet<StateCacheEntryInfo> descriptors=newEntries.stream()
 					.map(StateCacheEntry::getDescriptor)
 					.collect(ImmutableSet.toImmutableSet());
 			descriptor.getEntries().addAll(descriptors);
