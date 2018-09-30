@@ -2,6 +2,8 @@
 
 Client/server to share DXVK pipeline caches.
 
+This only works for regular wine prefixes, as steam/proton does it's own thing, and probably much better.
+
 Client:
 - Fetches missing DxvkStateCacheEntry's and patches the .dxvk-cache.
 - Submits local DxvkStateCacheEntry's not present on server.
@@ -46,9 +48,16 @@ usage: dvxk-cache-client  directory... [-h] [--host <url>] [-t <path>]
        [--verbose]
  -h,--help            show this help
     --host <url>      Server URL
- -t,--target <path>   Target path to store caches
     --verbose         verbose output
 ```
+
+#### Environment
+
+For everything to work you should set DXVK_STATE_CACHE_PATH as a global variable and point it to '/dxvk-cache-pool'.
+Note that it is a windows path and points to 'C:/dxvk-cache-pool' in the wine prefix and not your root directory.
+
+See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly into `/etc/profile.d/`. The arch package already includes it.
+
 
 #### Example
 
@@ -58,6 +67,7 @@ Assuming you store your wine prefixes in `/usr/local/games/wine`, you can run it
 $ ./dxvk-cache-client /usr/local/games/wine
 scanning directories
 scanned 77522 files
+preparing wine prefixes
 looking up state caches for 235 possible games
 found 3 matching caches
 writing 1 new caches
@@ -69,7 +79,8 @@ updating 2 caches
 found 0 candidates for upload
 ```
 
-It will search for exe files in the passed directories and update the .dxvk-cache's for you.
+You can pass multiple directories. The directories should contain wine prefixes.
+It will search for exe files in the passed directories and automatically update the .dxvk-cache's for you.
 
 
 ### Server
