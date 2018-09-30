@@ -5,8 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.DxvkCachePoolREST;
-import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.DxvkCachePoolHome;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolREST;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
@@ -70,8 +70,8 @@ public class CachePoolServer implements Closeable {
 
 	private ResourceConfig buildResourceConfig() {
 		ResourceConfig resourceConfig=new ResourceConfig();
-		resourceConfig.register(DxvkCachePoolREST.class);
-		resourceConfig.register(DxvkCachePoolHome.class);
+		resourceConfig.register(CachePoolREST.class);
+		resourceConfig.register(CachePoolHome.class);
 		resourceConfig.register(new ServerBinder(configuration, cacheStorage));
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;

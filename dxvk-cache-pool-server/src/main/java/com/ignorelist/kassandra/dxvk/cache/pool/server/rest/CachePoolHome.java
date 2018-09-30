@@ -33,7 +33,7 @@ import views.index;
  * @author poison
  */
 @Path("/")
-public class DxvkCachePoolHome {
+public class CachePoolHome {
 
 	private static final int PAGE_SIZE=64;
 	private static final int VERSION=StateCacheHeaderInfo.getLatestVersion();

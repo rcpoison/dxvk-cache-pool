@@ -32,7 +32,7 @@ import javax.ws.rs.core.MediaType;
  * @author poison
  */
 @Path("pool")
-public class DxvkCachePoolREST implements CacheStorage {
+public class CachePoolREST implements CacheStorage {
 
 	@Inject
 	private Configuration configuration;

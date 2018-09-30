@@ -96,7 +96,7 @@
 						</goals>
 						<configuration>
 							<classifier>boot</classifier>
-							<mainClass>com.ignorelist.kassandra.dxvk.cache.pool.server.DxvkCachePoolServer</mainClass>
+							<mainClass>com.ignorelist.kassandra.dxvk.cache.pool.server.CachePoolServer</mainClass>
 						</configuration>
 					</execution>
 				</executions>
