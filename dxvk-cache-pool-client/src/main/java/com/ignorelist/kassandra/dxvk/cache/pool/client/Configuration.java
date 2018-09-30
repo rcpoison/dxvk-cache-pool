@@ -50,7 +50,7 @@ public class Configuration {
 				t=Paths.get(System.getProperty("user.home"), ".cache", WINE_PREFIX_SYMLINK);
 			}
 			Files.createDirectories(t);
-			return t;
+			cacheTargetPath=t;
 		}
 		return cacheTargetPath;
 	}
