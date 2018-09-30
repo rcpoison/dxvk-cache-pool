@@ -38,15 +38,15 @@ import org.glassfish.jersey.server.filter.EncodingFilter;
  *
  * @author poison
  */
-public class DxvkCachePoolServer implements Closeable {
+public class CachePoolServer implements Closeable {
 
-	private static final Logger LOG=Logger.getLogger(DxvkCachePoolServer.class.getName());
+	private static final Logger LOG=Logger.getLogger(CachePoolServer.class.getName());
 
 	private final Configuration configuration;
 	private final CacheStorage cacheStorage;
 	private Server server;
 
-	public DxvkCachePoolServer(final Configuration configuration, final CacheStorage cacheStorage) {
+	public CachePoolServer(final Configuration configuration, final CacheStorage cacheStorage) {
 		this.configuration=configuration;
 		this.cacheStorage=cacheStorage;
 	}
@@ -111,7 +111,7 @@ public class DxvkCachePoolServer implements Closeable {
 			System.exit(1);
 		}
 
-		try (CacheStorageFS storage=new CacheStorageFS(configuration.getStorage()); DxvkCachePoolServer js=new DxvkCachePoolServer(configuration, storage)) {
+		try (CacheStorageFS storage=new CacheStorageFS(configuration.getStorage()); CachePoolServer js=new CachePoolServer(configuration, storage)) {
 			storage.init();
 			js.start();
 			js.join();
