@@ -59,6 +59,10 @@
 			<artifactId>rocker-runtime</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>dxvk-cache-pool-test</artifactId>
 			<version>${project.version}</version>

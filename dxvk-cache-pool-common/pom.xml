@@ -18,6 +18,10 @@
 			<artifactId>validation-api</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>dxvk-cache-pool-test</artifactId>
 			<version>${project.version}</version>
