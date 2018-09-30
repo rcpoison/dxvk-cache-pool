@@ -32,7 +32,7 @@ public class DxvkStateCacheIO {
 	private static final Logger LOG=Logger.getLogger(DxvkStateCacheIO.class.getName());
 
 	/**
-	 * parse Parse DxvkStateCache and its entries.
+	 * Parse DxvkStateCache and its entries.
 	 *
 	 * Will set basename base on the passed Path
 	 *
