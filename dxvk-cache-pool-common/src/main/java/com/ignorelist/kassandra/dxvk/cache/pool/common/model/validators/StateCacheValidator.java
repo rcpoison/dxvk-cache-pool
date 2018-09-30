@@ -13,7 +13,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
  *
  * @author poison
  */
-public class DxvkStateCacheValidator {
+public class StateCacheValidator {
 
 	public void validate(StateCache cache) {
 		final int entrySize=StateCacheHeaderInfo.getEntrySize(cache.getVersion());

@@ -13,7 +13,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.StateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
@@ -97,7 +97,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 		if (null==dxvkStateCache) {
 			throw new IllegalArgumentException("missing dxvkStateCache");
 		}
-		new DxvkStateCacheValidator().validate(dxvkStateCache);
+		new StateCacheValidator().validate(dxvkStateCache);
 		// don't trust passed hashes, just rebuild the entries
 		ImmutableSet<StateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
 				.map(StateCacheEntry::getEntry)
