@@ -78,7 +78,7 @@ public class CachePoolClient {
 						try {
 							return p.toRealPath();
 						} catch (IOException ex) {
-							System.err.println("directory could not be resolved: "+p+": "+ex.getMessage());
+							System.err.println("directory could not be resolved: "+ex.getMessage());
 							return null;
 						}
 					})
