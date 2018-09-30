@@ -21,7 +21,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheMeta;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +46,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 
 /**
  * Simple storage using the filesystem.
@@ -301,7 +301,7 @@ public class CacheStorageFS implements CacheStorage {
 		}
 	}
 
-	private Path buildTargetDirectory(final DxvkStateCacheMeta cache) {
+	private Path buildTargetDirectory(final StateCacheMeta cache) {
 		final String baseName=cache.getBaseName();
 		final Path targetPath=storageRoot
 				.resolve(Integer.toString(cache.getVersion()))

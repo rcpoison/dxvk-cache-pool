@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheInfo implements DxvkStateCacheMeta, Serializable {
+public class StateCacheInfo implements StateCacheMeta, Serializable {
 
 	public static final Comparator<StateCacheInfo> COMPARATOR_EXE_NAME=Comparator
 			.comparing(StateCacheInfo::getBaseName, Comparator.nullsFirst(Comparator.naturalOrder()))

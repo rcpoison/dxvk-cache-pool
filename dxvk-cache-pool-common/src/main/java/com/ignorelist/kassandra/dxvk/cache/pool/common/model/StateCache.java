@@ -17,7 +17,7 @@ import java.util.Set;
  *
  * @author poison
  */
-public class StateCache implements DxvkStateCacheMeta, Serializable {
+public class StateCache implements StateCacheMeta, Serializable {
 
 	private String baseName;
 	private int version;

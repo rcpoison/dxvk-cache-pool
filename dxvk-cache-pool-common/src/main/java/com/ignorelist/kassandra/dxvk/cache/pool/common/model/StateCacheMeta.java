@@ -9,7 +9,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
  *
  * @author poison
  */
-public interface DxvkStateCacheMeta {
+public interface StateCacheMeta {
 
 	int getEntrySize();
 
