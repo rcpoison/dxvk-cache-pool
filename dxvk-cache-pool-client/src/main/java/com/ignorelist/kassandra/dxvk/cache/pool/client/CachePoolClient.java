@@ -109,6 +109,7 @@ public class CachePoolClient {
 		if (!Objects.equals(System.getenv("DXVK_STATE_CACHE_PATH"), expectedStateCachePath)) {
 			System.err.println("!warning: DXVK_STATE_CACHE_PATH is set to: '"+System.getenv("DXVK_STATE_CACHE_PATH")+"', expected: '"+expectedStateCachePath+"'");
 		}
+		System.err.println("target directory is: "+c.getCacheTargetPath());
 		CachePoolClient client=new CachePoolClient(c);
 		client.merge();
 	}
