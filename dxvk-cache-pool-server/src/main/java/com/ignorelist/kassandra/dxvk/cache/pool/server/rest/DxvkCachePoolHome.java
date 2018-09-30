@@ -13,7 +13,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.OutputStream;
 import java.util.Set;
@@ -76,7 +76,7 @@ public class DxvkCachePoolHome {
 			throw new IllegalArgumentException("filename may not be empty");
 		}
 		final String baseName=Util.removeFileExtension(fileName);
-		final DxvkStateCache cache=cacheStorage.getCache(VERSION, baseName);
+		final StateCache cache=cacheStorage.getCache(VERSION, baseName);
 		if (null==cache) {
 			throw new IllegalStateException("cache not found for: "+baseName);
 		}

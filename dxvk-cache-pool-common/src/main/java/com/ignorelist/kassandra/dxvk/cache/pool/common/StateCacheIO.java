@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.UnsignedInteger;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class StateCacheIO {
 	private static final Logger LOG=Logger.getLogger(StateCacheIO.class.getName());
 
 	/**
-	 * Parse DxvkStateCache and its entries.
+	 * Parse StateCache and its entries.
 	 *
 	 * Will set basename base on the passed Path
 	 *
@@ -40,23 +40,23 @@ public class StateCacheIO {
 	 * @return
 	 * @throws IOException
 	 */
-	public static DxvkStateCache parse(final Path path) throws IOException {
+	public static StateCache parse(final Path path) throws IOException {
 		try (BufferedInputStream is=new BufferedInputStream(Files.newInputStream(path))) {
-			final DxvkStateCache cache=parse(is);
+			final StateCache cache=parse(is);
 			cache.setBaseName(Util.baseName(path));
 			return cache;
 		}
 	}
 
 	/**
-	 * Parse DxvkStateCache and its entries. Will not set basename of course.
+	 * Parse StateCache and its entries. Will not set basename of course.
 	 *
 	 * @param inputStream
 	 * @return
 	 * @throws UnsupportedOperationException
 	 * @throws IOException
 	 */
-	public static DxvkStateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
+	public static StateCache parse(final InputStream inputStream) throws UnsupportedOperationException, IOException {
 		/*
 		struct DxvkStateCacheHeader {
 		  char     magic[4]   = { 'D', 'X', 'V', 'K' };
@@ -91,7 +91,7 @@ public class StateCacheIO {
 			throw new IllegalStateException("header corrupt? entry size: "+entrySize);
 		}
 
-		DxvkStateCache dxvkStateCache=new DxvkStateCache();
+		StateCache dxvkStateCache=new StateCache();
 		dxvkStateCache.setVersion(version);
 		dxvkStateCache.setEntrySize(entrySize);
 
@@ -114,13 +114,13 @@ public class StateCacheIO {
 		return dxvkStateCache;
 	}
 
-	public static void write(final Path path, DxvkStateCache cache) throws IOException {
+	public static void write(final Path path, StateCache cache) throws IOException {
 		try (OutputStream os=Files.newOutputStream(path)) {
 			write(os, cache);
 		}
 	}
 
-	public static void write(final OutputStream out, DxvkStateCache cache) throws IOException {
+	public static void write(final OutputStream out, StateCache cache) throws IOException {
 		final int version=cache.getVersion();
 		final int entrySize=cache.getEntrySize();
 		if (StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize) {

@@ -17,14 +17,14 @@ import java.util.Set;
  *
  * @author poison
  */
-public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
+public class StateCache implements DxvkStateCacheMeta, Serializable {
 
 	private String baseName;
 	private int version;
 	private int entrySize;
 	private Set<DxvkStateCacheEntry> entries;
 
-	public DxvkStateCache() {
+	public StateCache() {
 	}
 
 	@Override
@@ -81,16 +81,16 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	 *
 	 * @return
 	 */
-	public DxvkStateCache copyShallow() {
-		DxvkStateCache cache=new DxvkStateCache();
+	public StateCache copyShallow() {
+		StateCache cache=new StateCache();
 		cache.setVersion(getVersion());
 		cache.setEntrySize(getEntrySize());
 		cache.setBaseName(getBaseName());
 		return cache;
 	}
 
-	public DxvkStateCache copy() {
-		DxvkStateCache cache=copyShallow();
+	public StateCache copy() {
+		StateCache cache=copyShallow();
 		if (null!=getEntries()) {
 			cache.setEntries(ImmutableSet.copyOf(getEntries()));
 		}
@@ -108,7 +108,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		setEntries(combined);
 	}
 
-	public void patch(DxvkStateCache other) {
+	public void patch(StateCache other) {
 		patch(other.getEntries());
 	}
 
@@ -118,7 +118,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
-	public Set<DxvkStateCacheEntry> getMissingEntries(DxvkStateCache other) {
+	public Set<DxvkStateCacheEntry> getMissingEntries(StateCache other) {
 		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
 	}
 
@@ -128,8 +128,8 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return instance with entries contained in this instance but missing in the passed instance
 	 */
-	public DxvkStateCache diff(DxvkStateCache other) {
-		DxvkStateCache diff=copyShallow();
+	public StateCache diff(StateCache other) {
+		StateCache diff=copyShallow();
 		diff.setEntries(getMissingEntries(other));
 		return diff;
 	}
@@ -140,14 +140,14 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 	 * @param other instance to check for missing entries
 	 * @return instance with entries contained in this instance but missing in the passed instance
 	 */
-	public DxvkStateCache diff(DxvkStateCacheInfo other) {
+	public StateCache diff(DxvkStateCacheInfo other) {
 		DxvkStateCacheInfo info=toInfo();
 		ImmutableSet<DxvkStateCacheEntryInfo> missingEntryInfos=info.getMissingEntries(other);
 		ImmutableMap<DxvkStateCacheEntryInfo, DxvkStateCacheEntry> indexByInfo=Maps.uniqueIndex(getEntries(), DxvkStateCacheEntry::getDescriptor);
 		ImmutableSet<DxvkStateCacheEntry> missingEntries=missingEntryInfos.stream()
 				.map(indexByInfo::get)
 				.collect(ImmutableSet.toImmutableSet());
-		DxvkStateCache diff=copyShallow();
+		StateCache diff=copyShallow();
 		diff.setEntries(missingEntries);
 		return diff;
 	}
@@ -172,7 +172,7 @@ public class DxvkStateCache implements DxvkStateCacheMeta, Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final DxvkStateCache other=(DxvkStateCache) obj;
+		final StateCache other=(StateCache) obj;
 		if (this.version!=other.version) {
 			return false;
 		}

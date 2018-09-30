@@ -17,7 +17,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
@@ -203,7 +203,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public DxvkStateCache getCache(final int version, final String baseName) {
+	public StateCache getCache(final int version, final String baseName) {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
@@ -214,7 +214,7 @@ public class CacheStorageFS implements CacheStorage {
 			}
 			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
 
-			DxvkStateCache cache=new DxvkStateCache();
+			StateCache cache=new StateCache();
 			cache.setBaseName(baseName);
 			cache.setVersion(cacheDescriptor.getVersion());
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
@@ -260,7 +260,7 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
-	public void store(final DxvkStateCache cache) throws IOException {
+	public void store(final StateCache cache) throws IOException {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
 		final String baseName=cache.getBaseName();
 		final Lock writeLock=getWriteLock(baseName);

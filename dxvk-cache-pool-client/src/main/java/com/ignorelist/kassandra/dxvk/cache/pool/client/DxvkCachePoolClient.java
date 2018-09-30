@@ -19,7 +19,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.io.IOException;
@@ -166,7 +166,7 @@ public class DxvkCachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
-						final DxvkStateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
+						final StateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
 						StateCacheIO.write(targetPath, cache);
 					}
 				}
@@ -180,7 +180,7 @@ public class DxvkCachePoolClient {
 					for (DxvkStateCacheInfo cacheInfo : entriesLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
-						final DxvkStateCache localCache=StateCacheIO.parse(cacheFile);
+						final StateCache localCache=StateCacheIO.parse(cacheFile);
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final DxvkStateCacheInfo localCacheInfo=localCache.toInfo();
@@ -195,7 +195,7 @@ public class DxvkCachePoolClient {
 							Files.move(tmpFile, cacheFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 						}
 
-						final DxvkStateCache missingOnServer=localCache.diff(cacheInfo);
+						final StateCache missingOnServer=localCache.diff(cacheInfo);
 						if (!missingOnServer.getEntries().isEmpty()) {
 							System.err.println(" -> "+baseName+": sending "+missingOnServer.getEntries().size()+" missing entries to remote");
 							restClient.store(missingOnServer);
@@ -217,16 +217,16 @@ public class DxvkCachePoolClient {
 		try (DxvkCachePoolRestClient restClient=new DxvkCachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
 				System.err.println(" -> uploading "+entry.getKey());
-				DxvkStateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
+				StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
 				restClient.store(cache);
 			}
 		}
 	}
 
-	private static DxvkStateCache readMerged(Set<Path> paths) throws IOException {
-		DxvkStateCache cache=null;
+	private static StateCache readMerged(Set<Path> paths) throws IOException {
+		StateCache cache=null;
 		for (Path path : paths) {
-			DxvkStateCache parsed=StateCacheIO.parse(path);
+			StateCache parsed=StateCacheIO.parse(path);
 			if (null==cache) {
 				cache=parsed;
 			} else {

@@ -6,7 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import java.util.Set;
@@ -57,12 +57,12 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public DxvkStateCache getCache(int version, String baseName) {
+	public StateCache getCache(int version, String baseName) {
 		return getWebTarget()
 				.path("stateCache")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(baseName), DxvkStateCache.class);
+				.post(Entity.json(baseName), StateCache.class);
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class DxvkCachePoolRestClient extends AbstractRestClient implements Cache
 	}
 
 	@Override
-	public void store(DxvkStateCache dxvkStateCache) {
+	public void store(StateCache dxvkStateCache) {
 		getWebTarget()
 				.path("store")
 				.request()

@@ -7,7 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
@@ -35,7 +35,7 @@ public class CacheStorageFSNGTest {
 
 	private static final String BASE_NAME="Beat Saber";
 	private static Path storagePath;
-	private static DxvkStateCache cache;
+	private static StateCache cache;
 
 	public CacheStorageFSNGTest() {
 	}
@@ -124,7 +124,7 @@ public class CacheStorageFSNGTest {
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetCache() throws IOException {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			DxvkStateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
+			StateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache);
 			assertEquals(result.getVersion(), cache.getVersion());
 			assertEquals(result.getEntrySize(), cache.getEntrySize());
@@ -135,7 +135,7 @@ public class CacheStorageFSNGTest {
 	public void testStore() throws Exception {
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
 			instance.store(cache);
-			DxvkStateCache retrieved=instance.getCache(cache.getVersion(), BASE_NAME);
+			StateCache retrieved=instance.getCache(cache.getVersion(), BASE_NAME);
 			assertEquals(retrieved, cache);
 		}
 	}

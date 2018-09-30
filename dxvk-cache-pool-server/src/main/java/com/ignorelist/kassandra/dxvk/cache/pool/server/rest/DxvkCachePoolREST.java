@@ -10,7 +10,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.DxvkStateCacheValidator;
@@ -68,7 +68,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public DxvkStateCache getCache(@PathParam("version") int version, String baseName) {
+	public StateCache getCache(@PathParam("version") int version, String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");
@@ -93,7 +93,7 @@ public class DxvkCachePoolREST implements CacheStorage {
 	@Path("store")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Override
-	public void store(DxvkStateCache dxvkStateCache) throws IOException {
+	public void store(StateCache dxvkStateCache) throws IOException {
 		if (null==dxvkStateCache) {
 			throw new IllegalArgumentException("missing dxvkStateCache");
 		}

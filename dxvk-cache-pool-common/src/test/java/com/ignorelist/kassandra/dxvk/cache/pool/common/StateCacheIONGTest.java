@@ -5,7 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.common.model.DxvkStateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -57,7 +57,7 @@ public class StateCacheIONGTest {
 		final byte[] stateCacheData=TestUtil.readStateCacheData();
 		Assert.assertEquals(stateCacheData.length, 1008684);
 
-		DxvkStateCache stateCache=StateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
+		StateCache stateCache=StateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
 		Assert.assertEquals(stateCache.getVersion(), 2);
 		Assert.assertEquals(stateCache.getEntrySize(), StateCacheHeaderInfo.getEntrySize(2).intValue());
 		Assert.assertEquals(stateCache.getEntries().size(), 553);
