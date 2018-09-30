@@ -1,3 +1,3 @@
 #!/bin/bash
-export DXVK_STATE_CACHE_PATH="/dxvk-cache-pool"
+export DXVK_STATE_CACHE_PATH="c:/dxvk-cache-pool"
 
