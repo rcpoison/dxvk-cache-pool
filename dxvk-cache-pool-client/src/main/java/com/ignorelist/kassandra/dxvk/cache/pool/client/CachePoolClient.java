@@ -107,7 +107,7 @@ public class CachePoolClient {
 		final String expectedStateCachePath="/"+Configuration.WINE_PREFIX_SYMLINK;
 		// check env for DXVK_STATE_CACHE_PATH
 		if (!Objects.equals(System.getenv("DXVK_STATE_CACHE_PATH"), expectedStateCachePath)) {
-			System.err.println("!warning: DXVK_STATE_CACHE_PATH is set to: '"+System.getenv("DXVK_STATE_CACHE_PATH")+"', expected: '"+expectedStateCachePath+"'");
+			System.err.println("!warning: DXVK_STATE_CACHE_PATH is set to: '"+System.getenv("DXVK_STATE_CACHE_PATH")+"', expected: '"+expectedStateCachePath+"'. Wine will not use the caches in "+c.getCacheTargetPath());
 		}
 		System.err.println("target directory is: "+c.getCacheTargetPath());
 		CachePoolClient client=new CachePoolClient(c);

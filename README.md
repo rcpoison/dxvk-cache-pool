@@ -53,8 +53,8 @@ usage: dvxk-cache-client  directory... [-h] [--host <url>] [-t <path>]
 
 #### Environment
 
-For everything to work you should set DXVK_STATE_CACHE_PATH as a global variable and point it to '/dxvk-cache-pool'.
-Note that it is a windows path and points to 'C:/dxvk-cache-pool' in the wine prefix and not your root directory.
+For wine to use the caches you should set DXVK_STATE_CACHE_PATH as a global variable and point it to '/dxvk-cache-pool'.
+Note that it is a windows path and points to 'C:/dxvk-cache-pool' in the wine prefixes and not your root directory.
 
 It doesn't affect steam/proton either, it's doing it's own thing and overrides that variable.
 
