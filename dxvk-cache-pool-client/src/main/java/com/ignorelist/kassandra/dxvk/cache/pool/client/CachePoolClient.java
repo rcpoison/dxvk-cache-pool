@@ -74,13 +74,15 @@ public class CachePoolClient {
 
 			ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
-					.filter(p -> {
-						if (Files.isDirectory(p)) {
-							return true;
+					.map(p -> {
+						try {
+							return p.toRealPath();
+						} catch (IOException ex) {
+							System.err.println("directory could not be resolved: "+p+": "+ex.getMessage());
+							return null;
 						}
-						System.err.println("directory does not exist: "+p);
-						return false;
 					})
+					.filter(Predicates.notNull())
 					.collect(ImmutableSet.toImmutableSet());
 			c.setGamePaths(paths);
 		} catch (ParseException pe) {
