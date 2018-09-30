@@ -38,9 +38,7 @@ public class Configuration {
 			Path xdgCacheHome=null;
 			try {
 				xdgCacheHome=Util.getEnvPath("XDG_CACHE_HOME");
-				System.err.println("XDG_CACHE_HOME: "+xdgCacheHome);
 				if (!Files.isDirectory(xdgCacheHome)) {
-					System.err.println("no dir");
 					xdgCacheHome=null;
 				}
 			} catch (Exception e) {
