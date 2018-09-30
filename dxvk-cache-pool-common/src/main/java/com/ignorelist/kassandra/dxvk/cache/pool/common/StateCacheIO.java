@@ -88,7 +88,7 @@ public class StateCacheIO {
 		byte[] entrySizeBytes=new byte[4];
 		inputStream.read(entrySizeBytes);
 		final int entrySize=parseUnsignedInt(entrySizeBytes);
-		if (0==entrySize||entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX||(StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize)) {
+		if (entrySize<=1||entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX||(StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize)) {
 			throw new IllegalStateException("header corrupt? entry size: "+entrySize);
 		}
 
@@ -133,6 +133,9 @@ public class StateCacheIO {
 		final int entrySize=cache.getEntrySize();
 		if (StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize) {
 			throw new IllegalStateException("wrong entry size "+entrySize+" for version "+version);
+		}
+		if (entrySize<=1) {
+			throw new IllegalStateException("illegal entry size: "+entrySize);
 		}
 		out.write("DXVK".getBytes(Charsets.US_ASCII));
 		out.write(toUnsignedIntBytes(version));
