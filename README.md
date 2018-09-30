@@ -44,7 +44,7 @@ Both client and server require Java >= 8.
 
 ```bash
 $ ./dxvk-cache-client -h
-usage: dvxk-cache-client  directory... [-h] [--host <url>] [-t <path>]
+usage: dvxk-cache-client  directory... [-h] [--host <url>]
        [--verbose]
  -h,--help            show this help
     --host <url>      Server URL
