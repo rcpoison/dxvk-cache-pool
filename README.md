@@ -64,6 +64,9 @@ Set it up globally.
 
 See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly into `/etc/profile.d/`. The arch package already includes it.
 
+Warning: in this case you need to run the client against all your wine prefixes,
+otherwise the symlinks to the cache directory will be missing and DXVK won't be able to open/create a cache file.
+
 
 ##### The hard way
 
