@@ -45,6 +45,10 @@ public class CryptoUtil {
 		out.write(encodedKeySpec.getEncoded());
 	}
 
+	public static PublicKey decodePublicKey(final com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		return decodePublicKey(publicKey.getKey());
+	}
+
 	public static PublicKey decodePublicKey(final byte[] key) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		final KeyFactory instance=KeyFactory.getInstance(ALGO_KEY);
 		final X509EncodedKeySpec keySpec=new X509EncodedKeySpec(key);
