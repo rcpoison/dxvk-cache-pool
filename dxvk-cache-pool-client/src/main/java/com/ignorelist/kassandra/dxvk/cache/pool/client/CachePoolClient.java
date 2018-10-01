@@ -156,7 +156,6 @@ public class CachePoolClient {
 
 	private void merge() throws IOException {
 		final FsScanner fs=getScanResult();
-		final ImmutableSet<String> baseNames=getAvailableBaseNames();
 
 		prepareWinePrefixes(fs);
 
