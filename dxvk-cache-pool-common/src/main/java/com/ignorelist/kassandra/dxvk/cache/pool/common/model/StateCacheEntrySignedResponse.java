@@ -5,8 +5,11 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.base.Function;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import java.io.Serializable;
+import java.security.PublicKey;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -47,6 +50,15 @@ public class StateCacheEntrySignedResponse implements Serializable {
 
 	public void setSignatures(Set<SignaturePublicKeyInfo> signatures) {
 		this.signatures=signatures;
+	}
+	
+	public boolean verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+		for (SignaturePublicKeyInfo signature : getSignatures()) {
+			final PublicKey publicKey=keyAccessor.apply(signature.getPublicKeyInfo());
+			if (null==publicKey) {
+				return false;
+			}
+		}
 	}
 
 	@Override
