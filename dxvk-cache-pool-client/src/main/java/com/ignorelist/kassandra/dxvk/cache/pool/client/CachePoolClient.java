@@ -46,6 +46,8 @@ public class CachePoolClient {
 
 	private final Configuration configuration;
 
+	private FsScanner scanResult;
+
 	private CachePoolClient(Configuration c) {
 		this.configuration=c;
 	}
@@ -101,11 +103,13 @@ public class CachePoolClient {
 		client.merge();
 	}
 
-	private FsScanner scan() throws IOException {
-		System.err.println("scanning directories");
-		FsScanner fs=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
-		System.err.println("scanned "+fs.getVisitedFiles()+" files");
-		return fs;
+	public synchronized FsScanner scanResult() throws IOException {
+		if (null==scanResult) {
+			System.err.println("scanning directories");
+			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
+			System.err.println("scanned "+scanResult.getVisitedFiles()+" files");
+		}
+		return scanResult;
 	}
 
 	private ImmutableMap<String, StateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
@@ -134,7 +138,7 @@ public class CachePoolClient {
 	}
 
 	private void merge() throws IOException {
-		final FsScanner fs=scan();
+		final FsScanner fs=scanResult();
 		final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
 				.stream()
 				.flatMap(Collection::stream)
