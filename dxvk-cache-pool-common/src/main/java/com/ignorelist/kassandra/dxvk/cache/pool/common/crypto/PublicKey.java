@@ -7,7 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -27,7 +27,7 @@ public class PublicKey {
 	}
 
 	@NotNull
-	@XmlAttribute(required=true)
+	@XmlElement(required=true)
 	public byte[] getKey() {
 		return key;
 	}

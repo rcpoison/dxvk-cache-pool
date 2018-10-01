@@ -7,6 +7,8 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import java.util.Objects;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  *
@@ -15,13 +17,14 @@ import javax.validation.constraints.Email;
 public class Identity {
 
 	private PublicKey publicKey;
-	@Email
 	private String email;
 	private String name;
 
 	public Identity() {
 	}
 
+	@NotNull
+	@XmlElement(required=true)
 	public PublicKey getPublicKey() {
 		return publicKey;
 	}
@@ -30,6 +33,7 @@ public class Identity {
 		this.publicKey=publicKey;
 	}
 
+	@Email
 	public String getEmail() {
 		return email;
 	}
