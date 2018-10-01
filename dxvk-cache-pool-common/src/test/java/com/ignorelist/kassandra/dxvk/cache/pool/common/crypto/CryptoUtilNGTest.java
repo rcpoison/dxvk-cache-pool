@@ -6,11 +6,19 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicates;
+import com.google.common.base.Stopwatch;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -92,6 +100,29 @@ public class CryptoUtilNGTest {
 		PrivateKey privateKey=keyPair.getPrivate();
 		byte[] signature=CryptoUtil.sign(message, privateKey);
 		assertFalse(CryptoUtil.verify(message, CryptoUtil.generate().getPublic(), signature));
+	}
+
+	@Test
+	public void stats() throws UnsupportedOperationException, IOException {
+		byte[] stateCacheData=TestUtil.readStateCacheData();
+		StateCache cache=StateCacheIO.parse(new ByteArrayInputStream(stateCacheData));
+		Stopwatch stopwatch=Stopwatch.createStarted();
+		int totalSize=cache.getEntries().parallelStream()
+				.map(e -> {
+					try {
+						return CryptoUtil.sign(e.getEntry(), keyPair.getPrivate());
+					} catch (Exception ex) {
+						Logger.getLogger(CryptoUtilNGTest.class.getName()).log(Level.SEVERE, null, ex);
+						return null;
+					}
+				})
+				.filter(Predicates.notNull())
+				.mapToInt(s -> s.length)
+				.sum();
+		long millis=stopwatch.elapsed().toMillis();
+		stopwatch.reset();
+		stopwatch.start();
+		System.err.println("signed "+cache.getEntries().size()+" messages in "+millis+"ms, total signatures size: "+totalSize);
 	}
 
 }
