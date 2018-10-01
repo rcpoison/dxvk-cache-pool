@@ -94,9 +94,13 @@ public class FsScanner {
 		ImmutableSet<Path> exec=paths.stream()
 				.filter(Util.PREDICATE_EXE)
 				.collect(ImmutableSet.toImmutableSet());
-		ImmutableSet<Path> wineRoots=paths.stream()
-				.filter(Util.PREDICATE_DRIVEC_WINDOWS)
-				.map(Path::getParent)
+		ImmutableSet<Path> wineRoots=paths.parallelStream()
+				.map(p -> Util.extractParentPath(p, Util.PATH_DRIVEC))
+				.filter(Predicates.notNull())
+				.distinct()
+				.filter(p -> Files.isDirectory(p.resolve(Util.PATH_WINDOWS)))
+				.filter(p -> Files.isDirectory(p.resolveSibling(Util.PATH_DOSDEVICES)))
+				.peek(System.err::println)
 				.collect(ImmutableSet.toImmutableSet());
 		return new FsScanner(targetPath, exec, cachePaths, wineRoots, visited.get());
 	}
@@ -112,8 +116,8 @@ public class FsScanner {
 					.filter(p -> !p.getParent().endsWith("syswow64"))
 					.filter(p -> !p.getParent().endsWith("fakedlls"))
 					.filter(p -> !p.getParent().endsWith("windows"))
-					.filter(Predicates.or(Util.PREDICATE_EXE, Util.PREDICATE_CACHE, Util.PREDICATE_DRIVEC_WINDOWS))
-					.filter(Predicates.or(Util.PREDICATE_DRIVEC_WINDOWS, Files::isRegularFile))
+					.filter(Predicates.or(Util.PREDICATE_EXE, Util.PREDICATE_CACHE))
+					.filter(Files::isRegularFile)
 					.collect(ImmutableSet.toImmutableSet());
 			return paths;
 		} catch (IOException ex) {

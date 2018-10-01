@@ -74,7 +74,7 @@ public class UtilNGTest {
 
 	@Test(dataProvider="paths")
 	public void testExtractParentPath(Path path, Path expected) {
-		Path result=Util.extractParentPath(path, Util.DRIVEC_WINDOWS);
+		Path result=Util.extractParentPath(path, Util.PATH_DRIVEC_WINDOWS);
 		Assert.assertEquals(result, expected);
 	}
 
