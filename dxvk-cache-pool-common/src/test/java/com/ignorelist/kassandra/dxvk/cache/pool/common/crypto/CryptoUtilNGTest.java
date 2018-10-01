@@ -40,6 +40,8 @@ public class CryptoUtilNGTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		keyPair=CryptoUtil.generate();
+		System.err.println("privateKey length: "+keyPair.getPrivate().getEncoded().length);
+		System.err.println("publicKey length: "+keyPair.getPublic().getEncoded().length);
 	}
 
 	@AfterClass
