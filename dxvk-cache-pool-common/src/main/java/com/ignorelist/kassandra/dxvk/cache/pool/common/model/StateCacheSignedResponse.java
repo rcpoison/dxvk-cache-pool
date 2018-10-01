@@ -34,6 +34,7 @@ public class StateCacheSignedResponse implements Serializable, StateCacheMeta {
 		return baseName;
 	}
 
+	@Override
 	public void setBaseName(String baseName) {
 		this.baseName=baseName;
 	}
@@ -44,6 +45,7 @@ public class StateCacheSignedResponse implements Serializable, StateCacheMeta {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version=version;
 	}
@@ -53,6 +55,7 @@ public class StateCacheSignedResponse implements Serializable, StateCacheMeta {
 		return entrySize;
 	}
 
+	@Override
 	public void setEntrySize(int entrySize) {
 		this.entrySize=entrySize;
 	}

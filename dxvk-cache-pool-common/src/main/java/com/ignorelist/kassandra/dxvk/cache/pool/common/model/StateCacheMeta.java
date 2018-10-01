@@ -17,4 +17,10 @@ public interface StateCacheMeta {
 
 	int getVersion();
 
+	void setBaseName(String baseName);
+
+	void setEntrySize(int entrySize);
+
+	void setVersion(int version);
+
 }

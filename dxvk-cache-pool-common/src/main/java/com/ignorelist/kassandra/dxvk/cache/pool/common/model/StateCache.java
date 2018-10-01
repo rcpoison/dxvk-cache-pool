@@ -38,6 +38,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return baseName;
 	}
 
+	@Override
 	public void setBaseName(String baseName) {
 		this.baseName=baseName;
 	}
@@ -48,6 +49,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version=version;
 	}
@@ -57,6 +59,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return entrySize;
 	}
 
+	@Override
 	public void setEntrySize(int entrySize) {
 		this.entrySize=entrySize;
 	}
@@ -86,13 +89,23 @@ public class StateCache implements StateCacheMeta, Serializable {
 	/**
 	 * copy without entries
 	 *
+	 * @param cache
+	 * @return
+	 */
+	public void copyShallowTo(StateCacheMeta cache) {
+		cache.setVersion(getVersion());
+		cache.setEntrySize(getEntrySize());
+		cache.setBaseName(getBaseName());
+	}
+
+	/**
+	 * copy without entries
+	 *
 	 * @return
 	 */
 	public StateCache copyShallow() {
 		StateCache cache=new StateCache();
-		cache.setVersion(getVersion());
-		cache.setEntrySize(getEntrySize());
-		cache.setBaseName(getBaseName());
+		copyShallowTo(cache);
 		return cache;
 	}
 

@@ -48,6 +48,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return baseName;
 	}
 
+	@Override
 	public void setBaseName(String executableInfo) {
 		this.baseName=executableInfo;
 	}
@@ -58,6 +59,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version=version;
 	}
@@ -67,6 +69,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return entrySize;
 	}
 
+	@Override
 	public void setEntrySize(int entrySize) {
 		this.entrySize=entrySize;
 	}
