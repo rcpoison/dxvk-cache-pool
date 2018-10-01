@@ -9,11 +9,13 @@ import java.util.Objects;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author poison
  */
+@XmlRootElement
 public class Identity {
 
 	private PublicKey publicKey;
