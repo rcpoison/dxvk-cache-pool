@@ -6,7 +6,6 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -36,15 +35,6 @@ public final class Util {
 		@Override
 		public boolean apply(Path input) {
 			return input.getFileName().toString().endsWith(ext);
-		}
-
-	}
-
-	private static final class WineRootPredicate implements Predicate<Path> {
-
-		@Override
-		public boolean apply(Path input) {
-			return input.endsWith(FsScanner.PATH_DRIVEC_WINDOWS);
 		}
 
 	}
