@@ -42,7 +42,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -58,7 +57,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 public class CacheStorageFS implements CacheStorage {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
-	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{64}", Pattern.CASE_INSENSITIVE);
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
 
 	private final Path storageRoot;
@@ -110,7 +108,7 @@ public class CacheStorageFS implements CacheStorage {
 					final Path versionDirectory=storageRoot.resolve(versionString);
 					final ImmutableSetMultimap<Path, Path> entriesInRelativePath=Files.walk(versionDirectory)
 							.filter(Files::isRegularFile)
-							.filter(p -> SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
+							.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
 					entriesInRelativePath.asMap().entrySet().parallelStream()
 							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), currentVersion))
