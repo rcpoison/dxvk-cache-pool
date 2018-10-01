@@ -72,12 +72,12 @@ public final class Util {
 		return hashingInputStream.hash();
 	}
 
-	public static Path removeFileExtension(Path path) {
-		String fileName=removeFileExtension(path.getFileName().toString());
+	public static Path removeFileSuffix(Path path) {
+		String fileName=removeFileSuffix(path.getFileName().toString());
 		return path.resolveSibling(fileName);
 	}
 
-	public static String removeFileExtension(String fileName) {
+	public static String removeFileSuffix(String fileName) {
 		final int lastIndexOf=fileName.lastIndexOf('.');
 		if (-1==lastIndexOf) {
 			return fileName;
@@ -92,7 +92,7 @@ public final class Util {
 	 * @return name without directory and suffix
 	 */
 	public static String baseName(Path path) {
-		return removeFileExtension(path.getFileName().toString());
+		return removeFileSuffix(path.getFileName().toString());
 	}
 
 	public static boolean isSafeBaseName(String baseName) {

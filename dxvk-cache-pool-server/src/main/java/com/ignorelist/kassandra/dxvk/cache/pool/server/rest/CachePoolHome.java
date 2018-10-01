@@ -126,7 +126,7 @@ public class CachePoolHome {
 			System.err.println("");
 			throw new IllegalArgumentException("filename may not be empty");
 		}
-		final String baseName=Util.removeFileExtension(fileName);
+		final String baseName=Util.removeFileSuffix(fileName);
 		final StateCache cache=cacheStorage.getCache(VERSION, baseName);
 		if (null==cache) {
 			throw new IllegalStateException("cache not found for: "+baseName);
