@@ -50,7 +50,7 @@ public class CachePoolClient {
 	private ImmutableSet<String> availableBaseNames;
 	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
 
-	private CachePoolClient(Configuration c) {
+	public CachePoolClient(Configuration c) {
 		this.configuration=c;
 	}
 
