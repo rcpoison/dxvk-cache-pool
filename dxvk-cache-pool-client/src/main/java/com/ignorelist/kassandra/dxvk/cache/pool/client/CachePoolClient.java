@@ -211,13 +211,14 @@ public class CachePoolClient {
 
 		}
 
-		uploadUnknown(fs, getCacheDescriptorsByBaseNames());
+		uploadUnknown();
 	}
 
-	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
+	private void uploadUnknown() throws IOException {
 		// upload unkown caches
-		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
-		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));
+		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
+		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
+		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
 		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
