@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -15,7 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class Signature {
+public class Signature implements Serializable {
 
 	private byte[] signature;
 

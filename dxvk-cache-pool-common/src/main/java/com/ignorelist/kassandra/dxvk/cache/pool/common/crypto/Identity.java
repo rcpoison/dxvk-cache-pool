@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import java.io.Serializable;
 import java.util.Objects;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -16,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class Identity {
+public class Identity implements Serializable {
 
 	private PublicKey publicKey;
 	private String email;

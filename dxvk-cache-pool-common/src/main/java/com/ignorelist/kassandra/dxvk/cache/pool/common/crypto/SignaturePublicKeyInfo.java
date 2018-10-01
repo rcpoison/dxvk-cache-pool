@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import java.io.Serializable;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
@@ -15,7 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class SignaturePublicKeyInfo {
+public class SignaturePublicKeyInfo implements Serializable {
 	
 	private Signature signature;
 	private PublicKeyInfo publicKeyInfo;

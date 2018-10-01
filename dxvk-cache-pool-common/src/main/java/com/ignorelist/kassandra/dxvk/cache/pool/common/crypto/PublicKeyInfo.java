@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.hash.Hashing;
+import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -17,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PublicKeyInfo {
+public class PublicKeyInfo implements Serializable {
 
 	private byte[] hash;
 
