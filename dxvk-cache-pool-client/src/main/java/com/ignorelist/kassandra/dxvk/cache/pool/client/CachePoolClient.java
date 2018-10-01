@@ -143,10 +143,9 @@ public class CachePoolClient {
 		return cacheDescriptorsByBaseName;
 	}
 
-	private void prepareWinePrefixes(final FsScanner fs) throws IOException {
+	public synchronized void prepareWinePrefixes() throws IOException {
 		System.err.println("preparing wine prefixes");
-
-		for (Path wineDriveC : fs.getWineRoots()) {
+		for (Path wineDriveC : getScanResult().getWineRoots()) {
 			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
 			if (!Files.isSymbolicLink(symLink)) {
 				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
@@ -161,8 +160,7 @@ public class CachePoolClient {
 
 	private void merge() throws IOException {
 		final FsScanner fs=getScanResult();
-
-		prepareWinePrefixes(fs);
+		prepareWinePrefixes();
 
 		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=getCacheDescriptorsByBaseNames();
 
