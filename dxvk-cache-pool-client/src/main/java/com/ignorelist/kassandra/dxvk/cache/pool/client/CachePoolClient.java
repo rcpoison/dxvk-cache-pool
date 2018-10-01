@@ -159,12 +159,10 @@ public class CachePoolClient {
 	}
 
 	private void merge() throws IOException {
-		final FsScanner fs=getScanResult();
 		prepareWinePrefixes();
-
 		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 			// create new caches
-			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
+			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
