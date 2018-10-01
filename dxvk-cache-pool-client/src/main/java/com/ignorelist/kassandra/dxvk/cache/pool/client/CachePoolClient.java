@@ -48,6 +48,7 @@ public class CachePoolClient {
 
 	private FsScanner scanResult;
 	private ImmutableSet<String> availableBaseNames;
+	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
 
 	private CachePoolClient(Configuration c) {
 		this.configuration=c;
@@ -124,13 +125,16 @@ public class CachePoolClient {
 		return availableBaseNames;
 	}
 
-	private ImmutableMap<String, StateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
-		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-			System.err.println("looking up remove caches for "+baseNames.size()+" possible games");
-			Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
-			ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
-			return cacheDescriptorsByBaseName;
+	private ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
+		if (null==cacheDescriptorsByBaseName) {
+			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
+				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
+				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
+
+			}
 		}
+		return cacheDescriptorsByBaseName;
 	}
 
 	private void prepareWinePrefixes(final FsScanner fs) throws IOException {
@@ -155,7 +159,7 @@ public class CachePoolClient {
 
 		prepareWinePrefixes(fs);
 
-		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
+		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=getCacheDescriptorsByBaseNames();
 		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 		if (configuration.isVerbose()) {
 			cacheDescriptorsByBaseName.values().forEach(d -> {
