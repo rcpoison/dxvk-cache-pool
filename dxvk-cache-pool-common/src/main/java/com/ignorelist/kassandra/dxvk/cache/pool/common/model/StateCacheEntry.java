@@ -6,7 +6,13 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.hash.Hashing;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
 import java.io.Serializable;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.SignatureException;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -51,6 +57,11 @@ public class StateCacheEntry implements Serializable {
 
 	public void setEntry(byte[] entry) {
 		this.entry=entry;
+	}
+
+	public StateCacheEntrySignedRequest sign(final PrivateKey privateKey) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+		Signature signature=new Signature(CryptoUtil.sign(getEntry(), privateKey));
+		return new StateCacheEntrySignedRequest(this, signature);
 	}
 
 	@Override
