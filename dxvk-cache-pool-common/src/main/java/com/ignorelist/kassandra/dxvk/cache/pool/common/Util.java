@@ -42,8 +42,6 @@ public final class Util {
 
 	private static final class WineRootPredicate implements Predicate<Path> {
 
-		private static final Path DRIVEC_WINDOWS=Paths.get("drive_c", "windows");
-
 		@Override
 		public boolean apply(Path input) {
 			return input.endsWith(DRIVEC_WINDOWS);
@@ -51,6 +49,7 @@ public final class Util {
 
 	}
 
+	public static final Path DRIVEC_WINDOWS=Paths.get("drive_c", "windows");
 	public static final String DXVK_CACHE_EXT=".dxvk-cache";
 	public static final Predicate<Path> PREDICATE_CACHE=new FileExtPredicate(DXVK_CACHE_EXT);
 	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new FileExtPredicate(".exe"), new FileExtPredicate(".EXE"));
@@ -112,7 +111,7 @@ public final class Util {
 		final Path resolvedPath=Paths.get(parsedPath);
 		return resolvedPath;
 	}
-	
+
 	public static Path getEnvPath(final String envVar) {
 		final String envPath=System.getenv(envVar);
 		if (!Strings.isNullOrEmpty(envPath)) {
@@ -121,6 +120,24 @@ public final class Util {
 			} catch (Exception e) {
 				System.err.println("failed to resolve '"+envVar+"' '"+envPath+"': "+e.getMessage());
 			}
+		}
+		return null;
+	}
+
+	/**
+	 * extract subpath that ends with the specified parent
+	 *
+	 * @param path compelte path
+	 * @param parentEnding path fragment with which the path is supposed to end
+	 * @return subpath that ends with the specified parent, null if parentEnding is not contained
+	 */
+	public static Path extractParentPath(final Path path, final Path parentEnding) {
+		Path p=path;
+		while (null!=p) {
+			if (p.endsWith(parentEnding)) {
+				return p;
+			}
+			p=p.getParent();
 		}
 		return null;
 	}

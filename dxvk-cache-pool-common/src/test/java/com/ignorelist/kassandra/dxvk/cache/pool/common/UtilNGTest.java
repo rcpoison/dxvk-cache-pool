@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -53,11 +55,27 @@ public class UtilNGTest {
 		};
 	}
 
-	
 	@Test(dataProvider="baseNames")
 	public void testIsSafeBaseName(String baseName, boolean expected) {
 		boolean result=Util.isSafeBaseName(baseName);
 		Assert.assertEquals(result, expected, baseName);
+	}
+
+	@DataProvider
+	public Object[][] paths() {
+		return new Object[][]{
+			{Paths.get("/test/a/wine/prefix/drive_c/windows"), Paths.get("/test/a/wine/prefix/drive_c/windows")},
+			{Paths.get("/test/a/wine/prefix/drive_c/windows/some/other/dir/with/Some.exe"), Paths.get("/test/a/wine/prefix/drive_c/windows")},
+			{Paths.get("wine/prefix/drive_c/windows"), Paths.get("wine/prefix/drive_c/windows")},
+			{Paths.get("wine/prefix/drive_c/windows/some/other/dir/with/Some.exe"), Paths.get("wine/prefix/drive_c/windows")},
+			{Paths.get("/test/not/a/wine/prefix"), null}
+		};
+	}
+
+	@Test(dataProvider="paths")
+	public void testExtractParentPath(Path path, Path expected) {
+		Path result=Util.extractParentPath(path, Util.DRIVEC_WINDOWS);
+		Assert.assertEquals(result, expected);
 	}
 
 }
