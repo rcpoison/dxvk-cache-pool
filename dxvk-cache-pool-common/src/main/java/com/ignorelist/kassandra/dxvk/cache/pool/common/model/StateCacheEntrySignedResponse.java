@@ -6,12 +6,15 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Function;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -22,6 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class StateCacheEntrySignedResponse implements Serializable {
+
+	private static final Logger LOG=Logger.getLogger(StateCacheEntrySignedResponse.class.getName());
 
 	private StateCacheEntry cacheEntry;
 	private Set<SignaturePublicKeyInfo> signatures;
@@ -51,14 +56,25 @@ public class StateCacheEntrySignedResponse implements Serializable {
 	public void setSignatures(Set<SignaturePublicKeyInfo> signatures) {
 		this.signatures=signatures;
 	}
-	
+
 	public boolean verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
 		for (SignaturePublicKeyInfo signature : getSignatures()) {
-			final PublicKey publicKey=keyAccessor.apply(signature.getPublicKeyInfo());
+			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
+			final PublicKey publicKey=keyAccessor.apply(publicKeyInfo);
+			LOG.warning("public key not found for: "+publicKeyInfo);
 			if (null==publicKey) {
 				return false;
 			}
+			try {
+				if (!CryptoUtil.verify(getCacheEntry().getEntry(), publicKey, signature.getSignature().getSignature())) {
+					return false;
+				}
+			} catch (Exception ex) {
+				Logger.getLogger(StateCacheEntrySignedResponse.class.getName()).log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
+				return false;
+			}
 		}
+		return true;
 	}
 
 	@Override
