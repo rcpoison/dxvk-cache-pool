@@ -25,7 +25,7 @@ public class PublicKeyInfo {
 	public PublicKeyInfo(byte[] hash) {
 		this.hash=hash;
 	}
-	
+
 	public PublicKeyInfo(PublicKey publicKey) {
 		this(Hashing.sha256().hashBytes(publicKey.getKey()).asBytes());
 	}
