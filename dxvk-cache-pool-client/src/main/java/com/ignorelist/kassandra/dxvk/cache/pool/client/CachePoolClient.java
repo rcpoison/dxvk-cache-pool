@@ -125,12 +125,13 @@ public class CachePoolClient {
 		return availableBaseNames;
 	}
 
-	private ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
+	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
 				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
 				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
+				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 
 			}
 		}
@@ -160,7 +161,6 @@ public class CachePoolClient {
 		prepareWinePrefixes(fs);
 
 		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=getCacheDescriptorsByBaseNames();
-		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 		if (configuration.isVerbose()) {
 			cacheDescriptorsByBaseName.values().forEach(d -> {
 				System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
