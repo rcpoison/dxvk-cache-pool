@@ -132,6 +132,11 @@ public class CachePoolClient {
 				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
 				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
 				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
+				if (configuration.isVerbose()) {
+					cacheDescriptorsByBaseName.values().forEach(d -> {
+						System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
+					});
+				}
 
 			}
 		}
@@ -160,11 +165,6 @@ public class CachePoolClient {
 		prepareWinePrefixes(fs);
 
 		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=getCacheDescriptorsByBaseNames();
-		if (configuration.isVerbose()) {
-			cacheDescriptorsByBaseName.values().forEach(d -> {
-				System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
-			});
-		}
 
 		if (!cacheDescriptorsByBaseName.isEmpty()) {
 			// create new caches
