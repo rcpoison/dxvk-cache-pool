@@ -100,7 +100,6 @@ public class FsScanner {
 				.distinct()
 				.filter(p -> Files.isDirectory(p.resolve(Util.PATH_WINDOWS)))
 				.filter(p -> Files.isDirectory(p.resolveSibling(Util.PATH_DOSDEVICES)))
-				.peek(System.err::println)
 				.collect(ImmutableSet.toImmutableSet());
 		return new FsScanner(targetPath, exec, cachePaths, wineRoots, visited.get());
 	}
