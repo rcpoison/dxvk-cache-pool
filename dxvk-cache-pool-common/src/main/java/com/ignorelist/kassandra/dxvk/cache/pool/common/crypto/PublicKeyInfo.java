@@ -5,7 +5,9 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
@@ -67,6 +69,13 @@ public class PublicKeyInfo implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("hash", BaseEncoding.base16().encode(hash))
+				.toString();
 	}
 
 }
