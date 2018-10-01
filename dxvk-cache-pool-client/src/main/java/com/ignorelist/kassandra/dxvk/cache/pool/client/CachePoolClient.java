@@ -143,6 +143,13 @@ public class CachePoolClient {
 		return cacheDescriptorsByBaseName;
 	}
 
+	public synchronized void merge() throws IOException {
+		prepareWinePrefixes();
+		downloadNew();
+		mergeExisting();
+		uploadUnknown();
+	}
+
 	public synchronized void prepareWinePrefixes() throws IOException {
 		System.err.println("preparing wine prefixes");
 		for (Path wineDriveC : getScanResult().getWineRoots()) {
@@ -158,8 +165,7 @@ public class CachePoolClient {
 		}
 	}
 
-	private void merge() throws IOException {
-		prepareWinePrefixes();
+	public synchronized void downloadNew() throws IOException {
 		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
@@ -176,9 +182,15 @@ public class CachePoolClient {
 					}
 				}
 			}
+		}
+	}
 
+	public synchronized void mergeExisting() throws IOException {
+		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
+
+			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// merge existing caches
-			Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
+			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -208,11 +220,9 @@ public class CachePoolClient {
 			}
 
 		}
-
-		uploadUnknown();
 	}
 
-	private void uploadUnknown() throws IOException {
+	public synchronized void uploadUnknown() throws IOException {
 		// upload unkown caches
 		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
 		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
