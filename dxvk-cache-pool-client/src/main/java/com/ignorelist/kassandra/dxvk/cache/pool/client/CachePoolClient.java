@@ -150,6 +150,11 @@ public class CachePoolClient {
 		uploadUnknown();
 	}
 
+	/**
+	 * create symlinks in wine prefixes to the target dir
+	 *
+	 * @throws IOException
+	 */
 	public synchronized void prepareWinePrefixes() throws IOException {
 		System.err.println("preparing wine prefixes");
 		for (Path wineDriveC : getScanResult().getWineRoots()) {
@@ -165,11 +170,17 @@ public class CachePoolClient {
 		}
 	}
 
+	/**
+	 * Download and write entries for which we have no local .dxvk-cache in the target directory
+	 *
+	 * @throws IOException
+	 */
 	public synchronized void downloadNew() throws IOException {
 		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
-			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
+			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
+			final Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -185,11 +196,16 @@ public class CachePoolClient {
 		}
 	}
 
+	/**
+	 * Merge existing local and remote caches
+	 *
+	 * @throws IOException
+	 */
 	public synchronized void mergeExisting() throws IOException {
 		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
-			// merge existing caches
+			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
 			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
@@ -222,6 +238,12 @@ public class CachePoolClient {
 		}
 	}
 
+	/**
+	 * Upload caches which have no entry on the remote. Also copies them to the target directory so they're available if the env var
+	 * is set.
+	 *
+	 * @throws IOException
+	 */
 	public synchronized void uploadUnknown() throws IOException {
 		// upload unkown caches
 		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
