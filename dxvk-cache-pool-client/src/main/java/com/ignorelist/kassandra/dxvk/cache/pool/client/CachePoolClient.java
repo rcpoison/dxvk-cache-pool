@@ -162,12 +162,10 @@ public class CachePoolClient {
 		final FsScanner fs=getScanResult();
 		prepareWinePrefixes();
 
-		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=getCacheDescriptorsByBaseNames();
-
-		if (!cacheDescriptorsByBaseName.isEmpty()) {
+		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
-			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
+			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -182,7 +180,7 @@ public class CachePoolClient {
 			}
 
 			// merge existing caches
-			Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, baseNameToCacheTarget::containsKey);
+			Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -213,7 +211,7 @@ public class CachePoolClient {
 
 		}
 
-		uploadUnknown(fs, cacheDescriptorsByBaseName);
+		uploadUnknown(fs, getCacheDescriptorsByBaseNames());
 	}
 
 	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
