@@ -28,6 +28,7 @@ public class FsScanner {
 	private final ImmutableSet<Path> cachePaths;
 	private final ImmutableSet<Path> wineRoots;
 	private final int visitedFiles;
+	private ImmutableMap<String, Path> baseNameToCacheTarget;
 
 	private FsScanner(Path targetPath, ImmutableSet<Path> executables, ImmutableSet<Path> caches, ImmutableSet<Path> wineRoots, int visitedFiles) {
 		this.targetPath=targetPath;
@@ -59,8 +60,16 @@ public class FsScanner {
 		return Sets.difference(cachePaths, getStateCachesInTarget());
 	}
 
-	public ImmutableMap<String, Path> getBaseNameToCacheTarget() {
-		return Maps.uniqueIndex(getStateCachesInTarget(), Util::baseName);
+	/**
+	 * get .dxvk-cache files residing in the target directory, indexed by baseNam
+	 *
+	 * @return .dxvk-cache files residing in the target directory, indexed by baseNam
+	 */
+	public synchronized ImmutableMap<String, Path> getBaseNameToCacheTarget() {
+		if (null==baseNameToCacheTarget) {
+			baseNameToCacheTarget=Maps.uniqueIndex(getStateCachesInTarget(), Util::baseName);
+		}
+		return baseNameToCacheTarget;
 	}
 
 	public int getVisitedFiles() {

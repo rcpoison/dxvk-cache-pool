@@ -46,6 +46,10 @@ public class CachePoolClient {
 
 	private final Configuration configuration;
 
+	private FsScanner scanResult;
+	private ImmutableSet<String> availableBaseNames;
+	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
+
 	private CachePoolClient(Configuration c) {
 		this.configuration=c;
 	}
@@ -101,26 +105,59 @@ public class CachePoolClient {
 		client.merge();
 	}
 
-	private FsScanner scan() throws IOException {
-		System.err.println("scanning directories");
-		FsScanner fs=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
-		System.err.println("scanned "+fs.getVisitedFiles()+" files");
-		return fs;
-	}
-
-	private ImmutableMap<String, StateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
-		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-			System.err.println("looking up remove caches for "+baseNames.size()+" possible games");
-			Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), baseNames);
-			ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
-			return cacheDescriptorsByBaseName;
+	public synchronized FsScanner getScanResult() throws IOException {
+		if (null==scanResult) {
+			System.err.println("scanning directories");
+			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
+			System.err.println("scanned "+scanResult.getVisitedFiles()+" files");
 		}
+		return scanResult;
 	}
 
-	private void prepareWinePrefixes(final FsScanner fs) throws IOException {
-		System.err.println("preparing wine prefixes");
+	public synchronized ImmutableSet<String> getAvailableBaseNames() throws IOException {
+		if (null==availableBaseNames) {
+			availableBaseNames=ImmutableList.of(getScanResult().getExecutables(), getScanResult().getStateCaches())
+					.stream()
+					.flatMap(Collection::stream)
+					.map(Util::baseName)
+					.collect(ImmutableSet.toImmutableSet());
+		}
+		return availableBaseNames;
+	}
 
-		for (Path wineDriveC : fs.getWineRoots()) {
+	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
+		if (null==cacheDescriptorsByBaseName) {
+			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
+				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
+				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
+				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
+				if (configuration.isVerbose()) {
+					cacheDescriptorsByBaseName.values().forEach(d -> {
+						System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
+					});
+				}
+
+			}
+		}
+		return cacheDescriptorsByBaseName;
+	}
+
+	public synchronized void merge() throws IOException {
+		prepareWinePrefixes();
+		downloadNew();
+		mergeExisting();
+		uploadUnknown();
+	}
+
+	/**
+	 * create symlinks in wine prefixes to the target dir
+	 *
+	 * @throws IOException
+	 */
+	public synchronized void prepareWinePrefixes() throws IOException {
+		System.err.println("preparing wine prefixes");
+		for (Path wineDriveC : getScanResult().getWineRoots()) {
 			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
 			if (!Files.isSymbolicLink(symLink)) {
 				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
@@ -133,28 +170,17 @@ public class CachePoolClient {
 		}
 	}
 
-	private void merge() throws IOException {
-		final FsScanner fs=scan();
-		final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
-				.stream()
-				.flatMap(Collection::stream)
-				.map(Util::baseName)
-				.collect(ImmutableSet.toImmutableSet());
-
-		prepareWinePrefixes(fs);
-
-		ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName=fetchCacheDescriptors(baseNames);
-		System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
-		if (configuration.isVerbose()) {
-			cacheDescriptorsByBaseName.values().forEach(d -> {
-				System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
-			});
-		}
-
-		if (!cacheDescriptorsByBaseName.isEmpty()) {
+	/**
+	 * Download and write entries for which we have no local .dxvk-cache in the target directory
+	 *
+	 * @throws IOException
+	 */
+	public synchronized void downloadNew() throws IOException {
+		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
 			// create new caches
-			final ImmutableMap<String, Path> baseNameToCacheTarget=fs.getBaseNameToCacheTarget();
-			Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, Predicates.not(baseNameToCacheTarget::containsKey));
+			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
+			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
+			final Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -167,9 +193,20 @@ public class CachePoolClient {
 					}
 				}
 			}
+		}
+	}
 
-			// merge existing caches
-			Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(cacheDescriptorsByBaseName, baseNameToCacheTarget::containsKey);
+	/**
+	 * Merge existing local and remote caches
+	 *
+	 * @throws IOException
+	 */
+	public synchronized void mergeExisting() throws IOException {
+		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
+
+			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
+			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
+			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
@@ -199,14 +236,19 @@ public class CachePoolClient {
 			}
 
 		}
-
-		uploadUnknown(fs, cacheDescriptorsByBaseName);
 	}
 
-	private void uploadUnknown(final FsScanner fs, final ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName) throws IOException {
+	/**
+	 * Upload caches which have no entry on the remote. Also copies them to the target directory so they're available if the env var
+	 * is set.
+	 *
+	 * @throws IOException
+	 */
+	public synchronized void uploadUnknown() throws IOException {
 		// upload unkown caches
-		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(fs.getStateCaches(), Util::baseName);
-		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(cacheDescriptorsByBaseName::containsKey));
+		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
+		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
+		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
 		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
