@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -13,6 +14,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +24,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author poison
  */
 public class FsScanner {
+
+	private static final class WineRootPredicate implements Predicate<Path> {
+
+		@Override
+		public boolean apply(Path input) {
+			return input.endsWith(FsScanner.PATH_DRIVEC_WINDOWS);
+		}
+
+	}
+
+	public static final Predicate<Path> PREDICATE_DRIVEC_WINDOWS=new WineRootPredicate();
+	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new Util.FileExtPredicate(".exe"), new Util.FileExtPredicate(".EXE"));
+	public static final Predicate<Path> PREDICATE_CACHE=new Util.FileExtPredicate(Util.DXVK_CACHE_EXT);
+	public static final Path PATH_WINDOWS=Paths.get("windows");
+	public static final Path PATH_DRIVEC=Paths.get("drive_c");
+	public static final Path PATH_DRIVEC_WINDOWS=PATH_DRIVEC.resolve(PATH_WINDOWS);
+	public static final Path PATH_DOSDEVICES=Paths.get("dosdevices");
 
 	private final Path targetPath;
 	private final ImmutableSet<Path> executables;
@@ -89,17 +108,17 @@ public class FsScanner {
 				.collect(ImmutableSet.toImmutableSet());
 
 		ImmutableSet<Path> cachePaths=paths.stream()
-				.filter(Util.PREDICATE_CACHE)
+				.filter(PREDICATE_CACHE)
 				.collect(ImmutableSet.toImmutableSet());
 		ImmutableSet<Path> exec=paths.stream()
-				.filter(Util.PREDICATE_EXE)
+				.filter(PREDICATE_EXE)
 				.collect(ImmutableSet.toImmutableSet());
 		ImmutableSet<Path> wineRoots=paths.parallelStream()
-				.map(p -> Util.extractParentPath(p, Util.PATH_DRIVEC))
+				.map(p -> Util.extractParentPath(p, PATH_DRIVEC))
 				.filter(Predicates.notNull())
 				.distinct()
-				.filter(p -> Files.isDirectory(p.resolve(Util.PATH_WINDOWS)))
-				.filter(p -> Files.isDirectory(p.resolveSibling(Util.PATH_DOSDEVICES)))
+				.filter(p -> Files.isDirectory(p.resolve(PATH_WINDOWS)))
+				.filter(p -> Files.isDirectory(p.resolveSibling(PATH_DOSDEVICES)))
 				.collect(ImmutableSet.toImmutableSet());
 		return new FsScanner(targetPath, exec, cachePaths, wineRoots, visited.get());
 	}
@@ -115,7 +134,7 @@ public class FsScanner {
 					.filter(p -> !p.getParent().endsWith("syswow64"))
 					.filter(p -> !p.getParent().endsWith("fakedlls"))
 					.filter(p -> !p.getParent().endsWith("windows"))
-					.filter(Predicates.or(Util.PREDICATE_EXE, Util.PREDICATE_CACHE))
+					.filter(Predicates.or(PREDICATE_EXE, PREDICATE_CACHE))
 					.filter(Files::isRegularFile)
 					.collect(ImmutableSet.toImmutableSet());
 			return paths;

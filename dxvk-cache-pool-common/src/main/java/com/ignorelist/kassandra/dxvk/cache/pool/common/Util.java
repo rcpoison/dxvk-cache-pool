@@ -44,19 +44,12 @@ public final class Util {
 
 		@Override
 		public boolean apply(Path input) {
-			return input.endsWith(PATH_DRIVEC_WINDOWS);
+			return input.endsWith(FsScanner.PATH_DRIVEC_WINDOWS);
 		}
 
 	}
 
-	public static final Path PATH_DRIVEC=Paths.get("drive_c");
-	public static final Path PATH_WINDOWS=Paths.get("windows");
-	public static final Path PATH_DOSDEVICES=Paths.get("dosdevices");
-	public static final Path PATH_DRIVEC_WINDOWS=PATH_DRIVEC.resolve(PATH_WINDOWS);
 	public static final String DXVK_CACHE_EXT=".dxvk-cache";
-	public static final Predicate<Path> PREDICATE_CACHE=new FileExtPredicate(DXVK_CACHE_EXT);
-	public static final Predicate<Path> PREDICATE_EXE=Predicates.or(new FileExtPredicate(".exe"), new FileExtPredicate(".EXE"));
-	public static final Predicate<Path> PREDICATE_DRIVEC_WINDOWS=new WineRootPredicate();
 	private static final Pattern SAFE_BASE_NAME=Pattern.compile("^[\\w. -]+$", Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CHARACTER_CLASS);
 
 	private Util() {
