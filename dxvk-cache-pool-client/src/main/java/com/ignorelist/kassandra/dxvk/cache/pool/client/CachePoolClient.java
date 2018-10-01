@@ -47,6 +47,7 @@ public class CachePoolClient {
 	private final Configuration configuration;
 
 	private FsScanner scanResult;
+	private ImmutableSet<String> availableBaseNames;
 
 	private CachePoolClient(Configuration c) {
 		this.configuration=c;
@@ -103,13 +104,24 @@ public class CachePoolClient {
 		client.merge();
 	}
 
-	public synchronized FsScanner scanResult() throws IOException {
+	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
 			System.err.println("scanning directories");
 			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
 			System.err.println("scanned "+scanResult.getVisitedFiles()+" files");
 		}
 		return scanResult;
+	}
+
+	public synchronized ImmutableSet<String> getAvailableBaseNames() throws IOException {
+		if (null==availableBaseNames) {
+			availableBaseNames=ImmutableList.of(getScanResult().getExecutables(), getScanResult().getStateCaches())
+					.stream()
+					.flatMap(Collection::stream)
+					.map(Util::baseName)
+					.collect(ImmutableSet.toImmutableSet());
+		}
+		return availableBaseNames;
 	}
 
 	private ImmutableMap<String, StateCacheInfo> fetchCacheDescriptors(Set<String> baseNames) throws IOException {
@@ -138,12 +150,8 @@ public class CachePoolClient {
 	}
 
 	private void merge() throws IOException {
-		final FsScanner fs=scanResult();
-		final ImmutableSet<String> baseNames=ImmutableList.of(fs.getExecutables(), fs.getStateCaches())
-				.stream()
-				.flatMap(Collection::stream)
-				.map(Util::baseName)
-				.collect(ImmutableSet.toImmutableSet());
+		final FsScanner fs=getScanResult();
+		final ImmutableSet<String> baseNames=getAvailableBaseNames();
 
 		prepareWinePrefixes(fs);
 
