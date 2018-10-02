@@ -78,6 +78,10 @@ public class StateCacheEntry implements Serializable {
 		return new StateCacheEntrySigned(this, ImmutableSet.of(signaturePublicKeyInfo));
 	}
 
+	public StateCacheEntry copySafe() {
+		return new StateCacheEntry(getEntry());
+	}
+
 	@Override
 	public int hashCode() {
 		int hash=7;
