@@ -9,7 +9,9 @@ import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolREST;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.SignatureStorageFS;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
@@ -44,11 +46,13 @@ public class CachePoolServer implements Closeable {
 
 	private final Configuration configuration;
 	private final CacheStorage cacheStorage;
+	private final SignatureStorage signatureStorage;
 	private Server server;
 
-	public CachePoolServer(final Configuration configuration, final CacheStorage cacheStorage) {
+	public CachePoolServer(final Configuration configuration, final CacheStorage cacheStorage, final SignatureStorage signatureStorage) {
 		this.configuration=configuration;
 		this.cacheStorage=cacheStorage;
+		this.signatureStorage=signatureStorage;
 	}
 
 	public synchronized void start() throws Exception {
@@ -72,7 +76,7 @@ public class CachePoolServer implements Closeable {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(CachePoolREST.class);
 		resourceConfig.register(CachePoolHome.class);
-		resourceConfig.register(new ServerBinder(configuration, cacheStorage));
+		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage));
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
 	}
@@ -111,8 +115,11 @@ public class CachePoolServer implements Closeable {
 			System.exit(1);
 		}
 
-		try (CacheStorageFS storage=new CacheStorageFS(configuration.getStorage()); CachePoolServer js=new CachePoolServer(configuration, storage)) {
+		try (final CacheStorageFS storage=new CacheStorageFS(configuration.getStorage());
+				final SignatureStorageFS signatureStorage=new SignatureStorageFS(configuration.getStorage());
+				final CachePoolServer js=new CachePoolServer(configuration, storage, signatureStorage)) {
 			storage.init();
+			signatureStorage.init();
 			js.start();
 			js.join();
 		}

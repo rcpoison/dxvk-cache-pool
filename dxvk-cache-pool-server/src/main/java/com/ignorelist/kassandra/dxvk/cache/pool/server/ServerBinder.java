@@ -1,6 +1,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
@@ -12,16 +13,19 @@ public class ServerBinder extends AbstractBinder {
 
 	private final Configuration configuration;
 	private final CacheStorage cacheStorage;
+	private final SignatureStorage signatureStorage;
 
-	public ServerBinder(Configuration configuration, CacheStorage cacheStorage) {
+	public ServerBinder(final Configuration configuration, final CacheStorage cacheStorage, final SignatureStorage signatureStorage) {
 		this.configuration=configuration;
 		this.cacheStorage=cacheStorage;
+		this.signatureStorage=signatureStorage;
 	}
 
 	@Override
 	protected void configure() {
 		bind(configuration).to(Configuration.class);
 		bind(cacheStorage).to(CacheStorage.class);
+		bind(signatureStorage).to(SignatureStorage.class);
 	}
 
 }
