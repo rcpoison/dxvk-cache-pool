@@ -81,10 +81,17 @@ public class StateCacheEntrySigned implements Serializable {
 					validSignatures.add(signature);
 				}
 			} catch (Exception ex) {
-				LOG.log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
+				LOG.log(Level.WARNING, "failed to verify: "+publicKeyInfo, ex);
 			}
 		}
 		return validSignatures.build();
+	}
+
+	public StateCacheEntrySigned copySafe() {
+		StateCacheEntrySigned copy=new StateCacheEntrySigned();
+		copy.setCacheEntry(getCacheEntry().copySafe());
+		copy.setSignatures(getSignatures());
+		return copy;
 	}
 
 	@Override
