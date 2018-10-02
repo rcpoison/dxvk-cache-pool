@@ -17,7 +17,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySign
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -51,7 +50,7 @@ public class CacheStorageSignedFacade {
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
-				.flatMap(Collection::stream)
+				.flatMap(Set::stream)
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.distinct()
 				.map(signatureStorage::getPublicKey)
