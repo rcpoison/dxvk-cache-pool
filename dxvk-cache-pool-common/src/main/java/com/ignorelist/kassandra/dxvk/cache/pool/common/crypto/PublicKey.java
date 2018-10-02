@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -44,6 +45,8 @@ public class PublicKey implements Serializable {
 		this.key=key;
 	}
 
+	@NotNull
+	@XmlAttribute(required=true)
 	public PublicKeyInfo getKeyInfo() {
 		return keyInfo;
 	}
