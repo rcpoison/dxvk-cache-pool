@@ -71,7 +71,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	private synchronized ForkJoinPool getThreadPool() {
 		if (null==storageThreadPool) {
-			storageThreadPool=new ForkJoinPool(8);
+			storageThreadPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()/2));
 		}
 		return storageThreadPool;
 	}
