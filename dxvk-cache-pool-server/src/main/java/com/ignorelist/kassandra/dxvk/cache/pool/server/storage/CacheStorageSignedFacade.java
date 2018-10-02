@@ -47,6 +47,12 @@ public class CacheStorageSignedFacade {
 		cache.copyShallowTo(cacheSigned);
 		ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries());
 		cacheSigned.setEntries(signedEntries);
+		ImmutableSet<PublicKey> usedPublicKeys=getKeysForEntries(signedEntries);
+		cacheSigned.setPublicKeys(usedPublicKeys);
+		return cacheSigned;
+	}
+
+	private ImmutableSet<PublicKey> getKeysForEntries(ImmutableSet<StateCacheEntrySigned> signedEntries) {
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
 				.filter(Predicates.notNull())
@@ -56,8 +62,7 @@ public class CacheStorageSignedFacade {
 				.map(signatureStorage::getPublicKey)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
-		cacheSigned.setPublicKeys(usedPublicKeys);
-		return cacheSigned;
+		return usedPublicKeys;
 	}
 
 	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries) {
