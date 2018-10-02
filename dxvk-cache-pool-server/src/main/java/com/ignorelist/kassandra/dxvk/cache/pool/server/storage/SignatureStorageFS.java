@@ -7,6 +7,8 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Stopwatch;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Interner;
@@ -18,6 +20,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
@@ -32,6 +35,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,17 +62,26 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private static final Logger LOG=Logger.getLogger(SignatureStorageFS.class.getName());
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
 	private static final Path PATH_SIGNATURES=Paths.get("signatures");
+	private static final Path PATH_KEYS=Paths.get("keys");
 
 	private final Path storageRoot;
 	private final Path signaturesPath;
+	private final Path keysPath;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
 	private final Interner<PublicKeyInfo> publicKeyInfoInterner=Interners.newWeakInterner();
+	private final Cache<PublicKeyInfo, PublicKey> publicKeyStorageCache=CacheBuilder.newBuilder()
+			.weigher((PublicKeyInfo i, PublicKey k) -> k.getKey().length)
+			.maximumWeight(8*1024*1024) // 8MiB
+			.build();
 	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> signatureStorageCache;
 	private ForkJoinPool storageThreadPool;
 
-	public SignatureStorageFS(Path storageRoot) {
+	public SignatureStorageFS(Path storageRoot) throws IOException {
 		this.storageRoot=storageRoot;
 		signaturesPath=storageRoot.resolve(PATH_SIGNATURES);
+		keysPath=storageRoot.resolve(PATH_KEYS);
+		Files.createDirectories(signaturesPath);
+		Files.createDirectories(keysPath);
 	}
 
 	private synchronized ForkJoinPool getThreadPool() {
@@ -93,7 +106,6 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private synchronized ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> getSignatureStorageCache() throws IOException {
 		if (null==signatureStorageCache) {
 			Stopwatch stopwatch=Stopwatch.createStarted();
-			Files.createDirectories(signaturesPath);
 			final ImmutableSetMultimap<Path, Path> signatureFiles=Files.walk(signaturesPath)
 					.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 					.filter(Files::isRegularFile)
@@ -232,13 +244,49 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		}
 	}
 
-	@Override
-	public PublicKey getPublicKey(final PublicKeyInfo keyInfo) {
-		throw new UnsupportedOperationException();
+	private Path buildPublicKeyPath(final PublicKeyInfo keyInfo) {
+		return buildTargetPathFile(keysPath, keyInfo);
 	}
 
-	public void storePublicKey(final PublicKey publicKey) {
-		throw new UnsupportedOperationException();
+	@Override
+	public PublicKey getPublicKey(final PublicKeyInfo keyInfo) {
+		final PublicKeyInfo keyInfoInterned=publicKeyInfoInterner.intern(keyInfo);
+		try {
+			return publicKeyStorageCache.get(keyInfoInterned, () -> {
+				final Path keyPath=buildPublicKeyPath(keyInfoInterned);
+				final Lock readLock=getReadLock(keyPath);
+				readLock.lock();
+				try (InputStream in=Files.newInputStream(keyPath)) {
+					byte[] keyBytes=ByteStreams.toByteArray(in);
+					return new PublicKey(keyBytes, keyInfoInterned);
+				} finally {
+					readLock.unlock();
+				}
+			});
+		} catch (Exception ex) {
+			LOG.log(Level.INFO, "no key found for: {0}", keyInfo);
+			return null;
+		}
+
+	}
+
+	@Override
+	public void storePublicKey(final PublicKey publicKey) throws IOException {
+		final PublicKeyInfo keyInfoInterned=publicKeyInfoInterner.intern(publicKey.getKeyInfo());
+		final Path keyPath=buildPublicKeyPath(keyInfoInterned);
+		final Lock writeLock=getWriteLock(keyPath);
+		writeLock.lock();
+		try (OutputStream out=Files.newOutputStream(keyPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)) { // don't overwrite existing
+			CryptoUtil.write(out, CryptoUtil.decodePublicKey(publicKey));
+			final PublicKey keyInterned=new PublicKey(publicKey.getKey(), keyInfoInterned);
+			publicKeyStorageCache.put(keyInfoInterned, keyInterned);
+		} catch (IOException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new IOException(e);
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	@Override

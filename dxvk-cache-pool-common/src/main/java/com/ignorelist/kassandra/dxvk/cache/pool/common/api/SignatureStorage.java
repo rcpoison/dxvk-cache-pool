@@ -10,6 +10,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -18,14 +19,16 @@ import java.util.Set;
  */
 public interface SignatureStorage {
 
-	Identity getIdentity(final PublicKeyInfo keyInfo);
-
-	PublicKey getPublicKey(final PublicKeyInfo keyInfo);
+	void addSignee(final StateCacheEntryInfo entryInfo, final SignaturePublicKeyInfo signaturePublicKeyInfo);
 
 	Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo);
 
 	Set<PublicKeyInfo> getSignedBy(final StateCacheEntryInfo entryInfo);
 
-	void addSignee(final StateCacheEntryInfo entryInfo, final SignaturePublicKeyInfo signaturePublicKeyInfo);
+	void storePublicKey(final PublicKey publicKey) throws IOException;
+
+	PublicKey getPublicKey(final PublicKeyInfo keyInfo);
+
+	Identity getIdentity(final PublicKeyInfo keyInfo);
 
 }

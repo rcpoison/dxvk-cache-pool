@@ -128,4 +128,29 @@ public class SignatureStorageFSNGTest {
 		}
 	}
 
+	/**
+	 * Test of getPublicKey method, of class SignatureStorageFS.
+	 */
+	@Test(dependsOnMethods={"testStorePublicKey"})
+	public void testGetPublicKey() throws Exception {
+		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+			final PublicKey expected=new PublicKey(keyPair.getPublic());
+			final PublicKey storedKey=storage.getPublicKey(expected.getKeyInfo());
+			Assert.assertEquals(storedKey, expected);
+		}
+	}
+
+	/**
+	 * Test of storePublicKey method, of class SignatureStorageFS.
+	 */
+	@Test
+	public void testStorePublicKey() throws Exception {
+		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+			final PublicKey publicKey=new PublicKey(keyPair.getPublic());
+			storage.storePublicKey(publicKey);
+			final PublicKey storedKey=storage.getPublicKey(publicKey.getKeyInfo());
+			Assert.assertEquals(storedKey, publicKey);
+		}
+	}
+
 }
