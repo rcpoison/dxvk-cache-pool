@@ -6,11 +6,13 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.ByteStreams;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
@@ -19,25 +21,32 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * Simple storage for signatures and keys using the filesystem.
  *
- * storage layout: storageRoot / signatures / entry sha256[0-1] / entry sha256[2-] / publickey sha256
+ * storage layout signatures: storageRoot / signatures / entry sha256[0-1] / entry sha256[2-] / publickey sha256 storage layout
+ * public keys: storageRoot / keys / publickey sha256
  *
  * @author poison
  */
@@ -45,16 +54,18 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	private static final Logger LOG=Logger.getLogger(SignatureStorageFS.class.getName());
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
+	private static final Path PATH_SIGNATURES=Paths.get("signatures");
 
 	private final Path storageRoot;
+	private final Path signaturesPath;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
 	private final Interner<PublicKeyInfo> publicKeyInfoInterner=Interners.newWeakInterner();
 	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> storageCache;
 	private ForkJoinPool storageThreadPool;
-	
 
 	public SignatureStorageFS(Path storageRoot) {
 		this.storageRoot=storageRoot;
+		signaturesPath=storageRoot.resolve(PATH_SIGNATURES);
 	}
 
 	private synchronized ForkJoinPool getThreadPool() {
@@ -64,22 +75,22 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		return storageThreadPool;
 	}
 
-	private Lock getReadLock(StateCacheEntryInfo entryInfo) {
-		final ReadWriteLock lock=storageLock.get(entryInfo);
+	private Lock getReadLock(Path path) {
+		final ReadWriteLock lock=storageLock.get(path);
 		final Lock readLock=lock.readLock();
 		return readLock;
 	}
 
-	private Lock getWriteLock(StateCacheEntryInfo entryInfo) {
-		final ReadWriteLock lock=storageLock.get(entryInfo);
+	private Lock getWriteLock(Path path) {
+		final ReadWriteLock lock=storageLock.get(path);
 		final Lock writeLock=lock.writeLock();
 		return writeLock;
 	}
 
 	private synchronized ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> getStorageCache() throws IOException {
 		if (null==storageCache) {
-			Files.createDirectories(storageRoot);
-			final ImmutableSetMultimap<Path, Path> signatureFiles=Files.walk(storageRoot)
+			Files.createDirectories(signaturesPath);
+			final ImmutableSetMultimap<Path, Path> signatureFiles=Files.walk(signaturesPath)
 					.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 					.filter(Files::isRegularFile)
 					.collect(ImmutableSetMultimap.toImmutableSetMultimap(Path::getParent, Functions.identity()));
@@ -104,22 +115,112 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		return storageCache;
 	}
 
+	private Path buildTargetPath(final StateCacheEntryInfo entryInfo) {
+		final String entryHashString=BASE16.encode(entryInfo.getHash());
+		return signaturesPath
+				.resolve(entryHashString.substring(0, 2))
+				.resolve(entryHashString.substring(2));
+	}
+
+	private static Path buildTargetPathFile(final Path targetPath, final PublicKeyInfo publicKeyInfo) {
+		final String keyHashString=BASE16.encode(publicKeyInfo.getHash());
+		return targetPath.resolve(keyHashString);
+	}
+
+	public void init() throws IOException {
+		getStorageCache();
+	}
+
 	@Override
 	public Set<PublicKeyInfo> getSignedBy(final StateCacheEntryInfo entryInfo) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void setSignedBy(final StateCacheEntryInfo entryInfo, final Signature signature) {
-		throw new UnsupportedOperationException();
+		try {
+			final Set<PublicKeyInfo> signedBy=getStorageCache().get(entryInfo);
+			if (null!=signedBy) {
+				return signedBy;
+			}
+		} catch (Exception ex) {
+			LOG.log(Level.SEVERE, null, ex);
+		}
+		return ImmutableSet.of();
 	}
 
 	@Override
-	public Set<Signature> getSignatures(final StateCacheEntryInfo entryInfo) {
-		throw new UnsupportedOperationException();
+	public void addSignee(final StateCacheEntryInfo entryInfo, final SignaturePublicKeyInfo signaturePublicKeyInfo) {
+		if (null==entryInfo) {
+			throw new IllegalArgumentException("entryInfo is null");
+		}
+		if (null==signaturePublicKeyInfo) {
+			throw new IllegalArgumentException("signaturePublicKeyInfo is null");
+		}
+		final Path targetPath=buildTargetPath(entryInfo);
+		final Lock writeLock=getWriteLock(targetPath);
+		writeLock.lock();
+		try {
+			final Set<PublicKeyInfo> existingEntries=getStorageCache().computeIfAbsent(entryInfo, k -> Sets.newConcurrentHashSet());
+			final PublicKeyInfo publicKeyInfo=signaturePublicKeyInfo.getPublicKeyInfo();
+			if (existingEntries.contains(publicKeyInfo)) {
+				return;
+			}
+			if (existingEntries.isEmpty()) {
+				Files.createDirectories(targetPath);
+			}
+			final Path filePath=buildTargetPathFile(targetPath, publicKeyInfo);
+			try (OutputStream out=Files.newOutputStream(filePath)) {
+				out.write(signaturePublicKeyInfo.getSignature().getSignature());
+			}
+			existingEntries.add(publicKeyInfoInterner.intern(publicKeyInfo));
+
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			writeLock.unlock();
+		}
+	}
+
+	@Override
+	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo) {
+		final Path targetPath=buildTargetPath(entryInfo);
+		final Lock readLock=getReadLock(targetPath);
+		readLock.lock();
+		try {
+			final Set<PublicKeyInfo> signedBy=getSignedBy(entryInfo);
+			if (null==signedBy||signedBy.isEmpty()) {
+				return ImmutableSet.of();
+			}
+			ForkJoinTask<ImmutableSet<SignaturePublicKeyInfo>> task=getThreadPool().submit(()
+					-> signedBy.parallelStream()
+							.map(k -> readSignature(targetPath, k))
+							.collect(ImmutableSet.toImmutableSet()));
+			return task.get();
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			readLock.unlock();
+		}
+	}
+
+	private static SignaturePublicKeyInfo readSignature(final Path basePath, final PublicKeyInfo keyInfo) {
+		final Path filePath=buildTargetPathFile(basePath, keyInfo);
+		try (InputStream in=Files.newInputStream(filePath)) {
+			final byte[] signature=ByteStreams.toByteArray(in);
+			final Signature s=new Signature(signature);
+			return new SignaturePublicKeyInfo(s, keyInfo);
+		} catch (Exception e) {
+			LOG.log(Level.WARNING, "failed to read: "+keyInfo, e);
+			throw new IllegalStateException("failed to read: "+keyInfo, e);
+		}
 	}
 
 	@Override
 	public PublicKey getPublicKey(final PublicKeyInfo keyInfo) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void storePublicKey(final PublicKey publicKey) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import java.util.Set;
 
@@ -22,8 +22,10 @@ public interface SignatureStorage {
 
 	PublicKey getPublicKey(final PublicKeyInfo keyInfo);
 
-	Set<Signature> getSignatures(final StateCacheEntryInfo entryInfo);
+	Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo);
 
 	Set<PublicKeyInfo> getSignedBy(final StateCacheEntryInfo entryInfo);
+
+	void addSignee(final StateCacheEntryInfo entryInfo, final SignaturePublicKeyInfo signaturePublicKeyInfo);
 
 }
