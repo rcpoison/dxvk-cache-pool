@@ -12,18 +12,21 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author poison
  */
-public class StateCacheSignedRequest implements Serializable, StateCacheMeta {
+@XmlRootElement
+public class StateCacheSigned implements Serializable, StateCacheMeta {
 
+	@NotNull
 	private String baseName;
 	private int version;
 	private int entrySize;
 	private PublicKey publicKey;
-	private Set<StateCacheEntrySignedRequest> entries;
+	private Set<StateCacheEntrySigned> entries;
 
 	@NotNull
 	@Size(min=1, max=256)
@@ -59,33 +62,20 @@ public class StateCacheSignedRequest implements Serializable, StateCacheMeta {
 		this.entrySize=entrySize;
 	}
 
-	@NotNull
-	@XmlElement(required=true)
-	public PublicKey getPublicKey() {
-		return publicKey;
-	}
-
-	public void setPublicKey(PublicKey publicKey) {
-		this.publicKey=publicKey;
-	}
-
-	@NotNull
-	@XmlElement(required=true)
-	public Set<StateCacheEntrySignedRequest> getEntries() {
+	public Set<StateCacheEntrySigned> getEntries() {
 		return entries;
 	}
 
-	public void setEntries(Set<StateCacheEntrySignedRequest> entries) {
+	public void setEntries(Set<StateCacheEntrySigned> entries) {
 		this.entries=entries;
 	}
 
 	@Override
 	public int hashCode() {
-		int hash=7;
-		hash=89*hash+Objects.hashCode(this.baseName);
-		hash=89*hash+this.version;
-		hash=89*hash+Objects.hashCode(this.publicKey);
-		hash=89*hash+Objects.hashCode(this.entries);
+		int hash=5;
+		hash=59*hash+Objects.hashCode(this.baseName);
+		hash=59*hash+this.version;
+		hash=59*hash+Objects.hashCode(this.entries);
 		return hash;
 	}
 
@@ -100,14 +90,11 @@ public class StateCacheSignedRequest implements Serializable, StateCacheMeta {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final StateCacheSignedRequest other=(StateCacheSignedRequest) obj;
+		final StateCacheSigned other=(StateCacheSigned) obj;
 		if (this.version!=other.version) {
 			return false;
 		}
 		if (!Objects.equals(this.baseName, other.baseName)) {
-			return false;
-		}
-		if (!Objects.equals(this.publicKey, other.publicKey)) {
 			return false;
 		}
 		if (!Objects.equals(this.entries, other.entries)) {

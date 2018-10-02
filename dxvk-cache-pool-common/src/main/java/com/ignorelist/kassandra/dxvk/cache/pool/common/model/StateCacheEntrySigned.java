@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
@@ -24,17 +25,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntrySignedResponse implements Serializable {
+public class StateCacheEntrySigned implements Serializable {
 
-	private static final Logger LOG=Logger.getLogger(StateCacheEntrySignedResponse.class.getName());
+	private static final Logger LOG=Logger.getLogger(StateCacheEntrySigned.class.getName());
 
 	private StateCacheEntry cacheEntry;
 	private Set<SignaturePublicKeyInfo> signatures;
 
-	public StateCacheEntrySignedResponse() {
+	public StateCacheEntrySigned() {
 	}
 
-	public StateCacheEntrySignedResponse(StateCacheEntry cacheEntry, Set<SignaturePublicKeyInfo> signatures) {
+	public StateCacheEntrySigned(StateCacheEntry cacheEntry, Set<SignaturePublicKeyInfo> signatures) {
 		this.cacheEntry=cacheEntry;
 		this.signatures=signatures;
 	}
@@ -57,24 +58,33 @@ public class StateCacheEntrySignedResponse implements Serializable {
 		this.signatures=signatures;
 	}
 
-	public boolean verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+	/**
+	 * get valid signatures
+	 *
+	 * @param keyAccessor
+	 * @return
+	 */
+	public ImmutableSet<SignaturePublicKeyInfo> verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+		if (null==getSignatures()) {
+			return ImmutableSet.of();
+		}
+		ImmutableSet.Builder<SignaturePublicKeyInfo> validSignatures=ImmutableSet.<SignaturePublicKeyInfo>builder();
 		for (SignaturePublicKeyInfo signature : getSignatures()) {
 			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
 			final PublicKey publicKey=keyAccessor.apply(publicKeyInfo);
-			LOG.warning("public key not found for: "+publicKeyInfo);
 			if (null==publicKey) {
-				return false;
+				LOG.warning("public key not found for: "+publicKeyInfo);
+				continue;
 			}
 			try {
-				if (!CryptoUtil.verify(getCacheEntry().getEntry(), publicKey, signature.getSignature().getSignature())) {
-					return false;
+				if (CryptoUtil.verify(getCacheEntry().getEntry(), publicKey, signature.getSignature().getSignature())) {
+					validSignatures.add(signature);
 				}
 			} catch (Exception ex) {
-				Logger.getLogger(StateCacheEntrySignedResponse.class.getName()).log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
-				return false;
+				Logger.getLogger(StateCacheEntrySigned.class.getName()).log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
 			}
 		}
-		return true;
+		return validSignatures.build();
 	}
 
 	@Override
@@ -95,7 +105,7 @@ public class StateCacheEntrySignedResponse implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final StateCacheEntrySignedResponse other=(StateCacheEntrySignedResponse) obj;
+		final StateCacheEntrySigned other=(StateCacheEntrySigned) obj;
 		if (!Objects.equals(this.cacheEntry, other.cacheEntry)) {
 			return false;
 		}
