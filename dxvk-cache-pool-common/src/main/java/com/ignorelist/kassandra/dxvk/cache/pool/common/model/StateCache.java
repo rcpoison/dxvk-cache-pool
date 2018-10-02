@@ -92,17 +92,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return info;
 	}
 
-	/**
-	 * copy without entries
-	 *
-	 * @param cache
-	 * @return
-	 */
-	public void copyShallowTo(StateCacheMeta cache) {
-		cache.setVersion(getVersion());
-		cache.setEntrySize(getEntrySize());
-		cache.setBaseName(getBaseName());
-	}
+	
 
 	/**
 	 * copy without entries

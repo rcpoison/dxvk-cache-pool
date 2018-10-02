@@ -16,6 +16,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
 import java.util.Set;
@@ -34,8 +35,18 @@ public class CacheStorageSignedFacade {
 		this.signatureStorage=signatureStorage;
 	}
 
-	public StateCacheEntryInfoSignees getCacheDescriptor(int version, String baseName) {
-		throw new UnsupportedOperationException();
+	public StateCacheInfoSignees getCacheDescriptor(int version, String baseName) {
+		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
+		if (null==cacheDescriptor) {
+			return null;
+		}
+		StateCacheInfoSignees cacheInfoSignees=new StateCacheInfoSignees();
+		cacheDescriptor.copyShallowTo(cacheInfoSignees);
+		final ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=cacheDescriptor.getEntries().parallelStream()
+				.map(e -> new StateCacheEntryInfoSignees(e, signatureStorage.getSignedBy(e)))
+				.collect(ImmutableSet.toImmutableSet());
+		cacheInfoSignees.setEntries(entriesSignees);
+		return cacheInfoSignees;
 	}
 
 	public StateCacheSigned getCache(final int version, final String baseName) {
