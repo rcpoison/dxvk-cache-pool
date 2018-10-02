@@ -69,7 +69,7 @@ public class SignatureStorageFSNGTest {
 	public void tearDownMethod() throws Exception {
 	}
 
-	@DataProvider
+	@DataProvider(parallel=true)
 	private Iterator<Object[]> entryInfoSignee() throws Exception {
 		return Iterables.transform(
 				cacheSigned.getEntries(),
