@@ -115,8 +115,8 @@ public class CachePoolServer implements Closeable {
 			System.exit(1);
 		}
 
-		try (final CacheStorageFS storage=new CacheStorageFS(configuration.getStorage());
-				final SignatureStorageFS signatureStorage=new SignatureStorageFS(configuration.getStorage());
+		try (final CacheStorageFS storage=new CacheStorageFS(configuration.getStorage().resolve("cache"));
+				final SignatureStorageFS signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
 				final CachePoolServer js=new CachePoolServer(configuration, storage, signatureStorage)) {
 			storage.init();
 			signatureStorage.init();
