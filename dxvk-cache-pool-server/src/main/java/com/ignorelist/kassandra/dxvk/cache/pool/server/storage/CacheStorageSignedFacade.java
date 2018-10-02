@@ -12,6 +12,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
@@ -44,9 +45,7 @@ public class CacheStorageSignedFacade {
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cache.copyShallowTo(cacheSigned);
-		final ImmutableSet<StateCacheEntrySigned> signedEntries=cache.getEntries().parallelStream()
-				.map(e -> new StateCacheEntrySigned(e, signatureStorage.getSignatures(e.getEntryInfo())))
-				.collect(ImmutableSet.toImmutableSet());
+		ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries());
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
@@ -59,6 +58,12 @@ public class CacheStorageSignedFacade {
 				.collect(ImmutableSet.toImmutableSet());
 		cacheSigned.setPublicKeys(usedPublicKeys);
 		return cacheSigned;
+	}
+
+	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries) {
+		return entries.parallelStream()
+				.map(e -> new StateCacheEntrySigned(e, signatureStorage.getSignatures(e.getEntryInfo())))
+				.collect(ImmutableSet.toImmutableSet());
 	}
 
 	public void store(StateCacheSigned cache) throws IOException {
