@@ -50,6 +50,7 @@ public class CacheStorageSignedFacade {
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
+				.filter(Predicates.notNull())
 				.flatMap(Set::stream)
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.distinct()
