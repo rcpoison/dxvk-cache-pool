@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
@@ -54,6 +55,7 @@ public class CacheStorageSignedFacade {
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.distinct()
 				.map(signatureStorage::getPublicKey)
+				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 		cacheSigned.setPublicKeys(usedPublicKeys);
 		return cacheSigned;
