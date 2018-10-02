@@ -38,21 +38,21 @@ public class CacheStorageSignedFacade {
 		throw new UnsupportedOperationException();
 	}
 
-	public StateCacheSigned getCache(int version, String baseName) {
+	public StateCacheSigned getCache(final int version, final String baseName) {
 		final StateCache cache=cacheStorage.getCache(version, baseName);
 		if (null==cache) {
 			return null;
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cache.copyShallowTo(cacheSigned);
-		ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries());
+		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries());
 		cacheSigned.setEntries(signedEntries);
-		ImmutableSet<PublicKey> usedPublicKeys=getKeysForEntries(signedEntries);
+		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
 		return cacheSigned;
 	}
 
-	private ImmutableSet<PublicKey> getKeysForEntries(ImmutableSet<StateCacheEntrySigned> signedEntries) {
+	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
 				.filter(Predicates.notNull())
@@ -75,7 +75,7 @@ public class CacheStorageSignedFacade {
 		throw new UnsupportedOperationException();
 	}
 
-	public Set<StateCacheEntrySigned> getMissingEntries(StateCacheInfo existingCache) {
+	public Set<StateCacheEntrySigned> getMissingEntries(final StateCacheInfo existingCache) {
 		final Set<StateCacheEntry> missingEntries=cacheStorage.getMissingEntries(existingCache);
 		return buildSignedEntries(missingEntries);
 	}
