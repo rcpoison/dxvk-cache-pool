@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import java.io.Serializable;
 import java.util.Objects;
@@ -76,6 +77,16 @@ public class StateCacheSigned implements Serializable, StateCacheMeta {
 
 	public void setPublicKeys(Set<PublicKey> publicKeys) {
 		this.publicKeys=publicKeys;
+	}
+
+	public StateCache toUnsigned() {
+		StateCache cache=new StateCache();
+		copyShallowTo(cache);
+		final ImmutableSet<StateCacheEntry> entries=getEntries().stream()
+				.map(StateCacheEntrySigned::getCacheEntry)
+				.collect(ImmutableSet.toImmutableSet());
+		cache.setEntries(entries);
+		return cache;
 	}
 
 	@Override
