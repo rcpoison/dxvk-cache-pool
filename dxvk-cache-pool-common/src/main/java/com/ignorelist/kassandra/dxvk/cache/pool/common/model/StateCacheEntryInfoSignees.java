@@ -18,15 +18,15 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntryInfoSigneeResponse implements Serializable {
+public class StateCacheEntryInfoSignees implements Serializable {
 
 	private StateCacheEntryInfo entryInfo;
 	private Set<PublicKeyInfo> publicKeyInfos;
 
-	public StateCacheEntryInfoSigneeResponse() {
+	public StateCacheEntryInfoSignees() {
 	}
 
-	public StateCacheEntryInfoSigneeResponse(StateCacheEntryInfo entryInfo, Set<PublicKeyInfo> publicKeyInfos) {
+	public StateCacheEntryInfoSignees(StateCacheEntryInfo entryInfo, Set<PublicKeyInfo> publicKeyInfos) {
 		this.entryInfo=entryInfo;
 		this.publicKeyInfos=publicKeyInfos;
 	}
@@ -67,7 +67,7 @@ public class StateCacheEntryInfoSigneeResponse implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final StateCacheEntryInfoSigneeResponse other=(StateCacheEntryInfoSigneeResponse) obj;
+		final StateCacheEntryInfoSignees other=(StateCacheEntryInfoSignees) obj;
 		if (!Objects.equals(this.entryInfo, other.entryInfo)) {
 			return false;
 		}
