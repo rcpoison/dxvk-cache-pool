@@ -93,9 +93,10 @@ public class CacheStorageFS implements CacheStorage {
 
 	private synchronized ConcurrentMap<String, StateCacheInfo> getStorageCache(int version) throws IOException {
 		if (null==storageCache) {
+			Stopwatch stopwatch=Stopwatch.createStarted();
 			Files.createDirectories(storageRoot);
 
-			ImmutableSet<String> versions=Files.list(storageRoot)
+			final ImmutableSet<String> versions=Files.list(storageRoot)
 					.filter(Files::isDirectory)
 					.map(Path::getFileName)
 					.map(Path::toString)
@@ -119,6 +120,8 @@ public class CacheStorageFS implements CacheStorage {
 					LOG.log(Level.WARNING, null, e);
 				}
 			}
+			stopwatch.stop();
+			LOG.log(Level.INFO, "populated storageCache in {0}ms", stopwatch.elapsed().toMillis());
 			storageCache=m;
 		}
 		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
