@@ -107,7 +107,7 @@ public class CacheStorageSignedFacade {
 					.map(StateCacheEntrySigned::getCacheEntry)
 					.collect(ImmutableSet.toImmutableSet());
 			unsigned.setEntries(verifiedEntriesUnsigned);
-			cacheStorage.store(unsigned);;
+			cacheStorage.store(unsigned);
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception ex) {
