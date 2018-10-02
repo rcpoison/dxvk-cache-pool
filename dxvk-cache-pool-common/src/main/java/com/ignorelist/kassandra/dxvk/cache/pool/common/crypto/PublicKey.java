@@ -30,6 +30,10 @@ public class PublicKey implements Serializable {
 		keyInfo=new PublicKeyInfo(this);
 	}
 
+	public PublicKey(java.security.PublicKey key) {
+		this(key.getEncoded());
+	}
+
 	public PublicKey(byte[] key, PublicKeyInfo keyInfo) {
 		this.key=key;
 		this.keyInfo=keyInfo;
