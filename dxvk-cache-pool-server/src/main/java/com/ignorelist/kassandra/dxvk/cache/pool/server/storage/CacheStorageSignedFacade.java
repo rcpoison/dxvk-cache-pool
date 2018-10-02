@@ -6,10 +6,14 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -83,7 +87,32 @@ public class CacheStorageSignedFacade {
 	}
 
 	public void store(StateCacheSigned cache) throws IOException {
-		throw new UnsupportedOperationException();
+		try {
+			final PublicKey publicKeyUntrustedInfo=Iterables.getOnlyElement(cache.getPublicKeys()); // submission must only have asingle public key attached
+			// do not trust key info, rebuild
+			final PublicKey publicKey=new PublicKey(publicKeyUntrustedInfo.getKey());
+
+			final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keyByInfo=ImmutableMap.of(publicKey.getKeyInfo(), CryptoUtil.decodePublicKey(publicKey.getKey()));
+			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
+					.map(StateCacheEntrySigned::copySafe)
+					.filter(e -> 1==e.getSignatures().size())
+					.filter(e -> 1==e.verify(keyByInfo::get).size())
+					.collect(ImmutableSet.toImmutableSet());
+			verifiedEntries.parallelStream()
+					.forEach(e -> signatureStorage.addSignee(e.getCacheEntry().getEntryInfo(), Iterables.getOnlyElement(e.getSignatures())));
+
+			StateCache unsigned=new StateCache();
+			cache.copyShallowTo(unsigned);
+			final ImmutableSet<StateCacheEntry> verifiedEntriesUnsigned=verifiedEntries.stream()
+					.map(StateCacheEntrySigned::getCacheEntry)
+					.collect(ImmutableSet.toImmutableSet());
+			unsigned.setEntries(verifiedEntriesUnsigned);
+			cacheStorage.store(unsigned);;
+		} catch (IOException e) {
+			throw e;
+		} catch (Exception ex) {
+			throw new IOException(ex);
+		}
 	}
 
 	public Set<StateCacheEntrySigned> getMissingEntries(final StateCacheInfo existingCache) {
