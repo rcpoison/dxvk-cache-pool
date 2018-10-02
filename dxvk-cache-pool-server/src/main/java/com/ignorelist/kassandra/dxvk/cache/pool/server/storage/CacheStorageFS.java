@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Simple storage using the filesystem.
@@ -102,6 +103,7 @@ public class CacheStorageFS implements CacheStorage {
 					.map(Path::toString)
 					.collect(ImmutableSet.toImmutableSet());
 			ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> m=new ConcurrentHashMap<>();
+			final AtomicInteger entryCount=new AtomicInteger();
 			for (String versionString : versions) {
 				try {
 					ConcurrentMap<String, StateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
@@ -111,17 +113,23 @@ public class CacheStorageFS implements CacheStorage {
 							.filter(Files::isRegularFile)
 							.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
+
 					entriesInRelativePath.asMap().entrySet().parallelStream()
 							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), currentVersion))
-							.peek(d -> LOG.info(() -> "loaded: "+d+" with "+d.getEntries().size()+" entries"))
+							.peek(d -> {
+								final int entrySize=d.getEntries().size();
+								LOG.info(() -> "loaded: "+d+" with "+entrySize+" entries");
+								entryCount.addAndGet(entrySize);
+							})
 							.forEach(d -> infoForVersion.put(d.getBaseName(), d));
+
 					m.put(currentVersion, infoForVersion);
 				} catch (Exception e) {
 					LOG.log(Level.WARNING, null, e);
 				}
 			}
 			stopwatch.stop();
-			LOG.log(Level.INFO, "populated storageCache in {0}ms", stopwatch.elapsed().toMillis());
+			LOG.log(Level.INFO, "populated storageCache in {0}ms with {1} baseNames and {2} entries", new Object[]{stopwatch.elapsed().toMillis(), m.size(), entryCount.intValue()});
 			storageCache=m;
 		}
 		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
