@@ -19,12 +19,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class PublicKey implements Serializable {
 
 	private byte[] key;
+	private PublicKeyInfo keyInfo;
 
 	public PublicKey() {
 	}
 
 	public PublicKey(byte[] key) {
 		this.key=key;
+		keyInfo=new PublicKeyInfo(this);
+	}
+
+	public PublicKey(byte[] key, PublicKeyInfo keyInfo) {
+		this.key=key;
+		this.keyInfo=keyInfo;
 	}
 
 	@NotNull
@@ -37,8 +44,12 @@ public class PublicKey implements Serializable {
 		this.key=key;
 	}
 
-	public PublicKeyInfo toInfo() {
-		return new PublicKeyInfo(this);
+	public PublicKeyInfo getKeyInfo() {
+		return keyInfo;
+	}
+
+	public void setKeyInfo(PublicKeyInfo keyInfo) {
+		this.keyInfo=keyInfo;
 	}
 
 	@Override

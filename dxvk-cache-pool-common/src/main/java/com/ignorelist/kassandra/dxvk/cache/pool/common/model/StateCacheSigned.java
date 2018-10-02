@@ -25,7 +25,7 @@ public class StateCacheSigned implements Serializable, StateCacheMeta {
 	private String baseName;
 	private int version;
 	private int entrySize;
-	private PublicKey publicKey;
+	private Set<PublicKey> publicKeys;
 	private Set<StateCacheEntrySigned> entries;
 
 	@NotNull
@@ -68,6 +68,14 @@ public class StateCacheSigned implements Serializable, StateCacheMeta {
 
 	public void setEntries(Set<StateCacheEntrySigned> entries) {
 		this.entries=entries;
+	}
+
+	public Set<PublicKey> getPublicKeys() {
+		return publicKeys;
+	}
+
+	public void setPublicKeys(Set<PublicKey> publicKeys) {
+		this.publicKeys=publicKeys;
 	}
 
 	@Override

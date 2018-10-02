@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import java.io.Serializable;
@@ -66,15 +66,15 @@ public class StateCacheEntry implements Serializable {
 	 * wrap in signed cache entry
 	 *
 	 * @param privateKey the private key
-	 * @param publicKeyInfo the public keys info
+	 * @param publicKey the public keys info
 	 * @return this wrapped in signed
 	 * @throws InvalidKeyException
 	 * @throws SignatureException
 	 * @throws NoSuchAlgorithmException
 	 */
-	public StateCacheEntrySigned sign(final PrivateKey privateKey, final PublicKeyInfo publicKeyInfo) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+	public StateCacheEntrySigned sign(final PrivateKey privateKey, final PublicKey publicKey) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
 		final Signature signature=new Signature(CryptoUtil.sign(getEntry(), privateKey));
-		final SignaturePublicKeyInfo signaturePublicKeyInfo=new SignaturePublicKeyInfo(signature, publicKeyInfo);
+		final SignaturePublicKeyInfo signaturePublicKeyInfo=new SignaturePublicKeyInfo(signature, publicKey.getKeyInfo());
 		return new StateCacheEntrySigned(this, ImmutableSet.of(signaturePublicKeyInfo));
 	}
 

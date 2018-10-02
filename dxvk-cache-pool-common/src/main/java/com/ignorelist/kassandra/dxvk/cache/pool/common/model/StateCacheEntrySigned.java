@@ -73,7 +73,7 @@ public class StateCacheEntrySigned implements Serializable {
 			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
 			final PublicKey publicKey=keyAccessor.apply(publicKeyInfo);
 			if (null==publicKey) {
-				LOG.warning("public key not found for: "+publicKeyInfo);
+				LOG.log(Level.WARNING, "public key not found for: {0}", publicKeyInfo);
 				continue;
 			}
 			try {
@@ -81,7 +81,7 @@ public class StateCacheEntrySigned implements Serializable {
 					validSignatures.add(signature);
 				}
 			} catch (Exception ex) {
-				Logger.getLogger(StateCacheEntrySigned.class.getName()).log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
+				LOG.log(Level.SEVERE, "failed to verify: "+publicKeyInfo, ex);
 			}
 		}
 		return validSignatures.build();
