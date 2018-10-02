@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -100,20 +101,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> m=new ConcurrentHashMap<>();
 			final ForkJoinTask<ImmutableSet<StateCacheEntryInfoSignees>> task=getThreadPool().submit(()
 					-> signatureFiles.asMap().entrySet().parallelStream()
-							.map(e -> {
-								final Path entryHashFragment0=e.getKey().getParent().getFileName();
-								final Path entryHashFragment1=e.getKey().getFileName();
-								final byte[] entryHash=BASE16.decode(entryHashFragment0.toString()+entryHashFragment1.toString());
-								StateCacheEntryInfo cacheEntryInfo=new StateCacheEntryInfo(entryHash);
-								final Set<PublicKeyInfo> pubKeyInfo=e.getValue().stream()
-										.map(Path::getFileName)
-										.map(Path::toString)
-										.map(BASE16::decode)
-										.map(PublicKeyInfo::new)
-										.map(publicKeyInfoInterner::intern)
-										.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
-								return new StateCacheEntryInfoSignees(cacheEntryInfo, pubKeyInfo);
-							})
+							.map(e -> buildStateCacheEntryInfoSignees(e.getKey(), e.getValue()))
 							.collect(ImmutableSet.toImmutableSet()));
 			try {
 				task.get().forEach(iS -> {
@@ -127,6 +115,21 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			signatureStorageCache=m;
 		}
 		return signatureStorageCache;
+	}
+
+	private StateCacheEntryInfoSignees buildStateCacheEntryInfoSignees(Path basePath, Collection<Path> signatureFiles) {
+		final Path entryHashFragment0=basePath.getParent().getFileName();
+		final Path entryHashFragment1=basePath.getFileName();
+		final byte[] entryHash=BASE16.decode(entryHashFragment0.toString()+entryHashFragment1.toString());
+		StateCacheEntryInfo cacheEntryInfo=new StateCacheEntryInfo(entryHash);
+		final Set<PublicKeyInfo> pubKeyInfo=signatureFiles.stream()
+				.map(Path::getFileName)
+				.map(Path::toString)
+				.map(BASE16::decode)
+				.map(PublicKeyInfo::new)
+				.map(publicKeyInfoInterner::intern)
+				.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
+		return new StateCacheEntryInfoSignees(cacheEntryInfo, pubKeyInfo);
 	}
 
 	private Path buildTargetPath(final StateCacheEntryInfo entryInfo) {
