@@ -60,7 +60,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private final Path signaturesPath;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
 	private final Interner<PublicKeyInfo> publicKeyInfoInterner=Interners.newWeakInterner();
-	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> storageCache;
+	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> signatureStorageCache;
 	private ForkJoinPool storageThreadPool;
 
 	public SignatureStorageFS(Path storageRoot) {
@@ -87,8 +87,8 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		return writeLock;
 	}
 
-	private synchronized ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> getStorageCache() throws IOException {
-		if (null==storageCache) {
+	private synchronized ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> getSignatureStorageCache() throws IOException {
+		if (null==signatureStorageCache) {
 			Files.createDirectories(signaturesPath);
 			final ImmutableSetMultimap<Path, Path> signatureFiles=Files.walk(signaturesPath)
 					.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
@@ -110,9 +110,9 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 								.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
 						m.put(cacheEntryInfo, pubKeyInfo);
 					});
-			storageCache=m;
+			signatureStorageCache=m;
 		}
-		return storageCache;
+		return signatureStorageCache;
 	}
 
 	private Path buildTargetPath(final StateCacheEntryInfo entryInfo) {
@@ -128,13 +128,13 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	}
 
 	public void init() throws IOException {
-		getStorageCache();
+		getSignatureStorageCache();
 	}
 
 	@Override
 	public Set<PublicKeyInfo> getSignedBy(final StateCacheEntryInfo entryInfo) {
 		try {
-			final Set<PublicKeyInfo> signedBy=getStorageCache().get(entryInfo);
+			final Set<PublicKeyInfo> signedBy=getSignatureStorageCache().get(entryInfo);
 			if (null!=signedBy) {
 				return signedBy;
 			}
@@ -156,7 +156,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		final Lock writeLock=getWriteLock(targetPath);
 		writeLock.lock();
 		try {
-			final Set<PublicKeyInfo> existingEntries=getStorageCache().computeIfAbsent(entryInfo, k -> Sets.newConcurrentHashSet());
+			final Set<PublicKeyInfo> existingEntries=getSignatureStorageCache().computeIfAbsent(entryInfo, k -> Sets.newConcurrentHashSet());
 			final PublicKeyInfo publicKeyInfo=signaturePublicKeyInfo.getPublicKeyInfo();
 			if (existingEntries.contains(publicKeyInfo)) {
 				return;
