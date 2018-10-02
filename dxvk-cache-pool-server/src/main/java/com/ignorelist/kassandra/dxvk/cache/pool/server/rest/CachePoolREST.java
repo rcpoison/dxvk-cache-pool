@@ -100,8 +100,7 @@ public class CachePoolREST implements CacheStorage {
 		new StateCacheValidator().validate(dxvkStateCache);
 		// don't trust passed hashes, just rebuild the entries
 		ImmutableSet<StateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
-				.map(StateCacheEntry::getEntry)
-				.map(StateCacheEntry::new)
+				.map(StateCacheEntry::copySafe)
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(entyCopies);
 		cacheStorage.store(dxvkStateCache);
