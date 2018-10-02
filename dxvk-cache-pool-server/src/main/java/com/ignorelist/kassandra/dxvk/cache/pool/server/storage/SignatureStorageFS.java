@@ -273,6 +273,9 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	@Override
 	public void storePublicKey(final PublicKey publicKey) throws IOException {
 		final PublicKeyInfo keyInfoInterned=publicKeyInfoInterner.intern(publicKey.getKeyInfo());
+		if (null!=getPublicKey(keyInfoInterned)) {
+			return;
+		}
 		final Path keyPath=buildPublicKeyPath(keyInfoInterned);
 		final Lock writeLock=getWriteLock(keyPath);
 		writeLock.lock();
