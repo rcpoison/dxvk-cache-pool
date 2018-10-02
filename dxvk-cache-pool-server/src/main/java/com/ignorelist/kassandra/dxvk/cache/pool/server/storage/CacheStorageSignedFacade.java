@@ -71,7 +71,8 @@ public class CacheStorageSignedFacade {
 	}
 
 	public Set<StateCacheEntrySigned> getMissingEntries(StateCacheInfo existingCache) {
-		throw new UnsupportedOperationException();
+		final Set<StateCacheEntry> missingEntries=cacheStorage.getMissingEntries(existingCache);
+		return buildSignedEntries(missingEntries);
 	}
 
 	public Set<String> findBaseNames(int version, String subString) {
