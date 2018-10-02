@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Interner;
@@ -23,6 +24,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,27 +91,39 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	private synchronized ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> getSignatureStorageCache() throws IOException {
 		if (null==signatureStorageCache) {
+			Stopwatch stopwatch=Stopwatch.createStarted();
 			Files.createDirectories(signaturesPath);
 			final ImmutableSetMultimap<Path, Path> signatureFiles=Files.walk(signaturesPath)
 					.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 					.filter(Files::isRegularFile)
 					.collect(ImmutableSetMultimap.toImmutableSetMultimap(Path::getParent, Functions.identity()));
 			ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> m=new ConcurrentHashMap<>();
-			signatureFiles.asMap().entrySet().parallelStream()
-					.forEach(e -> {
-						final Path entryHashFragment0=e.getKey().getParent().getFileName();
-						final Path entryHashFragment1=e.getKey().getFileName();
-						final byte[] entryHash=BASE16.decode(entryHashFragment0.toString()+entryHashFragment1.toString());
-						StateCacheEntryInfo cacheEntryInfo=new StateCacheEntryInfo(entryHash);
-						final Set<PublicKeyInfo> pubKeyInfo=e.getValue().stream()
-								.map(Path::getFileName)
-								.map(Path::toString)
-								.map(BASE16::decode)
-								.map(PublicKeyInfo::new)
-								.map(publicKeyInfoInterner::intern)
-								.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
-						m.put(cacheEntryInfo, pubKeyInfo);
-					});
+			final ForkJoinTask<ImmutableSet<StateCacheEntryInfoSignees>> task=getThreadPool().submit(()
+					-> signatureFiles.asMap().entrySet().parallelStream()
+							.map(e -> {
+								final Path entryHashFragment0=e.getKey().getParent().getFileName();
+								final Path entryHashFragment1=e.getKey().getFileName();
+								final byte[] entryHash=BASE16.decode(entryHashFragment0.toString()+entryHashFragment1.toString());
+								StateCacheEntryInfo cacheEntryInfo=new StateCacheEntryInfo(entryHash);
+								final Set<PublicKeyInfo> pubKeyInfo=e.getValue().stream()
+										.map(Path::getFileName)
+										.map(Path::toString)
+										.map(BASE16::decode)
+										.map(PublicKeyInfo::new)
+										.map(publicKeyInfoInterner::intern)
+										.collect(Collectors.toCollection(Sets::newConcurrentHashSet));
+								return new StateCacheEntryInfoSignees(cacheEntryInfo, pubKeyInfo);
+							})
+							.collect(ImmutableSet.toImmutableSet()));
+			try {
+				task.get().forEach(iS -> {
+					m.put(iS.getEntryInfo(), iS.getPublicKeyInfos());
+				});
+			} catch (Exception ex) {
+				throw new IOException(ex);
+			}
+			stopwatch.stop();
+			LOG.log(Level.INFO, "populated signatureStorageCache in {0}ms with {1} keys and {2} values", new Object[]{stopwatch.elapsed().toMillis(), m.size(), m.values().size()});
 			signatureStorageCache=m;
 		}
 		return signatureStorageCache;
