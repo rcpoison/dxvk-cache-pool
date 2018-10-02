@@ -44,6 +44,7 @@ public class SignatureStorageFSNGTest {
 	private static StateCache cache;
 	private static KeyPair keyPair;
 	private static StateCacheSigned cacheSigned;
+	private static SignatureStorageFS storageShared;
 
 	public SignatureStorageFSNGTest() {
 	}
@@ -55,10 +56,12 @@ public class SignatureStorageFSNGTest {
 		cache.setBaseName(BASE_NAME);
 		keyPair=CryptoUtil.generate();
 		cacheSigned=cache.sign(keyPair.getPrivate(), new PublicKey(keyPair.getPublic()));
+		storageShared=new SignatureStorageFS(storageRoot);
 	}
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
+		storageShared.close();
 	}
 
 	@BeforeMethod
@@ -102,10 +105,8 @@ public class SignatureStorageFSNGTest {
 	 */
 	@Test(dataProvider="entryInfoSignee")
 	public void testAddSignee(StateCacheEntryInfo entryInfo, SignaturePublicKeyInfo signaturePublicKeyInfo) throws Exception {
-		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
-			storage.addSignee(entryInfo, signaturePublicKeyInfo);
-			Assert.assertTrue(storage.getSignedBy(entryInfo).contains(signaturePublicKeyInfo.getPublicKeyInfo()));
-		}
+		storageShared.addSignee(entryInfo, signaturePublicKeyInfo);
+		Assert.assertTrue(storageShared.getSignedBy(entryInfo).contains(signaturePublicKeyInfo.getPublicKeyInfo()));
 	}
 
 	/**
@@ -114,12 +115,8 @@ public class SignatureStorageFSNGTest {
 	@Test(dependsOnMethods={"testAddSignee"})
 	public void testGetSignatures() throws Exception {
 		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
-			Stopwatch stopwatch=Stopwatch.createStarted();
 			storage.init();
-			stopwatch.stop();
-			System.err.println("init SignatureStorageFS in "+stopwatch.elapsed().toMillis()+"ms");
-			stopwatch.reset();
-			stopwatch.start();
+			Stopwatch stopwatch=Stopwatch.createStarted();
 			for (StateCacheEntrySigned entry : cacheSigned.getEntries()) {
 				final StateCacheEntryInfo entryInfo=entry.getCacheEntry().getEntryInfo();
 				final Set<SignaturePublicKeyInfo> signatures=entry.getSignatures();
