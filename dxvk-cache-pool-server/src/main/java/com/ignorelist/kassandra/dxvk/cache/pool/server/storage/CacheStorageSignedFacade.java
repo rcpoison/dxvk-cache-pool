@@ -76,10 +76,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return cacheSigned;
 	}
 
-	public StateCacheSigned getCacheSignedFiltered(final int version, final String baseName) {
-		throw new UnsupportedOperationException();
-	}
-
 	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
 		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
