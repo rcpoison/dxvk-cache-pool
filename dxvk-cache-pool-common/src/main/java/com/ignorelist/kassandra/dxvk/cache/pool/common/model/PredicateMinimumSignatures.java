@@ -37,7 +37,7 @@ public class PredicateMinimumSignatures implements Serializable, Predicate<State
 	@Override
 	public boolean apply(StateCacheEntrySigned entry) {
 		if (null!=minimumSignatures&&0!=minimumSignatures) {
-			return entry.getSignatures().size()>=minimumSignatures;
+			return null!=entry.getSignatures()&&entry.getSignatures().size()>=minimumSignatures;
 		}
 		return true;
 	}
