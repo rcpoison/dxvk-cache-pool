@@ -48,6 +48,9 @@ public class PredicateStateCacheEntrySigned implements Serializable, Predicate<S
 
 	@Override
 	public boolean apply(StateCacheEntrySigned input) {
+		if (null==acceptedPublicKeys&&null==minimumSignatures) {
+			return DEFAULT_PREDICATE.apply(input);
+		}
 		return Predicates
 				.and(
 						null==acceptedPublicKeys ? Predicates.alwaysTrue() : acceptedPublicKeys,
