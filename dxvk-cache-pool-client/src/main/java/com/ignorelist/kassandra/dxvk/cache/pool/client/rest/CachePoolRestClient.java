@@ -71,7 +71,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path("stateCache")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(baseName), StateCache.class);
+				.post(Entity.text(baseName), StateCache.class);
 	}
 
 	@Override
@@ -123,7 +123,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path("stateCacheSigned")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(baseName), StateCacheSigned.class);
+				.post(Entity.text(baseName), StateCacheSigned.class);
 	}
 
 	@Override

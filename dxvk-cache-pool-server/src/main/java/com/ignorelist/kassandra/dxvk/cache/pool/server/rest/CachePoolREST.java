@@ -104,7 +104,7 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 
 	@POST
 	@Path("stateCache/{version}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public StateCache getCache(@PathParam("version") int version, String baseName) {
@@ -117,7 +117,7 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 
 	@POST
 	@Path("stateCacheSigned/{version}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public StateCacheSigned getCacheSigned(@PathParam("version") int version, String baseName) {
