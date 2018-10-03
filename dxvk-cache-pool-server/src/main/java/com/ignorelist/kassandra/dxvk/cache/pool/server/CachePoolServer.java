@@ -10,6 +10,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.IllegalArgumentExceptionMapper;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.SignatureStorageFS;
 import java.io.Closeable;
@@ -77,6 +78,7 @@ public class CachePoolServer implements Closeable {
 		resourceConfig.register(CachePoolREST.class);
 		resourceConfig.register(CachePoolHome.class);
 		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage));
+		resourceConfig.register(IllegalArgumentExceptionMapper.class);
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
 	}
