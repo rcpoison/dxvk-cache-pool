@@ -206,11 +206,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 	@Path("publicKeys")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Set<PublicKey> getPublicKeys(Set<PublicKeyInfo> keyInfo) {
-		if (null==keyInfo) {
+	public Set<PublicKey> getPublicKeys(Set<PublicKeyInfo> keyInfos) {
+		if (null==keyInfos) {
 			throw new IllegalArgumentException("missing keyInfo");
 		}
-		return keyInfo.parallelStream()
+		return keyInfos.parallelStream()
 				.map(signatureStorage::getPublicKey)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());

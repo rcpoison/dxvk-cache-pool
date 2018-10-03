@@ -7,6 +7,8 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
@@ -28,7 +30,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 
 	private static final String PATH="pool";
 
-	private static final GenericType<Set<String>> TYPE_STRING_SETn=new GenericType<Set<String>>() {
+	private static final GenericType<Set<String>> TYPE_STRING_SET=new GenericType<Set<String>>() {
 	};
 	private static final GenericType<Set<StateCacheInfo>> TYPE_CACHE_INFO_SET=new GenericType<Set<StateCacheInfo>>() {
 	};
@@ -37,6 +39,8 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	private static final GenericType<Set<StateCacheEntry>> TYPE_CACHE_ENTRY_SET=new GenericType<Set<StateCacheEntry>>() {
 	};
 	private static final GenericType<Set<StateCacheEntrySigned>> TYPE_CACHE_ENTRY_SIGNED_SET=new GenericType<Set<StateCacheEntrySigned>>() {
+	};
+	private static final GenericType<Set<PublicKey>> TYPE_PUBLIC_KEY_SET=new GenericType<Set<PublicKey>>() {
 	};
 
 	public CachePoolRestClient(String baseUrl) {
@@ -98,7 +102,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path(Integer.toString(version))
 				.path(subString)
 				.request(MediaType.APPLICATION_JSON)
-				.get(TYPE_STRING_SETn);
+				.get(TYPE_STRING_SET);
 	}
 
 	@Override
@@ -134,6 +138,20 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path("missingCacheEntriesSigned")
 				.request(MediaType.APPLICATION_JSON)
 				.post(Entity.json(cacheInfo), TYPE_CACHE_ENTRY_SIGNED_SET);
+	}
+
+	public PublicKey getPublicKey(PublicKeyInfo keyInfo) {
+		return getWebTarget()
+				.path("publicKey")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(keyInfo), PublicKey.class);
+	}
+
+	public Set<PublicKey> getPublicKeys(Set<PublicKeyInfo> keyInfos) {
+		return getWebTarget()
+				.path("publicKeys")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(keyInfos), TYPE_PUBLIC_KEY_SET);
 	}
 
 	@Override
