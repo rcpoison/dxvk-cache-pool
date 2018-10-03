@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +30,7 @@ import java.util.Set;
  *
  * @author poison
  */
-public class CacheStorageSignedFacade {
+public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	private final CacheStorage cacheStorage;
 	private final SignatureStorage signatureStorage;
@@ -39,7 +40,8 @@ public class CacheStorageSignedFacade {
 		this.signatureStorage=signatureStorage;
 	}
 
-	public StateCacheInfoSignees getCacheDescriptor(int version, String baseName) {
+	@Override
+	public StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName) {
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
 		if (null==cacheDescriptor) {
 			return null;
@@ -53,7 +55,8 @@ public class CacheStorageSignedFacade {
 		return cacheInfoSignees;
 	}
 
-	public StateCacheSigned getCache(final int version, final String baseName) {
+	@Override
+	public StateCacheSigned getCacheSigned(final int version, final String baseName) {
 		final StateCache cache=cacheStorage.getCache(version, baseName);
 		if (null==cache) {
 			return null;
@@ -86,7 +89,8 @@ public class CacheStorageSignedFacade {
 				.collect(ImmutableSet.toImmutableSet());
 	}
 
-	public void store(StateCacheSigned cache) throws IOException {
+	@Override
+	public void storeSigned(StateCacheSigned cache) throws IOException {
 		try {
 			final PublicKey publicKeyUntrustedInfo=Iterables.getOnlyElement(cache.getPublicKeys()); // submission must only have asingle public key attached
 			// do not trust key info, rebuild
@@ -115,13 +119,10 @@ public class CacheStorageSignedFacade {
 		}
 	}
 
-	public Set<StateCacheEntrySigned> getMissingEntries(final StateCacheInfo existingCache) {
+	@Override
+	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
 		final Set<StateCacheEntry> missingEntries=cacheStorage.getMissingEntries(existingCache);
 		return buildSignedEntries(missingEntries);
-	}
-
-	public Set<String> findBaseNames(int version, String subString) {
-		return cacheStorage.findBaseNames(version, subString);
 	}
 
 }
