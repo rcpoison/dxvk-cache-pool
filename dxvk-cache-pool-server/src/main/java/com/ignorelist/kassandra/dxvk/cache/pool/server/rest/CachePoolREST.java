@@ -63,12 +63,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 		return cacheStorage.getCacheDescriptors(version, baseNames);
 	}
 
-	@POST
-	@Path("cacheDescriptor/{version}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("cacheDescriptor/{version}/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public StateCacheInfo getCacheDescriptor(@PathParam("version") int version, String baseName) {
+	public StateCacheInfo getCacheDescriptor(@PathParam("version") int version, @PathParam("baseName") String baseName) {
 		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(baseName)));
 	}
 
@@ -85,12 +84,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 		return cacheStorageSigned.getCacheDescriptorsSignees(version, baseNames);
 	}
 
-	@POST
-	@Path("cacheDescriptorSignees/{version}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("cacheDescriptorSignees/{version}/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public StateCacheInfoSignees getCacheDescriptorSignees(@PathParam("version") int version, String baseName) {
+	public StateCacheInfoSignees getCacheDescriptorSignees(@PathParam("version") int version, @PathParam("baseName") String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");
@@ -98,12 +96,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 		return cacheStorageSigned.getCacheDescriptorSignees(version, baseName);
 	}
 
-	@POST
-	@Path("stateCache/{version}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("stateCache/{version}/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public StateCache getCache(@PathParam("version") int version, String baseName) {
+	public StateCache getCache(@PathParam("version") int version, @PathParam("baseName") String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");
@@ -111,12 +108,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 		return cacheStorage.getCache(version, baseName);
 	}
 
-	@POST
-	@Path("stateCacheSigned/{version}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("stateCacheSigned/{version}/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public StateCacheSigned getCacheSigned(@PathParam("version") int version, String baseName) {
+	public StateCacheSigned getCacheSigned(@PathParam("version") int version, @PathParam("baseName") String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");

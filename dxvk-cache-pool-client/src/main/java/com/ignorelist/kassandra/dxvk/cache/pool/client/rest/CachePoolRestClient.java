@@ -66,8 +66,9 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 		return getWebTarget()
 				.path("cacheDescriptor")
 				.path(Integer.toString(version))
+				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.text(baseName), StateCacheInfo.class);
+				.get(StateCacheInfo.class);
 	}
 
 	@Override
@@ -75,8 +76,9 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 		return getWebTarget()
 				.path("stateCache")
 				.path(Integer.toString(version))
+				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.text(baseName), StateCache.class);
+				.get(StateCache.class);
 	}
 
 	@Override
@@ -110,8 +112,9 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 		return getWebTarget()
 				.path("cacheDescriptorSignees")
 				.path(Integer.toString(version))
+				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.text(baseName), StateCacheInfoSignees.class);
+				.get(StateCacheInfoSignees.class);
 	}
 
 	@Override
@@ -128,8 +131,9 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 		return getWebTarget()
 				.path("stateCacheSigned")
 				.path(Integer.toString(version))
+				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.text(baseName), StateCacheSigned.class);
+				.get(StateCacheSigned.class);
 	}
 
 	@Override
