@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Predicate;
+import java.io.Serializable;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -14,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PredicateMinimumSignatures implements Predicate<StateCacheEntrySigned> {
+public class PredicateMinimumSignatures implements Serializable, Predicate<StateCacheEntrySigned> {
 
 	private Integer minimumSignatures;
 

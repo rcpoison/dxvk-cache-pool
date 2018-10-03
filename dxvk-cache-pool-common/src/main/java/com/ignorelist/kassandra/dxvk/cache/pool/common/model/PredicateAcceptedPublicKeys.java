@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Predicate;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -16,7 +17,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PredicateAcceptedPublicKeys implements Predicate<StateCacheEntrySigned> {
+public class PredicateAcceptedPublicKeys implements Serializable, Predicate<StateCacheEntrySigned> {
 
 	private Set<PublicKeyInfo> acceptedPublicKeys;
 
