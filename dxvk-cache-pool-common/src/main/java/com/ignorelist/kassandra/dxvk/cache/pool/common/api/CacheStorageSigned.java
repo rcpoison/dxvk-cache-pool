@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
@@ -21,6 +22,8 @@ public interface CacheStorageSigned {
 	StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName);
 
 	StateCacheSigned getCacheSigned(final int version, final String baseName);
+
+	StateCacheSigned getCacheSigned(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned);
 
 	Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache);
 

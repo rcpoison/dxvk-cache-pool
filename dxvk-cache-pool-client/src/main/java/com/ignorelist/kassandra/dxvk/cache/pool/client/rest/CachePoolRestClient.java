@@ -9,6 +9,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
@@ -134,6 +135,16 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
 				.get(StateCacheSigned.class);
+	}
+
+	@Override
+	public StateCacheSigned getCacheSigned(int version, String baseName, PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		return getWebTarget()
+				.path("stateCacheSigned")
+				.path(Integer.toString(version))
+				.path(baseName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(predicateStateCacheEntrySigned), StateCacheSigned.class);
 	}
 
 	@Override

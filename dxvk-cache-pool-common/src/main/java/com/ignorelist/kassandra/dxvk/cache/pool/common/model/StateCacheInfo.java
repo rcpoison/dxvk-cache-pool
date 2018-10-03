@@ -36,6 +36,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 	private int entrySize;
 	private Long lastModified;
 	private Set<StateCacheEntryInfo> entries;
+	private PredicateStateCacheEntrySigned predicateStateCacheEntrySigned;
 
 	public StateCacheInfo() {
 	}
@@ -88,6 +89,14 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 
 	public void setLastModified(Long lastModified) {
 		this.lastModified=lastModified;
+	}
+
+	public PredicateStateCacheEntrySigned getPredicateStateCacheEntrySigned() {
+		return predicateStateCacheEntrySigned;
+	}
+
+	public void setPredicateStateCacheEntrySigned(PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		this.predicateStateCacheEntrySigned=predicateStateCacheEntrySigned;
 	}
 
 	@XmlTransient

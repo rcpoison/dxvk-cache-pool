@@ -19,6 +19,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
@@ -118,6 +119,19 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 			throw new IllegalArgumentException("missing executableInfo");
 		}
 		return cacheStorageSigned.getCacheSigned(version, baseName);
+	}
+
+	@POST
+	@Path("stateCacheSigned/{version}/{baseName}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public StateCacheSigned getCacheSigned(@PathParam("version") int version, @PathParam("baseName") String baseName, PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (null==baseName) {
+			throw new IllegalArgumentException("missing executableInfo");
+		}
+		return cacheStorageSigned.getCacheSigned(version, baseName, predicateStateCacheEntrySigned);
 	}
 
 	@POST

@@ -16,6 +16,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
@@ -57,17 +58,26 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public StateCacheSigned getCacheSigned(final int version, final String baseName) {
+		return getCacheSigned(version, baseName, new PredicateStateCacheEntrySigned());
+	}
+
+	@Override
+	public StateCacheSigned getCacheSigned(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
 		final StateCache cache=cacheStorage.getCache(version, baseName);
 		if (null==cache) {
 			return null;
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cache.copyShallowTo(cacheSigned);
-		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries());
+		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries(), predicateStateCacheEntrySigned);
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
 		return cacheSigned;
+	}
+
+	public StateCacheSigned getCacheSignedFiltered(final int version, final String baseName) {
+		throw new UnsupportedOperationException();
 	}
 
 	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
@@ -83,9 +93,10 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return usedPublicKeys;
 	}
 
-	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries) {
+	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
 		return entries.parallelStream()
 				.map(e -> new StateCacheEntrySigned(e, signatureStorage.getSignatures(e.getEntryInfo())))
+				.filter(predicateStateCacheEntrySigned)
 				.collect(ImmutableSet.toImmutableSet());
 	}
 
@@ -121,8 +132,10 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
+		final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned=null==existingCache.getPredicateStateCacheEntrySigned() ? new PredicateStateCacheEntrySigned() : existingCache.getPredicateStateCacheEntrySigned();
 		final Set<StateCacheEntry> missingEntries=cacheStorage.getMissingEntries(existingCache);
-		return buildSignedEntries(missingEntries);
+		return buildSignedEntries(missingEntries, predicateStateCacheEntrySigned);
+
 	}
 
 	@Override
