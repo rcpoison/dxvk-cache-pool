@@ -17,6 +17,8 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.StateCac
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
@@ -191,6 +193,31 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 			throw new IllegalArgumentException("search string must not be empty");
 		}
 		return cacheStorage.findBaseNames(version, subString);
+	}
+
+	@POST
+	@Path("publicKey")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public PublicKey getPublicKey(PublicKeyInfo keyInfo) {
+		if (null==keyInfo) {
+			throw new IllegalArgumentException("missing keyInfo");
+		}
+		return signatureStorage.getPublicKey(keyInfo);
+	}
+
+	@POST
+	@Path("publicKeys")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Set<PublicKey> getPublicKeys(Set<PublicKeyInfo> keyInfo) {
+		if (null==keyInfo) {
+			throw new IllegalArgumentException("missing keyInfo");
+		}
+		return keyInfo.parallelStream()
+				.map(signatureStorage::getPublicKey)
+				.filter(Predicates.notNull())
+				.collect(ImmutableSet.toImmutableSet());
 	}
 
 	@Override
