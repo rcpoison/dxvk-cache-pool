@@ -48,6 +48,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 		return super.getWebTarget().path(PATH);
 	}
 
+	@Override
 	public Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
 		return getWebTarget()
 				.path("cacheDescriptors")

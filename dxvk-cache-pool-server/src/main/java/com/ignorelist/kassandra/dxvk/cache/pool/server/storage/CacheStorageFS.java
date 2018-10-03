@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.google.common.base.Strings;
@@ -327,6 +328,20 @@ public class CacheStorageFS implements CacheStorage {
 	public void close() throws IOException {
 		if (null!=storageThreadPool) {
 			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
+		}
+	}
+
+	@Override
+	public Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
+		try {
+			return getThreadPool().submit(()
+					-> baseNames.parallelStream()
+							.map(bN -> getCacheDescriptor(version, bN))
+							.filter(Predicates.notNull())
+							.collect(ImmutableSet.toImmutableSet()))
+					.get();
+		} catch (Exception ex) {
+			throw new IllegalStateException(ex);
 		}
 	}
 
