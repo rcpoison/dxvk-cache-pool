@@ -9,9 +9,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import java.io.Serializable;
+import java.security.PrivateKey;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
@@ -21,6 +25,8 @@ import javax.xml.bind.annotation.XmlElement;
  * @author poison
  */
 public class StateCache implements StateCacheMeta, Serializable {
+
+	private static final Logger LOG=Logger.getLogger(StateCache.class.getName());
 
 	private String baseName;
 	private int version;
@@ -38,6 +44,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return baseName;
 	}
 
+	@Override
 	public void setBaseName(String baseName) {
 		this.baseName=baseName;
 	}
@@ -48,6 +55,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version=version;
 	}
@@ -57,6 +65,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return entrySize;
 	}
 
+	@Override
 	public void setEntrySize(int entrySize) {
 		this.entrySize=entrySize;
 	}
@@ -83,6 +92,8 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return info;
 	}
 
+	
+
 	/**
 	 * copy without entries
 	 *
@@ -90,9 +101,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 	 */
 	public StateCache copyShallow() {
 		StateCache cache=new StateCache();
-		cache.setVersion(getVersion());
-		cache.setEntrySize(getEntrySize());
-		cache.setBaseName(getBaseName());
+		copyShallowTo(cache);
 		return cache;
 	}
 
@@ -157,6 +166,28 @@ public class StateCache implements StateCacheMeta, Serializable {
 		StateCache diff=copyShallow();
 		diff.setEntries(missingEntries);
 		return diff;
+	}
+
+	public StateCacheSigned sign(final PrivateKey privateKey, final PublicKey publicKey) {
+		StateCacheSigned cacheSigned=new StateCacheSigned();
+		copyShallowTo(cacheSigned);
+		cacheSigned.setPublicKeys(ImmutableSet.of(publicKey));
+		if (null!=entries) {
+			ImmutableSet<StateCacheEntrySigned> signedEntries=getEntries().parallelStream()
+					.map(e -> {
+						try {
+							return e.sign(privateKey, publicKey);
+						} catch (Exception ex) {
+							LOG.log(Level.SEVERE, null, ex);
+							throw new IllegalStateException("failed to sign entry", ex);
+						}
+					})
+					.collect(ImmutableSet.toImmutableSet());
+			cacheSigned.setEntries(signedEntries);
+		} else {
+			cacheSigned.setEntries(ImmutableSet.of());
+		}
+		return cacheSigned;
 	}
 
 	@Override

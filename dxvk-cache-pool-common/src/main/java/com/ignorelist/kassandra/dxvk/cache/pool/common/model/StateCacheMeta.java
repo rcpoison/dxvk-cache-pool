@@ -17,4 +17,21 @@ public interface StateCacheMeta {
 
 	int getVersion();
 
+	void setBaseName(String baseName);
+
+	void setEntrySize(int entrySize);
+
+	void setVersion(int version);
+
+	/**
+	 * copy without entries
+	 *
+	 * @param cache
+	 */
+	default void copyShallowTo(StateCacheMeta cache) {
+		cache.setVersion(getVersion());
+		cache.setEntrySize(getEntrySize());
+		cache.setBaseName(getBaseName());
+	}
+
 }

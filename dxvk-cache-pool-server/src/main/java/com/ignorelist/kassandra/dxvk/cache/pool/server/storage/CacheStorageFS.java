@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.google.common.base.Strings;
@@ -42,11 +43,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Simple storage using the filesystem.
@@ -58,7 +59,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 public class CacheStorageFS implements CacheStorage {
 
 	private static final Logger LOG=Logger.getLogger(CacheStorageFS.class.getName());
-	private static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{64}", Pattern.CASE_INSENSITIVE);
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
 
 	private final Path storageRoot;
@@ -72,7 +72,7 @@ public class CacheStorageFS implements CacheStorage {
 
 	private synchronized ForkJoinPool getThreadPool() {
 		if (null==storageThreadPool) {
-			storageThreadPool=new ForkJoinPool(8);
+			storageThreadPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()/2));
 		}
 		return storageThreadPool;
 	}
@@ -95,14 +95,17 @@ public class CacheStorageFS implements CacheStorage {
 
 	private synchronized ConcurrentMap<String, StateCacheInfo> getStorageCache(int version) throws IOException {
 		if (null==storageCache) {
+			Stopwatch stopwatch=Stopwatch.createStarted();
 			Files.createDirectories(storageRoot);
 
-			ImmutableSet<String> versions=Files.list(storageRoot)
+			final ImmutableSet<String> versions=Files.list(storageRoot)
 					.filter(Files::isDirectory)
 					.map(Path::getFileName)
 					.map(Path::toString)
 					.collect(ImmutableSet.toImmutableSet());
 			ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> m=new ConcurrentHashMap<>();
+			final AtomicInteger entryCount=new AtomicInteger();
+			final AtomicInteger baseNameCount=new AtomicInteger();
 			for (String versionString : versions) {
 				try {
 					ConcurrentMap<String, StateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
@@ -110,17 +113,26 @@ public class CacheStorageFS implements CacheStorage {
 					final Path versionDirectory=storageRoot.resolve(versionString);
 					final ImmutableSetMultimap<Path, Path> entriesInRelativePath=Files.walk(versionDirectory)
 							.filter(Files::isRegularFile)
-							.filter(p -> SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
+							.filter(p -> Util.SHA_256_HEX_PATTERN.matcher(p.getFileName().toString()).matches())
 							.collect(ImmutableSetMultimap.toImmutableSetMultimap(p -> versionDirectory.relativize(p.getParent()), p -> p));
+
 					entriesInRelativePath.asMap().entrySet().parallelStream()
 							.map(e -> buildCacheDescriptor(e.getKey(), e.getValue(), currentVersion))
-							.peek(d -> LOG.info(() -> "loaded: "+d+" with "+d.getEntries().size()+" entries"))
+							.peek(d -> {
+								final int entrySize=d.getEntries().size();
+								LOG.info(() -> "loaded: "+d+" with "+entrySize+" entries");
+								entryCount.addAndGet(entrySize);
+								baseNameCount.incrementAndGet();
+							})
 							.forEach(d -> infoForVersion.put(d.getBaseName(), d));
+
 					m.put(currentVersion, infoForVersion);
 				} catch (Exception e) {
 					LOG.log(Level.WARNING, null, e);
 				}
 			}
+			stopwatch.stop();
+			LOG.log(Level.INFO, "populated storageCache in {0}ms with {1} baseNames and {2} entries", new Object[]{stopwatch.elapsed().toMillis(), baseNameCount.intValue(), entryCount.intValue()});
 			storageCache=m;
 		}
 		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
@@ -316,6 +328,20 @@ public class CacheStorageFS implements CacheStorage {
 	public void close() throws IOException {
 		if (null!=storageThreadPool) {
 			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
+		}
+	}
+
+	@Override
+	public Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames) {
+		try {
+			return getThreadPool().submit(()
+					-> baseNames.parallelStream()
+							.map(bN -> getCacheDescriptor(version, bN))
+							.filter(Predicates.notNull())
+							.collect(ImmutableSet.toImmutableSet()))
+					.get();
+		} catch (Exception ex) {
+			throw new IllegalStateException(ex);
 		}
 	}
 

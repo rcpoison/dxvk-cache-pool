@@ -3,12 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
+package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -17,32 +16,31 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntryInfo implements Serializable {
+public class Signature implements Serializable {
 
-	private byte[] hash;
+	private byte[] signature;
 
-	public StateCacheEntryInfo() {
+	public Signature() {
 	}
 
-	public StateCacheEntryInfo(byte[] hash) {
-		this.hash=hash;
+	public Signature(byte[] signature) {
+		this.signature=signature;
 	}
 
 	@NotNull
-	@Size(min=32, max=32)
 	@XmlAttribute(required=true)
-	public byte[] getHash() {
-		return hash;
+	public byte[] getSignature() {
+		return signature;
 	}
 
-	public void setHash(byte[] hash) {
-		this.hash=hash;
+	public void setSignature(byte[] signature) {
+		this.signature=signature;
 	}
 
 	@Override
 	public int hashCode() {
-		int hash=5;
-		hash=53*hash+Arrays.hashCode(this.hash);
+		int hash=3;
+		hash=17*hash+Arrays.hashCode(this.signature);
 		return hash;
 	}
 
@@ -57,8 +55,8 @@ public class StateCacheEntryInfo implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final StateCacheEntryInfo other=(StateCacheEntryInfo) obj;
-		if (!Arrays.equals(this.hash, other.hash)) {
+		final Signature other=(Signature) obj;
+		if (!Arrays.equals(this.signature, other.signature)) {
 			return false;
 		}
 		return true;
