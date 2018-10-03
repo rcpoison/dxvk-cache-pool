@@ -106,6 +106,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 			final PublicKey publicKeyUntrustedInfo=Iterables.getOnlyElement(cache.getPublicKeys()); // submission must only have asingle public key attached
 			// do not trust key info, rebuild
 			final PublicKey publicKey=new PublicKey(publicKeyUntrustedInfo.getKey());
+			signatureStorage.storePublicKey(publicKey);
 
 			final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keyByInfo=ImmutableMap.of(publicKey.getKeyInfo(), CryptoUtil.decodePublicKey(publicKey.getKey()));
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
