@@ -120,7 +120,7 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
-	public StateCacheSigned getCacheSigned(int version, String baseName) {
+	public StateCacheSigned getCacheSigned(@PathParam("version") int version, String baseName) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseName) {
 			throw new IllegalArgumentException("missing executableInfo");
