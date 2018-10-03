@@ -26,4 +26,6 @@ public interface CacheStorageSigned {
 
 	void storeSigned(StateCacheSigned cache) throws IOException;
 
+	Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames);
+
 }

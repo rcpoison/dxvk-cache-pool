@@ -110,6 +110,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.post(Entity.text(baseName), StateCacheInfoSignees.class);
 	}
 
+	@Override
 	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames) {
 		return getWebTarget()
 				.path("cacheDescriptorsSignees")

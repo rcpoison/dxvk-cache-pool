@@ -76,15 +76,13 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 	@Path("cacheDescriptorsSignees/{version}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Override
 	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(@PathParam("version") int version, Set<String> baseNames) {
 		StateCacheHeaderInfo.getEntrySize(version);
 		if (null==baseNames) {
 			throw new IllegalArgumentException("missing executableInfos");
 		}
-		return baseNames.parallelStream()
-				.map(bN -> cacheStorageSigned.getCacheDescriptorSignees(version, bN))
-				.filter(Predicates.notNull())
-				.collect(ImmutableSet.toImmutableSet());
+		return cacheStorageSigned.getCacheDescriptorsSignees(version, baseNames);
 	}
 
 	@POST

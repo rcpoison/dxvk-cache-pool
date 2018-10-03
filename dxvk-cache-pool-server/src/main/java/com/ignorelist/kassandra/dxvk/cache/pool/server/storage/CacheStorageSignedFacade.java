@@ -125,4 +125,12 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return buildSignedEntries(missingEntries);
 	}
 
+	@Override
+	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames) {
+		return baseNames.parallelStream()
+				.map(bN -> getCacheDescriptorSignees(version, bN))
+				.filter(Predicates.notNull())
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
 }
