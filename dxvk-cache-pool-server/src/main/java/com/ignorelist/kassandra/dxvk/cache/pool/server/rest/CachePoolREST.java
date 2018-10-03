@@ -15,6 +15,11 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.StateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
 import java.util.Set;
@@ -32,12 +37,16 @@ import javax.ws.rs.core.MediaType;
  * @author poison
  */
 @Path("pool")
-public class CachePoolREST implements CacheStorage {
+public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 
 	@Inject
 	private Configuration configuration;
 	@Inject
 	private CacheStorage cacheStorage;
+	@Inject
+	private SignatureStorage signatureStorage;
+	@Inject
+	private CacheStorageSigned cacheStorageSigned;
 
 	@POST
 	@Path("cacheDescriptors/{version}")
@@ -56,11 +65,39 @@ public class CachePoolREST implements CacheStorage {
 
 	@POST
 	@Path("cacheDescriptor/{version}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public StateCacheInfo getCacheDescriptor(@PathParam("version") int version, String baseName) {
 		return Iterables.getOnlyElement(getCacheDescriptors(version, ImmutableSet.of(baseName)));
+	}
+
+	@POST
+	@Path("cacheDescriptorsSignees/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(@PathParam("version") int version, Set<String> baseNames) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (null==baseNames) {
+			throw new IllegalArgumentException("missing executableInfos");
+		}
+		return baseNames.parallelStream()
+				.map(bN -> cacheStorageSigned.getCacheDescriptorSignees(version, bN))
+				.filter(Predicates.notNull())
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@POST
+	@Path("cacheDescriptorSignees/{version}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public StateCacheInfoSignees getCacheDescriptorSignees(@PathParam("version") int version, String baseName) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (null==baseName) {
+			throw new IllegalArgumentException("missing executableInfo");
+		}
+		return cacheStorageSigned.getCacheDescriptorSignees(version, baseName);
 	}
 
 	@POST
@@ -77,16 +114,42 @@ public class CachePoolREST implements CacheStorage {
 	}
 
 	@POST
+	@Path("stateCacheSigned/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public StateCacheSigned getCacheSigned(int version, String baseName) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		if (null==baseName) {
+			throw new IllegalArgumentException("missing executableInfo");
+		}
+		return cacheStorageSigned.getCacheSigned(version, baseName);
+	}
+
+	@POST
 	@Path("missingCacheEntries")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Override
 	public Set<StateCacheEntry> getMissingEntries(StateCacheInfo cacheInfo) {
+		StateCacheHeaderInfo.getEntrySize(cacheInfo.getVersion());
 		if (null==cacheInfo) {
 			throw new IllegalArgumentException("missing cacheInfo");
 		}
-		StateCacheHeaderInfo.getEntrySize(cacheInfo.getVersion());
 		return cacheStorage.getMissingEntries(cacheInfo);
+	}
+
+	@POST
+	@Path("missingCacheEntriesSigned")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<StateCacheEntrySigned> getMissingEntriesSigned(StateCacheInfo cacheInfo) {
+		StateCacheHeaderInfo.getEntrySize(cacheInfo.getVersion());
+		if (null==cacheInfo) {
+			throw new IllegalArgumentException("missing cacheInfo");
+		}
+		return cacheStorageSigned.getMissingEntriesSigned(cacheInfo);
 	}
 
 	@POST
@@ -99,11 +162,23 @@ public class CachePoolREST implements CacheStorage {
 		}
 		new StateCacheValidator().validate(dxvkStateCache);
 		// don't trust passed hashes, just rebuild the entries
-		ImmutableSet<StateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
+		final ImmutableSet<StateCacheEntry> entyCopies=dxvkStateCache.getEntries().parallelStream()
 				.map(StateCacheEntry::copySafe)
 				.collect(ImmutableSet.toImmutableSet());
 		dxvkStateCache.setEntries(entyCopies);
 		cacheStorage.store(dxvkStateCache);
+	}
+
+	@POST
+	@Path("storeSigned")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Override
+	public void storeSigned(StateCacheSigned cache) throws IOException {
+		if (null==cache) {
+			throw new IllegalArgumentException("missing cache");
+		}
+		new StateCacheValidator().validate(cache);
+		cacheStorageSigned.storeSigned(cache);
 	}
 
 	@GET

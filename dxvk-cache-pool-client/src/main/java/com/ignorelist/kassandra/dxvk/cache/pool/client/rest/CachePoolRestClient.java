@@ -53,7 +53,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path("cacheDescriptor")
 				.path(Integer.toString(version))
 				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(baseName), StateCacheInfo.class);
+				.post(Entity.text(baseName), StateCacheInfo.class);
 	}
 
 	@Override
