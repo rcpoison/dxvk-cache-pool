@@ -6,9 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Predicate;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.util.Objects;
-import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -16,25 +14,15 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class SignaturePredicate implements Predicate<StateCacheEntrySigned> {
+public class PredicateMinimumSignatures implements Predicate<StateCacheEntrySigned> {
 
-	private Set<PublicKeyInfo> acceptedPublicKeys;
 	private Integer minimumSignatures;
 
-	public SignaturePredicate() {
+	public PredicateMinimumSignatures() {
 	}
 
-	public SignaturePredicate(Set<PublicKeyInfo> acceptedPublicKeys, Integer minimumSignatures) {
-		this.acceptedPublicKeys=acceptedPublicKeys;
+	public PredicateMinimumSignatures(Integer minimumSignatures) {
 		this.minimumSignatures=minimumSignatures;
-	}
-
-	public Set<PublicKeyInfo> getAcceptedPublicKeys() {
-		return acceptedPublicKeys;
-	}
-
-	public void setAcceptedPublicKeys(Set<PublicKeyInfo> acceptedPublicKeys) {
-		this.acceptedPublicKeys=acceptedPublicKeys;
 	}
 
 	public Integer getMinimumSignatures() {
@@ -47,9 +35,6 @@ public class SignaturePredicate implements Predicate<StateCacheEntrySigned> {
 
 	@Override
 	public boolean apply(StateCacheEntrySigned entry) {
-		if (null!=acceptedPublicKeys&&!acceptedPublicKeys.isEmpty()) {
-			return entry.getSignatures().containsAll(acceptedPublicKeys);
-		}
 		if (null!=minimumSignatures&&0!=minimumSignatures) {
 			return entry.getSignatures().size()>=minimumSignatures;
 		}
@@ -59,8 +44,7 @@ public class SignaturePredicate implements Predicate<StateCacheEntrySigned> {
 	@Override
 	public int hashCode() {
 		int hash=7;
-		hash=37*hash+Objects.hashCode(this.acceptedPublicKeys);
-		hash=37*hash+Objects.hashCode(this.minimumSignatures);
+		hash=71*hash+Objects.hashCode(this.minimumSignatures);
 		return hash;
 	}
 
@@ -75,10 +59,7 @@ public class SignaturePredicate implements Predicate<StateCacheEntrySigned> {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final SignaturePredicate other=(SignaturePredicate) obj;
-		if (!Objects.equals(this.acceptedPublicKeys, other.acceptedPublicKeys)) {
-			return false;
-		}
+		final PredicateMinimumSignatures other=(PredicateMinimumSignatures) obj;
 		if (!Objects.equals(this.minimumSignatures, other.minimumSignatures)) {
 			return false;
 		}
