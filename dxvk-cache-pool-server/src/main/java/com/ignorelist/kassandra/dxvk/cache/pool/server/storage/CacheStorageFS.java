@@ -104,6 +104,7 @@ public class CacheStorageFS implements CacheStorage {
 					.collect(ImmutableSet.toImmutableSet());
 			ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> m=new ConcurrentHashMap<>();
 			final AtomicInteger entryCount=new AtomicInteger();
+			final AtomicInteger baseNameCount=new AtomicInteger();
 			for (String versionString : versions) {
 				try {
 					ConcurrentMap<String, StateCacheInfo> infoForVersion=new ConcurrentHashMap<>();
@@ -120,6 +121,7 @@ public class CacheStorageFS implements CacheStorage {
 								final int entrySize=d.getEntries().size();
 								LOG.info(() -> "loaded: "+d+" with "+entrySize+" entries");
 								entryCount.addAndGet(entrySize);
+								baseNameCount.incrementAndGet();
 							})
 							.forEach(d -> infoForVersion.put(d.getBaseName(), d));
 
@@ -129,7 +131,7 @@ public class CacheStorageFS implements CacheStorage {
 				}
 			}
 			stopwatch.stop();
-			LOG.log(Level.INFO, "populated storageCache in {0}ms with {1} baseNames and {2} entries", new Object[]{stopwatch.elapsed().toMillis(), m.size(), entryCount.intValue()});
+			LOG.log(Level.INFO, "populated storageCache in {0}ms with {1} baseNames and {2} entries", new Object[]{stopwatch.elapsed().toMillis(), baseNameCount.intValue(), entryCount.intValue()});
 			storageCache=m;
 		}
 		return storageCache.computeIfAbsent(version, i -> new ConcurrentHashMap<>());
