@@ -114,7 +114,8 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
 	public ImmutableSet<StateCacheEntryInfo> getMissingEntries(StateCacheInfo other) {
-		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
+		final Set<StateCacheEntryInfo> otherEntries=null==other.getEntries() ? ImmutableSet.of() : other.getEntries();
+		return ImmutableSet.copyOf(Sets.difference(getEntries(), otherEntries));
 	}
 
 	@Override
