@@ -263,7 +263,7 @@ public class CachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
-						final StateCache localReferenceCache=readReference(baseName);
+						final StateCache localReferenceCache=readReference(localCache.getVersion(), baseName);
 
 						//final StateCacheInfo cacheInfoUnsigned=cacheDescriptorsByBaseNameUnsigned.get(baseName);
 						//final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
@@ -339,13 +339,15 @@ public class CachePoolClient {
 		Files.move(referencePathTmp, referencePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 	}
 
-	private StateCache readReference(final String baseName) throws IOException {
+	private StateCache readReference(final int version, final String baseName) throws IOException {
 		final Path referencePath=buildReferencePath(baseName);
 		try (InputStream in=new GZIPInputStream(Files.newInputStream(referencePath))) {
 			return StateCacheIO.parse(in);
 		} catch (IOException ioe) {
 			System.err.println(baseName+" -> couldn't find reference cache, assuming new");
 			StateCache stateCache=new StateCache();
+			stateCache.setVersion(version);
+			stateCache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
 			stateCache.setBaseName(baseName);
 			stateCache.setEntries(ImmutableSet.of());
 			return stateCache;
