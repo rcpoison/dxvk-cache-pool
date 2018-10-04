@@ -116,7 +116,7 @@ public class CachePoolClient {
 
 	private synchronized KeyStore getKeyStore() throws IOException {
 		if (null==keyStore) {
-			keyStore=new KeyStore();
+			keyStore=new KeyStore(configuration.getConfigurationPath());
 		}
 		return keyStore;
 	}

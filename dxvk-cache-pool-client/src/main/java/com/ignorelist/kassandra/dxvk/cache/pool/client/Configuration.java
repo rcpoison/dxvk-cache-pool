@@ -19,9 +19,11 @@ import java.util.Set;
 public class Configuration {
 
 	public static final String WINE_PREFIX_SYMLINK="dxvk-cache-pool";
+	public static final Path CONFIG_SUBDIR=Paths.get("dxvk-cache-pool");
 
 	private String host="http://kassandra.ignorelist.com:16969/";
 	private Path cacheTargetPath;
+	private Path configurationPath;
 	private Set<Path> gamePaths;
 	private boolean verbose=false;
 
@@ -53,6 +55,18 @@ public class Configuration {
 			cacheTargetPath=t;
 		}
 		return cacheTargetPath;
+	}
+
+	public synchronized Path getConfigurationPath() throws IOException {
+		if (null==configurationPath) {
+			Path configHome=Util.getEnvPath("XDG_CONFIG_HOME");
+			if (null==configHome) {
+				configHome=Paths.get(System.getProperty("user.home"), ".config");
+			}
+			configurationPath=configHome.resolve(CONFIG_SUBDIR);
+			Files.createDirectories(configurationPath);
+		}
+		return configurationPath;
 	}
 
 	public Set<Path> getGamePaths() {

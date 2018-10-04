@@ -5,7 +5,6 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,7 +24,6 @@ public class KeyStore {
 
 	private static final Path FILENAME_PRIVATE=Paths.get(".ec.private");
 	private static final Path FILENAME_PUBLIC=Paths.get("ec.pub");
-	private static final Path CONFIG_SUBDIR=Paths.get("dxvk-cache-pool");
 
 	private final Path configDirectory;
 	private PrivateKey privateKey;
@@ -37,17 +35,7 @@ public class KeyStore {
 		init();
 	}
 
-	public KeyStore() throws IOException {
-		Path configHome=Util.getEnvPath("XDG_CONFIG_HOME");
-		if (null==configHome) {
-			configHome=Paths.get(System.getProperty("user.home"), ".config");
-		}
-		configDirectory=configHome.resolve(CONFIG_SUBDIR);
-		init();
-	}
-
 	private void init() throws IOException {
-		Files.createDirectories(configDirectory);
 		final Path privFile=configDirectory.resolve(FILENAME_PRIVATE);
 		final Path pubFile=configDirectory.resolve(FILENAME_PUBLIC);
 		if (!Files.isRegularFile(privFile)) {

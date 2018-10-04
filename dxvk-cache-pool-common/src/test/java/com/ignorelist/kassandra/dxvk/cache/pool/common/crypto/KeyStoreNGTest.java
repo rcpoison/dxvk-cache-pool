@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivateKey;
@@ -30,6 +31,7 @@ public class KeyStoreNGTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		storagePath=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool-keystore").resolve(UUID.randomUUID().toString());
+		Files.createDirectory(storagePath);
 	}
 
 	@AfterClass
