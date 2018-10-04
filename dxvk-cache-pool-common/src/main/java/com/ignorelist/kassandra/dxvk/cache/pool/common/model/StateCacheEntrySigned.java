@@ -64,7 +64,7 @@ public class StateCacheEntrySigned implements Serializable {
 	 * @param keyAccessor
 	 * @return
 	 */
-	public ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+	public ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures(final Function<PublicKeyInfo, PublicKey> keyAccessor) {
 		if (null==getSignatures()) {
 			return ImmutableSet.of();
 		}
@@ -85,6 +85,11 @@ public class StateCacheEntrySigned implements Serializable {
 			}
 		}
 		return validSignatures.build();
+	}
+
+	public boolean verifyAllSignaturesValid(final Function<PublicKeyInfo, PublicKey> keyAccessor) {
+		final ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures=verifiedSignatures(keyAccessor);
+		return Objects.equals(getSignatures(), verifiedSignatures);
 	}
 
 	public StateCacheEntrySigned copySafe() {
