@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  */
 public class KeyStore {
 
-	private static final Path FILENAME_PRIVATE=Paths.get("ec");
+	private static final Path FILENAME_PRIVATE=Paths.get(".ec.private");
 	private static final Path FILENAME_PUBLIC=Paths.get("ec.pub");
 	private static final Path CONFIG_SUBDIR=Paths.get("dxvk-cache-pool");
 
