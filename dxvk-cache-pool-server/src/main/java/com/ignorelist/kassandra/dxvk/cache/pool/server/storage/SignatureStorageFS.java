@@ -201,7 +201,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			}
 
 			//if (existingEntries.size()>=MAX_SIGNATURES&&null!=getIdentity(publicKeyInfo)) {
-			LOG.log(Level.INFO, "already have {0} unidentified for {1}", new Object[]{MAX_SIGNATURES, entryInfo});
+			//LOG.log(Level.INFO, "already have {0} unidentified for {1}", new Object[]{MAX_SIGNATURES, entryInfo});
 			//}
 			if (existingEntries.isEmpty()) {
 				Files.createDirectories(targetPath);
