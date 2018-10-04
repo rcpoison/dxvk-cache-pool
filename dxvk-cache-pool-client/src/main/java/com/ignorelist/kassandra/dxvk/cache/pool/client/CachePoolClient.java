@@ -18,9 +18,12 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -48,7 +51,9 @@ public class CachePoolClient {
 
 	private FsScanner scanResult;
 	private ImmutableSet<String> availableBaseNames;
-	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
+	private ImmutableMap<String, StateCacheInfoSignees> cacheDescriptorsByBaseName;
+	//private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseNameUnsigned;
+	private KeyStore keyStore;
 
 	public CachePoolClient(Configuration c) {
 		this.configuration=c;
@@ -105,6 +110,13 @@ public class CachePoolClient {
 		client.merge();
 	}
 
+	private synchronized KeyStore getKeyStore() throws IOException {
+		if (null==keyStore) {
+			keyStore=new KeyStore();
+		}
+		return keyStore;
+	}
+
 	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
 			System.err.println("scanning directories");
@@ -125,12 +137,13 @@ public class CachePoolClient {
 		return availableBaseNames;
 	}
 
-	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
+	public synchronized ImmutableMap<String, StateCacheInfoSignees> getCacheDescriptorsByBaseNames() throws IOException {
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
-				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
-				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
+				Set<StateCacheInfoSignees> cacheDescriptors=restClient.getCacheDescriptorsSignees(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
+				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheMeta::getBaseName);
+				//cacheDescriptorsByBaseNameUnsigned=ImmutableMap.copyOf(Maps.transformValues(cacheDescriptorsByBaseName, StateCacheInfoSignees::toUnsigned));
 				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
 				if (configuration.isVerbose()) {
 					cacheDescriptorsByBaseName.values().forEach(d -> {
@@ -180,11 +193,11 @@ public class CachePoolClient {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
-			final Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
+			final Map<String, StateCacheInfoSignees> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
 			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-					for (StateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
+					for (StateCacheInfoSignees cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
@@ -206,11 +219,11 @@ public class CachePoolClient {
 
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
-			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
+			final Map<String, StateCacheInfoSignees> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
 			System.err.println("updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-					for (StateCacheInfo cacheInfo : entriesLocalCache.values()) {
+					for (StateCacheInfoSignees cacheInfo : entriesLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
@@ -225,8 +238,9 @@ public class CachePoolClient {
 							localCache.patch(missingEntries);
 							StateCacheIO.writeAtomic(cacheFile, localCache);
 						}
-
-						final StateCache missingOnServer=localCache.diff(cacheInfo);
+						//final StateCacheInfo cacheInfoUnsigned=cacheDescriptorsByBaseNameUnsigned.get(baseName);
+						final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
+						final StateCache missingOnServer=localCache.diff(cacheInfoUnsigned);
 						if (!missingOnServer.getEntries().isEmpty()) {
 							System.err.println(" -> "+baseName+": sending "+missingOnServer.getEntries().size()+" missing entries to remote");
 							restClient.store(missingOnServer);
@@ -246,7 +260,7 @@ public class CachePoolClient {
 	 */
 	public synchronized void uploadUnknown() throws IOException {
 		// upload unkown caches
-		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
+		ImmutableMap<String, StateCacheInfoSignees> descriptors=getCacheDescriptorsByBaseNames();
 		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
 		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
 		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
