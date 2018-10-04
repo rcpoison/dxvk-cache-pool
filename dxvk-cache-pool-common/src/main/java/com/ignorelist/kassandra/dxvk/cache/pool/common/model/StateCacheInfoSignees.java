@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
@@ -75,6 +77,22 @@ public class StateCacheInfoSignees implements StateCacheMeta, Serializable {
 
 	public void setEntries(Set<StateCacheEntryInfoSignees> entries) {
 		this.entries=entries;
+	}
+
+	public StateCacheInfo toUnsigned() {
+		StateCacheInfo cacheInfo=new StateCacheInfo();
+		copyShallowTo(cacheInfo);
+		cacheInfo.setLastModified(lastModified);
+		if (null!=entries) {
+			ImmutableSet<StateCacheEntryInfo> entriesUnsigned=entries.stream()
+					.map(StateCacheEntryInfoSignees::getEntryInfo)
+					.filter(Predicates.notNull())
+					.collect(ImmutableSet.toImmutableSet());
+			cacheInfo.setEntries(entriesUnsigned);
+		} else {
+			cacheInfo.setEntries(ImmutableSet.of());
+		}
+		return cacheInfo;
 	}
 
 	@Override
