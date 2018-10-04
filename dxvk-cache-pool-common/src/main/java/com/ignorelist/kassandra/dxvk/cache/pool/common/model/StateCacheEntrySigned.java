@@ -71,7 +71,12 @@ public class StateCacheEntrySigned implements Serializable {
 		ImmutableSet.Builder<SignaturePublicKeyInfo> validSignatures=ImmutableSet.<SignaturePublicKeyInfo>builder();
 		for (SignaturePublicKeyInfo signature : getSignatures()) {
 			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
-			final PublicKey publicKey=keyAccessor.apply(publicKeyInfo);
+			PublicKey publicKey=null;
+			try {
+				publicKey=keyAccessor.apply(publicKeyInfo);
+			} catch (Exception e) {
+				LOG.log(Level.FINE, "failed loading public key", e);
+			}
 			if (null==publicKey) {
 				LOG.log(Level.WARNING, "public key not found for: {0}", publicKeyInfo);
 				continue;
