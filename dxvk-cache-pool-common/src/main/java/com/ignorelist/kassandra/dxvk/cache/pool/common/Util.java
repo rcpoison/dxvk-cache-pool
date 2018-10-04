@@ -129,4 +129,17 @@ public final class Util {
 		return null;
 	}
 
+	public static int compare(final byte[] a, final byte[] b) {
+		if (a.length!=b.length) {
+			throw new IllegalArgumentException("arrays must be of the same length");
+		}
+		for (int i=0; i<a.length; ++i) {
+			final int result=Byte.compare(a[i], b[i]);
+			if (0!=result) {
+				return result;
+			}
+		}
+		return 0;
+	}
+
 }
