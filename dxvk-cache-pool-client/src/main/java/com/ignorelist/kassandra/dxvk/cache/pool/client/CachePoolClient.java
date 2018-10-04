@@ -280,13 +280,16 @@ public class CachePoolClient {
 				final String baseName=entry.getKey();
 				System.err.println(" -> uploading "+baseName);
 				final StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
-				restClient.store(cache);
+				final StateCacheSigned cacheSigned=cache.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+				restClient.storeSigned(cacheSigned);
 
 				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
+				final Path referencePath=configuration.getCacheReferencePath().resolve(baseName+Util.DXVK_CACHE_EXT+".gz");
 				if (!Files.exists(targetPath)) {
 					System.err.println(" -> "+baseName+" does not yet exist in target directory, copying to "+targetPath);
 					StateCacheIO.writeAtomic(targetPath, cache);
 				}
+				Util.copyCompressed(targetPath, referencePath);
 			}
 		}
 	}
