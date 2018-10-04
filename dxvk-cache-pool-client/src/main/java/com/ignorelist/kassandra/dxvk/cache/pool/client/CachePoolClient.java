@@ -175,8 +175,9 @@ public class CachePoolClient {
 	 * @throws IOException
 	 */
 	public synchronized void prepareWinePrefixes() throws IOException {
+		final ImmutableSet<Path> wineRoots=getScanResult().getWineRoots();
 		System.err.println("preparing wine prefixes");
-		for (Path wineDriveC : getScanResult().getWineRoots()) {
+		for (Path wineDriveC : wineRoots) {
 			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
 			if (!Files.isSymbolicLink(symLink)) {
 				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
