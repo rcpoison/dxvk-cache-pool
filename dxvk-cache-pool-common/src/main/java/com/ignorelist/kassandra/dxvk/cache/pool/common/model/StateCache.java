@@ -92,8 +92,6 @@ public class StateCache implements StateCacheMeta, Serializable {
 		return info;
 	}
 
-	
-
 	/**
 	 * copy without entries
 	 *
