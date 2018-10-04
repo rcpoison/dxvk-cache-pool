@@ -140,7 +140,7 @@ public class CachePoolClient {
 	public synchronized ImmutableMap<String, StateCacheInfoSignees> getCacheDescriptorsByBaseNames() throws IOException {
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
+				System.err.println("looking up remote caches for "+getAvailableBaseNames().size()+" possible games");
 				Set<StateCacheInfoSignees> cacheDescriptors=restClient.getCacheDescriptorsSignees(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
 				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheMeta::getBaseName);
 				//cacheDescriptorsByBaseNameUnsigned=ImmutableMap.copyOf(Maps.transformValues(cacheDescriptorsByBaseName, StateCacheInfoSignees::toUnsigned));
