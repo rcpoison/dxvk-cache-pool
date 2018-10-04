@@ -13,10 +13,12 @@ import com.google.common.hash.HashingInputStream;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 /**
  *
@@ -140,6 +142,12 @@ public final class Util {
 			}
 		}
 		return 0;
+	}
+
+	public static void copyCompressed(Path source, Path target) throws IOException {
+		try (OutputStream out=new GZIPOutputStream(Files.newOutputStream(target))) {
+			Files.copy(source, out);
+		}
 	}
 
 }
