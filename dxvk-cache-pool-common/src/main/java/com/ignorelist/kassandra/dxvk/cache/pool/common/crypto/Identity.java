@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.collect.Ordering;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.Email;
@@ -26,6 +27,8 @@ public class Identity implements Serializable, Comparable<Identity> {
 			.thenComparing(Identity::getPublicKey, Ordering.natural().nullsLast());
 
 	private PublicKey publicKey;
+	private byte[] publicKeySignature;
+	private byte[] publicKeyGPG;
 	private String email;
 	private String name;
 
@@ -59,10 +62,28 @@ public class Identity implements Serializable, Comparable<Identity> {
 		this.name=name;
 	}
 
+	public byte[] getPublicKeySignature() {
+		return publicKeySignature;
+	}
+
+	public void setPublicKeySignature(byte[] publicKeySignature) {
+		this.publicKeySignature=publicKeySignature;
+	}
+
+	public byte[] getPublicKeyGPG() {
+		return publicKeyGPG;
+	}
+
+	public void setPublicKeyGPG(byte[] publicKeyGPG) {
+		this.publicKeyGPG=publicKeyGPG;
+	}
+
 	@Override
 	public int hashCode() {
 		int hash=7;
 		hash=37*hash+Objects.hashCode(this.publicKey);
+		hash=37*hash+Arrays.hashCode(this.publicKeySignature);
+		hash=37*hash+Arrays.hashCode(this.publicKeyGPG);
 		hash=37*hash+Objects.hashCode(this.email);
 		hash=37*hash+Objects.hashCode(this.name);
 		return hash;
@@ -87,6 +108,12 @@ public class Identity implements Serializable, Comparable<Identity> {
 			return false;
 		}
 		if (!Objects.equals(this.publicKey, other.publicKey)) {
+			return false;
+		}
+		if (!Arrays.equals(this.publicKeySignature, other.publicKeySignature)) {
+			return false;
+		}
+		if (!Arrays.equals(this.publicKeyGPG, other.publicKeyGPG)) {
 			return false;
 		}
 		return true;
