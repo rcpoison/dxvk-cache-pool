@@ -40,6 +40,7 @@ public class KeyStore {
 		final Path pubFile=configDirectory.resolve(FILENAME_PUBLIC);
 		if (!Files.isRegularFile(privFile)) {
 			try {
+				System.err.println("generating key pair: "+configDirectory);
 				final KeyPair generated=CryptoUtil.generate();
 
 				try (OutputStream outPriv=Files.newOutputStream(privFile)) {
