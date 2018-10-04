@@ -24,6 +24,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -206,8 +207,12 @@ public class CachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
-						final StateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
-						StateCacheIO.write(targetPath, cache);
+						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName);
+						if (!cacheSigned.verifyAllSignaturesValid()) {
+							throw new IllegalStateException("signatures could not be verified!");
+						}
+						final StateCache cacheUnsigned=cacheSigned.toUnsigned();
+						StateCacheIO.write(targetPath, cacheUnsigned);
 					}
 				}
 			}
