@@ -65,7 +65,7 @@ public class CachePoolClient {
 	public static void main(String[] args) throws IOException {
 		Options options=buildOptions();
 		CommandLineParser parser=new DefaultParser();
-		CommandLine commandLine;
+		CommandLine commandLine=null;
 		Configuration c=new Configuration();
 		try {
 			commandLine=parser.parse(options, args);
@@ -107,6 +107,10 @@ public class CachePoolClient {
 		}
 		System.err.println("target directory is: "+c.getCacheTargetPath());
 		CachePoolClient client=new CachePoolClient(c);
+		if (commandLine.hasOption("init-keys")) {
+			client.getKeyStore();
+			System.exit(0);
+		}
 		client.merge();
 	}
 
@@ -157,6 +161,7 @@ public class CachePoolClient {
 	}
 
 	public synchronized void merge() throws IOException {
+		getKeyStore();
 		prepareWinePrefixes();
 		downloadNew();
 		mergeExisting();
@@ -304,6 +309,7 @@ public class CachePoolClient {
 		//options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
+		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		return options;
 	}
 
