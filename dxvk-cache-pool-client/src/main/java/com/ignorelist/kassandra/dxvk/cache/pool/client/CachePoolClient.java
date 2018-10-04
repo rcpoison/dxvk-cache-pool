@@ -6,6 +6,9 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -18,22 +21,30 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -50,6 +61,19 @@ public class CachePoolClient {
 
 	private final Configuration configuration;
 
+	private final LoadingCache<PublicKeyInfo, PublicKey> publicKeyCache=CacheBuilder.newBuilder()
+			.<PublicKeyInfo, PublicKey>build(new CacheLoader<PublicKeyInfo, PublicKey>() {
+				@Override
+				public PublicKey load(PublicKeyInfo key) throws Exception {
+					try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+						com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey publicKey=restClient.getPublicKey(key);
+						if (null==publicKey) {
+							throw new NoSuchElementException();
+						}
+						return CryptoUtil.decodePublicKey(publicKey);
+					}
+				}
+			});
 	private FsScanner scanResult;
 	private ImmutableSet<String> availableBaseNames;
 	private ImmutableMap<String, StateCacheInfoSignees> cacheDescriptorsByBaseName;
@@ -213,7 +237,8 @@ public class CachePoolClient {
 							throw new IllegalStateException("signatures could not be verified!");
 						}
 						final StateCache cacheUnsigned=cacheSigned.toUnsigned();
-						StateCacheIO.write(targetPath, cacheUnsigned);
+						StateCacheIO.writeAtomic(targetPath, cacheUnsigned);
+						copyToReference(targetPath, baseName);
 					}
 				}
 			}
@@ -238,24 +263,32 @@ public class CachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
+						final StateCache localReferenceCache=readReference(baseName);
+
+						//final StateCacheInfo cacheInfoUnsigned=cacheDescriptorsByBaseNameUnsigned.get(baseName);
+						//final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
+						final StateCache locallyBuilt=localCache.diff(localReferenceCache);
+						if (!locallyBuilt.getEntries().isEmpty()) {
+							System.err.println(" -> "+baseName+": sending "+locallyBuilt.getEntries().size()+" locally built to remote");
+							final StateCacheSigned locallyBuiltSigned=locallyBuilt.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+							restClient.storeSigned(locallyBuiltSigned);
+						}
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final StateCacheInfo localCacheInfo=localCache.toInfo();
-						final Set<StateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
+						final Set<StateCacheEntrySigned> missingEntries=restClient.getMissingEntriesSigned(localCacheInfo);
 						if (missingEntries.isEmpty()) {
 							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
 						} else {
 							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
-							localCache.patch(missingEntries);
+							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
+									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked))
+									.map(StateCacheEntrySigned::getCacheEntry)
+									.collect(ImmutableSet.toImmutableSet());
+							localCache.patch(verifiedMissingEntries);
 							StateCacheIO.writeAtomic(cacheFile, localCache);
 						}
-						//final StateCacheInfo cacheInfoUnsigned=cacheDescriptorsByBaseNameUnsigned.get(baseName);
-						final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
-						final StateCache missingOnServer=localCache.diff(cacheInfoUnsigned);
-						if (!missingOnServer.getEntries().isEmpty()) {
-							System.err.println(" -> "+baseName+": sending "+missingOnServer.getEntries().size()+" missing entries to remote");
-							restClient.store(missingOnServer);
-						}
+						copyToReference(cacheFile, baseName);
 					}
 				}
 			}
@@ -284,13 +317,38 @@ public class CachePoolClient {
 				restClient.storeSigned(cacheSigned);
 
 				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-				final Path referencePath=configuration.getCacheReferencePath().resolve(baseName+Util.DXVK_CACHE_EXT+".gz");
+
 				if (!Files.exists(targetPath)) {
 					System.err.println(" -> "+baseName+" does not yet exist in target directory, copying to "+targetPath);
 					StateCacheIO.writeAtomic(targetPath, cache);
+					copyToReference(targetPath, baseName);
 				}
-				Util.copyCompressed(targetPath, referencePath);
 			}
+		}
+	}
+
+	private Path buildReferencePath(final String baseName) throws IOException {
+		final Path referencePath=configuration.getCacheReferencePath().resolve(baseName+Util.DXVK_CACHE_EXT+".gz");
+		return referencePath;
+	}
+
+	private void copyToReference(final Path source, final String baseName) throws IOException {
+		final Path referencePath=buildReferencePath(baseName);
+		final Path referencePathTmp=buildReferencePath(baseName).resolveSibling(baseName+Util.DXVK_CACHE_EXT+".gz.tmp");
+		Util.copyCompressed(source, referencePathTmp);
+		Files.move(referencePathTmp, referencePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	private StateCache readReference(final String baseName) throws IOException {
+		final Path referencePath=buildReferencePath(baseName);
+		try (InputStream in=new GZIPInputStream(Files.newInputStream(referencePath))) {
+			return StateCacheIO.parse(in);
+		} catch (IOException ioe) {
+			System.err.println(baseName+" -> couldn't find reference cache, assuming new");
+			StateCache stateCache=new StateCache();
+			stateCache.setBaseName(baseName);
+			stateCache.setEntries(ImmutableSet.of());
+			return stateCache;
 		}
 	}
 
