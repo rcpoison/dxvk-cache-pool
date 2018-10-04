@@ -24,6 +24,7 @@ public class Configuration {
 	private String host="http://kassandra.ignorelist.com:16969/";
 	private Path cacheTargetPath;
 	private Path configurationPath;
+	private Path cacheReferencePath;
 	private Set<Path> gamePaths;
 	private boolean verbose=false;
 
@@ -67,6 +68,14 @@ public class Configuration {
 			Files.createDirectories(configurationPath);
 		}
 		return configurationPath;
+	}
+
+	public synchronized Path getCacheReferencePath() throws IOException {
+		if (null==cacheReferencePath) {
+			cacheReferencePath=getConfigurationPath().resolve("reference");
+			Files.createDirectories(cacheReferencePath);
+		}
+		return cacheReferencePath;
 	}
 
 	public Set<Path> getGamePaths() {
