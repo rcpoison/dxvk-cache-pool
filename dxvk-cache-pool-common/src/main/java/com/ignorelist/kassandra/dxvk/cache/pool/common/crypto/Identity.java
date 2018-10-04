@@ -5,7 +5,9 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import com.google.common.collect.Ordering;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -17,7 +19,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class Identity implements Serializable {
+public class Identity implements Serializable, Comparable<Identity> {
+
+	private static final Comparator<Identity> COMPARATOR=Comparator.comparing(Identity::getEmail, Ordering.natural().nullsLast())
+			.thenComparing(Identity::getName, Ordering.natural().nullsLast())
+			.thenComparing(Identity::getPublicKey, Ordering.natural().nullsLast());
 
 	private PublicKey publicKey;
 	private String email;
@@ -84,6 +90,11 @@ public class Identity implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public int compareTo(Identity o) {
+		return COMPARATOR.compare(this, o);
 	}
 
 }
