@@ -108,7 +108,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
 					.map(StateCacheEntrySigned::copySafe)
 					.filter(e -> 1==e.getSignatures().size())
-					.filter(e -> 1==e.verify(keyByInfo::get).size())
+					.filter(e -> 1==e.verifiedSignatures(keyByInfo::get).size())
 					.collect(ImmutableSet.toImmutableSet());
 			verifiedEntries.parallelStream()
 					.forEach(e -> signatureStorage.addSignee(e.getCacheEntry().getEntryInfo(), Iterables.getOnlyElement(e.getSignatures())));

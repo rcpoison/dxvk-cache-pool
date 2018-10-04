@@ -64,7 +64,7 @@ public class StateCacheEntrySigned implements Serializable {
 	 * @param keyAccessor
 	 * @return
 	 */
-	public ImmutableSet<SignaturePublicKeyInfo> verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+	public ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures(Function<PublicKeyInfo, PublicKey> keyAccessor) {
 		if (null==getSignatures()) {
 			return ImmutableSet.of();
 		}
