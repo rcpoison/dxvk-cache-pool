@@ -31,6 +31,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -341,7 +342,7 @@ public class CachePoolClient {
 
 	private StateCache readReference(final int version, final String baseName) throws IOException {
 		final Path referencePath=buildReferencePath(baseName);
-		try (InputStream in=new GZIPInputStream(Files.newInputStream(referencePath))) {
+		try (InputStream in=new BufferedInputStream(new GZIPInputStream(Files.newInputStream(referencePath)))) {
 			return StateCacheIO.parse(in);
 		} catch (IOException ioe) {
 			System.err.println(baseName+" -> couldn't find reference cache, assuming new");
