@@ -167,6 +167,7 @@ public class IdentityStorageFS implements IdentityStorage {
 				final IdentityVerification identityVerification=identityWithVerification.getIdentityVerification();
 				Files.write(buildFileNameSignature(publicKeyInfo), identityVerification.getPublicKeySignature());
 				Files.write(buildFileNameGPG(publicKeyInfo), identityVerification.getPublicKeyGPG());
+				getStorageCache().put(publicKeyInfo, identity);
 			} finally {
 				writeLock.unlock();
 			}
