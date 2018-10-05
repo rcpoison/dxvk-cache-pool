@@ -21,6 +21,7 @@ public class PredicateStateCacheEntrySigned implements Serializable, Predicate<S
 
 	private PredicateAcceptedPublicKeys acceptedPublicKeys;
 	private PredicateMinimumSignatures minimumSignatures;
+	private boolean onlyAcceptVerifiedKeys;
 
 	public PredicateStateCacheEntrySigned() {
 	}
@@ -44,6 +45,14 @@ public class PredicateStateCacheEntrySigned implements Serializable, Predicate<S
 
 	public void setMinimumSignatures(PredicateMinimumSignatures minimumSignatures) {
 		this.minimumSignatures=minimumSignatures;
+	}
+
+	public boolean isOnlyAcceptVerifiedKeys() {
+		return onlyAcceptVerifiedKeys;
+	}
+
+	public void setOnlyAcceptVerifiedKeys(boolean onlyAcceptVerifiedKeys) {
+		this.onlyAcceptVerifiedKeys=onlyAcceptVerifiedKeys;
 	}
 
 	@Override
