@@ -106,7 +106,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 			final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keyByInfo=ImmutableMap.of(publicKey.getKeyInfo(), CryptoUtil.decodePublicKey(publicKey.getKey()));
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
-					.map(StateCacheEntrySigned::copySafe)
+					.map(StateCacheEntrySigned::copySafe) // do not trust info, rebuild
 					.filter(e -> 1==e.getSignatures().size())
 					.filter(e -> 1==e.verifiedSignatures(keyByInfo::get).size())
 					.collect(ImmutableSet.toImmutableSet());
