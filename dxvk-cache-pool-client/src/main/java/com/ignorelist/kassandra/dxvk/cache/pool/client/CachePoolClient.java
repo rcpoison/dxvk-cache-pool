@@ -279,7 +279,7 @@ public class CachePoolClient {
 						final StateCacheInfo localCacheInfo=localCache.toInfo();
 						final Set<StateCacheEntrySigned> missingEntries=restClient.getMissingEntriesSigned(localCacheInfo);
 						if (missingEntries.isEmpty()) {
-							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
+							System.err.println(" -> "+baseName+": is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
 							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
