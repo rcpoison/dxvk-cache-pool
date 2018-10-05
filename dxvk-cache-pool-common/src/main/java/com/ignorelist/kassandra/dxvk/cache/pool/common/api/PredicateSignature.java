@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
+package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
