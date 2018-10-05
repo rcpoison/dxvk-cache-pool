@@ -10,6 +10,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerificati
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.IOException;
+import java.util.Set;
 
 /**
  *
@@ -23,5 +24,7 @@ public interface IdentityStorage {
 	IdentityVerification getIdentityVerification(PublicKeyInfo publicKeyInfo);
 
 	void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException;
+
+	Set<PublicKeyInfo> getVerifiedKeyInfos();
 	
 }

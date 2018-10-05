@@ -334,6 +334,11 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	}
 
 	@Override
+	public Set<PublicKeyInfo> getVerifiedKeyInfos() {
+		return identityStorage.getVerifiedKeyInfos();
+	}
+
+	@Override
 	public void close() throws IOException {
 		if (null!=storageThreadPool) {
 			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);

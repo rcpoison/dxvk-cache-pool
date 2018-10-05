@@ -22,6 +22,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -153,6 +154,16 @@ public class IdentityStorageFS implements IdentityStorage {
 			LOG.log(Level.SEVERE, null, e);
 		}
 		return null;
+	}
+
+	@Override
+	public Set<PublicKeyInfo> getVerifiedKeyInfos() {
+		try {
+			return ImmutableSet.copyOf(getStorageCache().keySet());
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			return ImmutableSet.of();
+		}
 	}
 
 	@Override
