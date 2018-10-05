@@ -5,8 +5,11 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
@@ -77,6 +80,23 @@ public class StateCacheSigned implements Serializable, StateCacheMeta {
 
 	public void setPublicKeys(Set<PublicKey> publicKeys) {
 		this.publicKeys=publicKeys;
+	}
+
+	public ImmutableMap<PublicKeyInfo, java.security.PublicKey> buildUsedPublicKeyMap() {
+		return getPublicKeys().stream()
+				.collect(ImmutableMap.toImmutableMap(PublicKey::getKeyInfo, v -> {
+					try {
+						return CryptoUtil.decodePublicKey(v);
+					} catch (Exception ex) {
+						throw new IllegalStateException(ex);
+					}
+				}));
+	}
+
+	public boolean verifyAllSignaturesValid() {
+		final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keysByInfo=buildUsedPublicKeyMap();
+		return getEntries().parallelStream()
+				.allMatch(e -> e.verifyAllSignaturesValid(keysByInfo::get));
 	}
 
 	public StateCache toUnsigned() {

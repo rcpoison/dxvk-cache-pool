@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PublicKey implements Serializable {
+public class PublicKey implements Serializable, Comparable<PublicKey> {
 
 	private byte[] key;
 	private PublicKeyInfo keyInfo;
@@ -82,6 +83,11 @@ public class PublicKey implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public int compareTo(PublicKey o) {
+		return Util.compare(getKey(), o.getKey());
 	}
 
 }

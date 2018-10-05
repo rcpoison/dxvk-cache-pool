@@ -20,6 +20,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentifiedFirstOrdering;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
@@ -73,6 +74,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			.weigher((PublicKeyInfo i, PublicKey k) -> k.getKey().length)
 			.maximumWeight(8*1024*1024) // 8MiB
 			.build();
+	private final IdentifiedFirstOrdering identifiedFirstOrdering;
 	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> signatureStorageCache;
 	private ForkJoinPool storageThreadPool;
 
@@ -82,6 +84,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		keysPath=storageRoot.resolve(PATH_KEYS);
 		Files.createDirectories(signaturesPath);
 		Files.createDirectories(keysPath);
+		identifiedFirstOrdering=new IdentifiedFirstOrdering(this);
 	}
 
 	private synchronized ForkJoinPool getThreadPool() {
@@ -165,7 +168,13 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		try {
 			final Set<PublicKeyInfo> signedBy=getSignatureStorageCache().get(entryInfo);
 			if (null!=signedBy) {
-				return signedBy;
+				if (signedBy.size()<=MAX_SIGNATURES) {
+					return signedBy;
+				}
+				return signedBy.stream()
+						.sorted(identifiedFirstOrdering)
+						.limit(MAX_SIGNATURES)
+						.collect(ImmutableSet.toImmutableSet());
 			}
 		} catch (Exception ex) {
 			LOG.log(Level.SEVERE, null, ex);
@@ -190,6 +199,10 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			if (existingEntries.contains(publicKeyInfo)) {
 				return;
 			}
+
+			//if (existingEntries.size()>=MAX_SIGNATURES&&null!=getIdentity(publicKeyInfo)) {
+			//LOG.log(Level.INFO, "already have {0} unidentified for {1}", new Object[]{MAX_SIGNATURES, entryInfo});
+			//}
 			if (existingEntries.isEmpty()) {
 				Files.createDirectories(targetPath);
 			}
@@ -294,7 +307,8 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	@Override
 	public Identity getIdentity(final PublicKeyInfo keyInfo) {
-		throw new UnsupportedOperationException();
+		//throw new UnsupportedOperationException();
+		return null;
 	}
 
 	@Override

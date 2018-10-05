@@ -64,14 +64,19 @@ public class StateCacheEntrySigned implements Serializable {
 	 * @param keyAccessor
 	 * @return
 	 */
-	public ImmutableSet<SignaturePublicKeyInfo> verify(Function<PublicKeyInfo, PublicKey> keyAccessor) {
+	public ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures(final Function<PublicKeyInfo, PublicKey> keyAccessor) {
 		if (null==getSignatures()) {
 			return ImmutableSet.of();
 		}
 		ImmutableSet.Builder<SignaturePublicKeyInfo> validSignatures=ImmutableSet.<SignaturePublicKeyInfo>builder();
 		for (SignaturePublicKeyInfo signature : getSignatures()) {
 			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
-			final PublicKey publicKey=keyAccessor.apply(publicKeyInfo);
+			PublicKey publicKey=null;
+			try {
+				publicKey=keyAccessor.apply(publicKeyInfo);
+			} catch (Exception e) {
+				LOG.log(Level.FINE, "failed loading public key", e);
+			}
 			if (null==publicKey) {
 				LOG.log(Level.WARNING, "public key not found for: {0}", publicKeyInfo);
 				continue;
@@ -85,6 +90,11 @@ public class StateCacheEntrySigned implements Serializable {
 			}
 		}
 		return validSignatures.build();
+	}
+
+	public boolean verifyAllSignaturesValid(final Function<PublicKeyInfo, PublicKey> keyAccessor) {
+		final ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures=verifiedSignatures(keyAccessor);
+		return Objects.equals(getSignatures(), verifiedSignatures);
 	}
 
 	public StateCacheEntrySigned copySafe() {

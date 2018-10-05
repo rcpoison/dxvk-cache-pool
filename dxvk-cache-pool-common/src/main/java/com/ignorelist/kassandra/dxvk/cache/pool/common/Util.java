@@ -13,10 +13,12 @@ import com.google.common.hash.HashingInputStream;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 /**
  *
@@ -127,6 +129,25 @@ public final class Util {
 			p=p.getParent();
 		}
 		return null;
+	}
+
+	public static int compare(final byte[] a, final byte[] b) {
+		if (a.length!=b.length) {
+			throw new IllegalArgumentException("arrays must be of the same length");
+		}
+		for (int i=0; i<a.length; ++i) {
+			final int result=Byte.compare(a[i], b[i]);
+			if (0!=result) {
+				return result;
+			}
+		}
+		return 0;
+	}
+
+	public static void copyCompressed(Path source, Path target) throws IOException {
+		try (OutputStream out=new GZIPOutputStream(Files.newOutputStream(target))) {
+			Files.copy(source, out);
+		}
 	}
 
 }

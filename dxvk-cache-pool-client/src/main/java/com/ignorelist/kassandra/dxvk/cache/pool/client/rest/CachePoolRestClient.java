@@ -172,7 +172,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	@Override
 	public void storeSigned(StateCacheSigned cache) throws IOException {
 		getWebTarget()
-				.path("store")
+				.path("storeSigned")
 				.request()
 				.post(Entity.json(cache));
 	}

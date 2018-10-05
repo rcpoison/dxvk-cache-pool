@@ -90,6 +90,7 @@ public class CacheStorageFSNGTest {
 			StateCacheInfo empty=cache.copy().toInfo();
 			empty.setEntries(ImmutableSet.of());
 			Set<StateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
+			assertEntrySize(missingEntriesForEmpty);
 			assertEquals(missingEntriesForEmpty, cache.getEntries());
 		}
 	}
@@ -103,11 +104,13 @@ public class CacheStorageFSNGTest {
 		iterator.remove();
 		existingCache.setEntries(entries);
 		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
-			Set<StateCacheEntryInfo> missingEntries=instance.getMissingEntries(existingCache).stream()
+			final Set<StateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
+			assertEntrySize(missingEntries);
+			Set<StateCacheEntryInfo> missingEntryInfos=missingEntries.stream()
 					.map(StateCacheEntry::getEntryInfo)
 					.collect(ImmutableSet.toImmutableSet());
-			assertEquals(missingEntries, ImmutableSet.of(missing));
-			assertEquals(missingEntries.size(), 1);
+			assertEquals(missingEntryInfos, ImmutableSet.of(missing));
+			assertEquals(missingEntryInfos.size(), 1);
 		}
 	}
 
@@ -128,7 +131,14 @@ public class CacheStorageFSNGTest {
 			assertEquals(result, cache);
 			assertEquals(result.getVersion(), cache.getVersion());
 			assertEquals(result.getEntrySize(), cache.getEntrySize());
+			assertEntrySize(cache.getEntries());
 		}
+	}
+
+	private void assertEntrySize(Set<StateCacheEntry> cacheEntrys) {
+		boolean collectEntrySize=cacheEntrys.stream()
+				.allMatch(e -> cache.getEntrySize()==e.getEntry().length);
+		assertTrue(collectEntrySize, "collectEntrySize");
 	}
 
 	@Test

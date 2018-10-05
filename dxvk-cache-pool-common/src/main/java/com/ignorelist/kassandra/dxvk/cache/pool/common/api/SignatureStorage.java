@@ -19,6 +19,8 @@ import java.util.Set;
  */
 public interface SignatureStorage {
 
+	int MAX_SIGNATURES=8;
+
 	void addSignee(final StateCacheEntryInfo entryInfo, final SignaturePublicKeyInfo signaturePublicKeyInfo);
 
 	Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo);

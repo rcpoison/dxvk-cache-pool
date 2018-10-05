@@ -5,6 +5,8 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.io.BaseEncoding;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
@@ -62,6 +64,13 @@ public class StateCacheEntryInfo implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("hash", null==hash ? null : BaseEncoding.base16().encode(hash))
+				.toString();
 	}
 
 }

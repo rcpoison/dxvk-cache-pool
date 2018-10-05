@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteStreams;
 import com.google.common.primitives.UnsignedInteger;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -80,7 +81,7 @@ public class StateCacheIO {
 		}
 		byte[] versionBytes=new byte[4];
 		inputStream.read(versionBytes);
-		int version=parseUnsignedInt(versionBytes);
+		final int version=parseUnsignedInt(versionBytes);
 		if (!StateCacheHeaderInfo.getKnownVersions().contains(version)) {
 			LOG.log(Level.WARNING, "unknon version encountered: {0}", version);
 		}
@@ -98,9 +99,10 @@ public class StateCacheIO {
 
 		List<byte[]> bareEntries=new ArrayList<>();
 		while (true) {
-			byte[] entry=new byte[entrySize];
-			final int bytesRead=inputStream.read(entry);
-			if (-1==bytesRead) {
+			final byte[] entry=new byte[entrySize];
+			final int bytesRead=ByteStreams.read(inputStream, entry, 0, entrySize);
+			//final int bytesRead=inputStream.read(entry);
+			if (0==bytesRead) {
 				break;
 			}
 			if (bytesRead!=entrySize) {
@@ -152,7 +154,6 @@ public class StateCacheIO {
 						throw new IllegalStateException("failed to write cache entry", ex);
 					}
 				});
-
 	}
 
 	private static int parseUnsignedInt(byte[] bytes) {
