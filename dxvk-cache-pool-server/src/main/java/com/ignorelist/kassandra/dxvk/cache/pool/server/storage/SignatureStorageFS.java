@@ -218,9 +218,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 				Files.createDirectories(targetPath);
 			}
 			final Path filePath=buildTargetPathFile(targetPath, publicKeyInfo);
-			try (OutputStream out=Files.newOutputStream(filePath)) {
-				out.write(signaturePublicKeyInfo.getSignature().getSignature());
-			}
+			Files.write(filePath, signaturePublicKeyInfo.getSignature().getSignature());
 			existingEntries.add(publicKeyInfoInterner.intern(publicKeyInfo));
 
 		} catch (RuntimeException e) {
