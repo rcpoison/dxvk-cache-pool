@@ -79,13 +79,13 @@ public class IdentityStorageFS implements IdentityStorage {
 				.collect(ImmutableSet.toImmutableSet());
 		return files.parallelStream()
 				.map(this::readIdentity)
-				.collect(Collectors.toConcurrentMap(Identity::getPublicKey, Functions.identity()));
+				.collect(Collectors.toConcurrentMap(Identity::getPublicKeyInfo, Functions.identity()));
 	}
 
 	private Identity readIdentity(final Path file) {
 		try {
 			final Identity identitiy=objectMapper.readValue(file.toFile(), Identity.class);
-			PublicKeyInfo interned=publicKeyInfoInterner.intern(identitiy.getPublicKey());
+			PublicKeyInfo interned=publicKeyInfoInterner.intern(identitiy.getPublicKeyInfo());
 			identitiy.setPublicKeyInfo(interned);
 			return identitiy;
 		} catch (RuntimeException ex) {
@@ -95,7 +95,7 @@ public class IdentityStorageFS implements IdentityStorage {
 		}
 	}
 
-	private void writeIdentity(final Path file, Identity identity) throws IOException {
+	private void writeIdentity(final Path file, final Identity identity) throws IOException {
 		objectMapper.writeValue(file.toFile(), identity);
 	}
 
@@ -115,7 +115,7 @@ public class IdentityStorageFS implements IdentityStorage {
 	}
 
 	private Path buildFileNameIdentity(PublicKeyInfo keyInfo) {
-		return storageRoot.resolve(keyHashString(keyInfo)+".json");
+		return storageRoot.resolve(keyHashString(keyInfo));
 	}
 
 	private Path buildFileNameGPG(PublicKeyInfo keyInfo) {
@@ -146,6 +146,7 @@ public class IdentityStorageFS implements IdentityStorage {
 					IdentityVerification iV=new IdentityVerification();
 					iV.setPublicKeySignature(Files.readAllBytes(buildFileNameSignature(publicKeyInfo)));
 					iV.setPublicKeyGPG(Files.readAllBytes(buildFileNameGPG(publicKeyInfo)));
+					return iV;
 				} finally {
 					readLock.unlock();
 				}
@@ -167,12 +168,14 @@ public class IdentityStorageFS implements IdentityStorage {
 	}
 
 	@Override
-	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
+	public void storeIdentity(final IdentityWithVerification identityWithVerification) throws IOException {
+		// TODO: verification
 		final Identity identity=identityWithVerification.getIdentity();
-		final PublicKeyInfo publicKeyInfo=publicKeyInfoInterner.intern(identity.getPublicKey());
+		final PublicKeyInfo publicKeyInfo=publicKeyInfoInterner.intern(identity.getPublicKeyInfo());
 		if (!getStorageCache().containsKey(publicKeyInfo)) {
 			identity.setPublicKeyInfo(publicKeyInfo);
 			final Lock writeLock=getWriteLock(publicKeyInfo);
+			writeLock.lock();
 			try {
 				writeIdentity(buildFileNameIdentity(publicKeyInfo), identity);
 				final IdentityVerification identityVerification=identityWithVerification.getIdentityVerification();

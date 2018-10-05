@@ -23,7 +23,7 @@ public class Identity implements Serializable, Comparable<Identity> {
 
 	private static final Comparator<Identity> COMPARATOR=Comparator.comparing(Identity::getEmail, Ordering.natural().nullsLast())
 			.thenComparing(Identity::getName, Ordering.natural().nullsLast())
-			.thenComparing(Identity::getPublicKey, Ordering.natural().nullsLast());
+			.thenComparing(Identity::getPublicKeyInfo, Ordering.natural().nullsLast());
 
 	private PublicKeyInfo publicKeyInfo;
 	private String email;
@@ -34,7 +34,7 @@ public class Identity implements Serializable, Comparable<Identity> {
 
 	@NotNull
 	@XmlElement(required=true)
-	public PublicKeyInfo getPublicKey() {
+	public PublicKeyInfo getPublicKeyInfo() {
 		return publicKeyInfo;
 	}
 
