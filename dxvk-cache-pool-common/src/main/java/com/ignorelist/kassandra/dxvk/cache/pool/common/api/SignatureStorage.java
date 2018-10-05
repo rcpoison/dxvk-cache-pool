@@ -5,7 +5,6 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
@@ -17,7 +16,7 @@ import java.util.Set;
  *
  * @author poison
  */
-public interface SignatureStorage {
+public interface SignatureStorage extends IdentityStorage {
 
 	int MAX_SIGNATURES=8;
 
@@ -30,7 +29,5 @@ public interface SignatureStorage {
 	void storePublicKey(final PublicKey publicKey) throws IOException;
 
 	PublicKey getPublicKey(final PublicKeyInfo keyInfo);
-
-	Identity getIdentity(final PublicKeyInfo keyInfo);
 
 }
