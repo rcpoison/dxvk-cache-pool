@@ -39,7 +39,7 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 	@Override
 	public boolean apply(StateCacheEntrySigned entry) {
 		if (null!=acceptedPublicKeys&&!acceptedPublicKeys.isEmpty()) {
-			return null!=entry.getSignatures()&&entry.getSignatures().containsAll(acceptedPublicKeys);
+			return null!=entry.getSignatures()&&entry.getSignatures().containsAll(acceptedPublicKeys); // TODO: containsAny
 		}
 		return true;
 	}
