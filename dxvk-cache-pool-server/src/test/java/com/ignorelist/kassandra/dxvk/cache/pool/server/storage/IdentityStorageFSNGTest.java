@@ -114,6 +114,7 @@ public class IdentityStorageFSNGTest {
 	@Test(dependsOnMethods={"testStoreIdentity"})
 	public void testGetVerifiedKeyInfos() throws Exception {
 		IdentityStorageFS instance=new IdentityStorageFS(storageRoot);
+		instance.init();
 		Set<PublicKeyInfo> expResult=ImmutableSet.of(publicKey0.getKeyInfo(), publicKey1.getKeyInfo());
 		Set<PublicKeyInfo> result=instance.getVerifiedKeyInfos();
 		assertEquals(result, expResult);
