@@ -59,14 +59,14 @@ public class IdentityStorageFS implements IdentityStorage {
 		objectMapper.registerModule(module);
 	}
 
-	private Lock getReadLock(PublicKeyInfo path) {
-		final ReadWriteLock lock=storageLock.get(path);
+	private Lock getReadLock(PublicKeyInfo keyInfo) {
+		final ReadWriteLock lock=storageLock.get(keyInfo);
 		final Lock readLock=lock.readLock();
 		return readLock;
 	}
 
-	private Lock getWriteLock(PublicKeyInfo path) {
-		final ReadWriteLock lock=storageLock.get(path);
+	private Lock getWriteLock(PublicKeyInfo keyInfo) {
+		final ReadWriteLock lock=storageLock.get(keyInfo);
 		final Lock writeLock=lock.writeLock();
 		return writeLock;
 	}
