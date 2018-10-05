@@ -278,8 +278,8 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 				final Path keyPath=buildPublicKeyPath(keyInfoInterned);
 				final Lock readLock=getReadLock(keyPath);
 				readLock.lock();
-				try (InputStream in=Files.newInputStream(keyPath)) {
-					byte[] keyBytes=ByteStreams.toByteArray(in);
+				try {
+					byte[] keyBytes=Files.readAllBytes(keyPath);
 					return new PublicKey(keyBytes, keyInfoInterned);
 				} finally {
 					readLock.unlock();
