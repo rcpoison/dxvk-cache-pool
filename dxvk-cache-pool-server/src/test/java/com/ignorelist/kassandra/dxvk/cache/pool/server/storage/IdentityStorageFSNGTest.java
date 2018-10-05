@@ -68,8 +68,8 @@ public class IdentityStorageFSNGTest {
 		identity.setName("Who Cares");
 
 		IdentityVerification iv=new IdentityVerification();
-		iv.setPublicKeyGPG(key.getKey());
-		iv.setPublicKeySignature(key.getKeyInfo().getHash());
+		iv.setPublicKeyGPG(key.getKey()); // just garbage for testing! Not a proper example!
+		iv.setPublicKeySignature(key.getKeyInfo().getHash()); // just garbage for testing! Not a proper example!
 
 		IdentityWithVerification idv=new IdentityWithVerification();
 		idv.setIdentity(identity);
@@ -79,7 +79,6 @@ public class IdentityStorageFSNGTest {
 
 	@Test
 	public void testStoreIdentity() throws Exception {
-
 		final IdentityWithVerification idv0=buildIdentity(publicKey0);
 		final IdentityWithVerification idv1=buildIdentity(publicKey1);
 
