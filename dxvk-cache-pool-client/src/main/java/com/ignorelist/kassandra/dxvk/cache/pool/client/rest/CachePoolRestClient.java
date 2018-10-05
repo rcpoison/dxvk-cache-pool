@@ -209,7 +209,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 
 	@Override
 	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
 	}
 
 }
