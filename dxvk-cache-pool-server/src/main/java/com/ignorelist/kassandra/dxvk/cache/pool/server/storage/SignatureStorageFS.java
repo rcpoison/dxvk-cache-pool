@@ -21,8 +21,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentifiedFirstOrdering;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentityStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Signature;
@@ -64,16 +67,19 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private static final BaseEncoding BASE16=BaseEncoding.base16();
 	private static final Path PATH_SIGNATURES=Paths.get("signatures");
 	private static final Path PATH_KEYS=Paths.get("keys");
+	private static final Path PATH_IDENTITIES=Paths.get("identities");
 
 	private final Path storageRoot;
 	private final Path signaturesPath;
 	private final Path keysPath;
+	private final Path identitiesPath;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
 	private final Interner<PublicKeyInfo> publicKeyInfoInterner=Interners.newWeakInterner();
 	private final Cache<PublicKeyInfo, PublicKey> publicKeyStorageCache=CacheBuilder.newBuilder()
 			.weigher((PublicKeyInfo i, PublicKey k) -> k.getKey().length)
 			.maximumWeight(8*1024*1024) // 8MiB
 			.build();
+	private final IdentityStorage identityStorage;
 	private final IdentifiedFirstOrdering identifiedFirstOrdering;
 	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> signatureStorageCache;
 	private ForkJoinPool storageThreadPool;
@@ -81,10 +87,17 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	public SignatureStorageFS(Path storageRoot) throws IOException {
 		this.storageRoot=storageRoot;
 		signaturesPath=storageRoot.resolve(PATH_SIGNATURES);
-		keysPath=storageRoot.resolve(PATH_KEYS);
 		Files.createDirectories(signaturesPath);
+
+		keysPath=storageRoot.resolve(PATH_KEYS);
 		Files.createDirectories(keysPath);
+
+		identitiesPath=storageRoot.resolve(PATH_IDENTITIES);
+		Files.createDirectories(identitiesPath);
+
 		identifiedFirstOrdering=new IdentifiedFirstOrdering(this);
+
+		identityStorage=new IdentityStorageFS(storageRoot, publicKeyInfoInterner);
 	}
 
 	private synchronized ForkJoinPool getThreadPool() {
@@ -306,9 +319,18 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	}
 
 	@Override
-	public Identity getIdentity(final PublicKeyInfo keyInfo) {
-		//throw new UnsupportedOperationException();
-		return null;
+	public Identity getIdentity(PublicKeyInfo keyInfo) {
+		return identityStorage.getIdentity(keyInfo);
+	}
+
+	@Override
+	public IdentityVerification getIdentityVerification(PublicKeyInfo publicKeyInfo) {
+		return identityStorage.getIdentityVerification(publicKeyInfo);
+	}
+
+	@Override
+	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
+		identityStorage.storeIdentity(identityWithVerification);
 	}
 
 	@Override
