@@ -15,7 +15,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -77,12 +76,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	}
 
 	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
-		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
-				.map(StateCacheEntrySigned::getSignatures)
-				.filter(Predicates.notNull())
-				.flatMap(Set::stream)
-				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
-				.distinct()
+		final ImmutableSet<PublicKey> usedPublicKeys=StateCacheEntrySigned.getUsedPublicKeyInfos(signedEntries).parallelStream()
 				.map(signatureStorage::getPublicKey)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
