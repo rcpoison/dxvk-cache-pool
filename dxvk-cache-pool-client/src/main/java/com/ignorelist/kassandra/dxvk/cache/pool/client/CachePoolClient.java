@@ -24,6 +24,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
@@ -80,6 +81,7 @@ public class CachePoolClient {
 	private ImmutableMap<String, StateCacheInfoSignees> cacheDescriptorsByBaseName;
 	//private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseNameUnsigned;
 	private KeyStore keyStore;
+	private PredicateStateCacheEntrySigned predicateStateCacheEntrySigned;
 
 	public CachePoolClient(Configuration c) {
 		this.configuration=c;
@@ -103,11 +105,14 @@ public class CachePoolClient {
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
+			if (commandLine.hasOption("only-verified")) {
+				c.setOnlyVerified(true);
+			}
 			if (commandLine.hasOption("verbose")) {
 				c.setVerbose(true);
 			}
 
-			ImmutableSet<Path> paths=commandLine.getArgList().stream()
+			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.map(p -> {
 						try {
@@ -145,6 +150,14 @@ public class CachePoolClient {
 			keyStore=new KeyStore(configuration.getConfigurationPath());
 		}
 		return keyStore;
+	}
+
+	private synchronized PredicateStateCacheEntrySigned getCacheEntryPredicate() {
+		if (null==predicateStateCacheEntrySigned) {
+			predicateStateCacheEntrySigned=new PredicateStateCacheEntrySigned();
+			predicateStateCacheEntrySigned.setOnlyAcceptVerifiedKeys(configuration.isOnlyVerified());
+		}
+		return predicateStateCacheEntrySigned;
 	}
 
 	public synchronized FsScanner getScanResult() throws IOException {
@@ -234,7 +247,7 @@ public class CachePoolClient {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						System.err.println(" -> "+baseName+": writing to "+targetPath);
-						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName);
+						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
 						if (!cacheSigned.verifyAllSignaturesValid()) {
 							throw new IllegalStateException("signatures could not be verified!");
 						}
@@ -278,6 +291,7 @@ public class CachePoolClient {
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final StateCacheInfo localCacheInfo=localCache.toInfo();
+						localCacheInfo.setPredicateStateCacheEntrySigned(getCacheEntryPredicate());
 						final Set<StateCacheEntrySigned> missingEntries=restClient.getMissingEntriesSigned(localCacheInfo);
 						if (missingEntries.isEmpty()) {
 							System.err.println(" -> "+baseName+": is up to date ("+localCacheEntriesSize+" entries)");
@@ -380,6 +394,7 @@ public class CachePoolClient {
 		//options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
+		options.addOption(Option.builder().longOpt("only-verified").desc("Only download entries from verified uploaders").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		return options;
 	}

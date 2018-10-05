@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicateSignature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -19,6 +20,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKey
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
@@ -77,12 +79,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	}
 
 	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
-		final ImmutableSet<PublicKey> usedPublicKeys=signedEntries.parallelStream()
-				.map(StateCacheEntrySigned::getSignatures)
-				.filter(Predicates.notNull())
-				.flatMap(Set::stream)
-				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
-				.distinct()
+		final ImmutableSet<PublicKey> usedPublicKeys=StateCacheEntrySigned.getUsedPublicKeyInfos(signedEntries).parallelStream()
 				.map(signatureStorage::getPublicKey)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
@@ -90,10 +87,16 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	}
 
 	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		final PredicateSignature signaturePredicate=PredicateSignature.buildFrom(signatureStorage, predicateStateCacheEntrySigned);
 		return entries.parallelStream()
-				.map(e -> new StateCacheEntrySigned(e, signatureStorage.getSignatures(e.getEntryInfo())))
+				.map(e -> new StateCacheEntrySigned(e, getSignaturesFiltered(signaturePredicate, e.getEntryInfo())))
 				.filter(predicateStateCacheEntrySigned)
 				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	private ImmutableSet<SignaturePublicKeyInfo> getSignaturesFiltered(final PredicateSignature signaturePredicate, final StateCacheEntryInfo entryInfo) {
+		final Iterable<SignaturePublicKeyInfo> filteredSignatures=Iterables.filter(signatureStorage.getSignatures(entryInfo), signaturePredicate);
+		return ImmutableSet.copyOf(filteredSignatures);
 	}
 
 	@Override
@@ -106,7 +109,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 			final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keyByInfo=ImmutableMap.of(publicKey.getKeyInfo(), CryptoUtil.decodePublicKey(publicKey.getKey()));
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
-					.map(StateCacheEntrySigned::copySafe)
+					.map(StateCacheEntrySigned::copySafe) // do not trust info, rebuild
 					.filter(e -> 1==e.getSignatures().size())
 					.filter(e -> 1==e.verifiedSignatures(keyByInfo::get).size())
 					.collect(ImmutableSet.toImmutableSet());

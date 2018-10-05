@@ -17,7 +17,7 @@ public class IdentifiedFirstOrdering extends Ordering<PublicKeyInfo> {
 
 	private final IdentityStorage identityStorage;
 
-	public IdentifiedFirstOrdering(SignatureStorage signatureStorage) {
+	public IdentifiedFirstOrdering(IdentityStorage signatureStorage) {
 		this.identityStorage=signatureStorage;
 	}
 

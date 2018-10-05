@@ -26,6 +26,7 @@ public class Configuration {
 	private Path configurationPath;
 	private Path cacheReferencePath;
 	private Set<Path> gamePaths;
+	private boolean onlyVerified=false;
 	private boolean verbose=false;
 
 	public String getHost() {
@@ -84,6 +85,14 @@ public class Configuration {
 
 	public void setGamePaths(Set<Path> gamePaths) {
 		this.gamePaths=gamePaths;
+	}
+
+	public boolean isOnlyVerified() {
+		return onlyVerified;
+	}
+
+	public void setOnlyVerified(boolean onlyVerified) {
+		this.onlyVerified=onlyVerified;
 	}
 
 	public boolean isVerbose() {

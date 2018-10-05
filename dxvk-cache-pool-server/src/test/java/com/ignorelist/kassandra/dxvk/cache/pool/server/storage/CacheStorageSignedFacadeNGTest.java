@@ -10,6 +10,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
@@ -61,6 +64,8 @@ public class CacheStorageSignedFacadeNGTest {
 	private static final PredicateStateCacheEntrySigned predicateSignedOnce=new PredicateStateCacheEntrySigned(null, new PredicateMinimumSignatures(1));
 	private static final PredicateStateCacheEntrySigned predicateSignedTwice=new PredicateStateCacheEntrySigned(null, new PredicateMinimumSignatures(2));
 	private static PredicateStateCacheEntrySigned predicateSignedKey1;
+	private static PredicateStateCacheEntrySigned predicateSignatureVerified;
+	private static IdentityWithVerification identityWithVerification1;
 
 	public CacheStorageSignedFacadeNGTest() throws Exception {
 
@@ -82,7 +87,17 @@ public class CacheStorageSignedFacadeNGTest {
 		cacheStorageSignedShared=new CacheStorageSignedFacade(cacheStorageShared, SignatureStorageShared);
 		publicKeyInfo0=new PublicKeyInfo(new PublicKey(keyPair0.getPublic()));
 		publicKeyInfo1=new PublicKeyInfo(new PublicKey(keyPair1.getPublic()));
+		Identity identity1=new Identity();
+		identity1.setName("a");
+		identity1.setEmail("a");
+		identity1.setPublicKeyInfo(publicKeyInfo1);
+		IdentityVerification identityVerification1=new IdentityVerification();
+		identityVerification1.setPublicKeyGPG(keyPair1.getPublic().getEncoded()); // just garbage for testing!
+		identityVerification1.setPublicKeySignature(publicKeyInfo1.getHash()); // just garbage for testing!
+		identityWithVerification1=new IdentityWithVerification(identity1, identityVerification1);
 		predicateSignedKey1=new PredicateStateCacheEntrySigned(new PredicateAcceptedPublicKeys(ImmutableSet.of(publicKeyInfo1)), null);
+		predicateSignatureVerified=new PredicateStateCacheEntrySigned(null, null);
+		predicateSignatureVerified.setOnlyAcceptVerifiedKeys(true);
 	}
 
 	@AfterClass
@@ -144,6 +159,11 @@ public class CacheStorageSignedFacadeNGTest {
 	}
 
 	@Test(dependsOnMethods={"testStoreSignedOnce"})
+	public void testStoreIdentity() throws Exception {
+		SignatureStorageShared.storeIdentity(identityWithVerification1);
+	}
+
+	@Test(dependsOnMethods={"testStoreSignedOnce", "testStoreIdentity"})
 	public void testStoreSignedTwice() throws Exception {
 		cacheStorageSignedShared.storeSigned(cacheSigned1);
 		StateCache cacheFetched=cacheStorageShared.getCache(VERSION, BASE_NAME);
@@ -181,12 +201,23 @@ public class CacheStorageSignedFacadeNGTest {
 	}
 
 	@Test(dependsOnMethods={"testStoreSignedTwice"})
-	public void testGetCacheSignedFiltered() {
+	public void testGetCacheSignedFilteredPublicKey() {
 		StateCacheSigned cacheSigned=cacheStorageSignedShared.getCacheSigned(VERSION, BASE_NAME, predicateSignedKey1);
+		ImmutableSet<PublicKeyInfo> justKey1=ImmutableSet.of(publicKeyInfo1);
 		cacheSigned.getEntries().stream()
 				.map(StateCacheEntrySigned::getSignatures)
 				.map(this::fromSignaturePublicKeyInfos)
-				.forEach(s -> assertTrue(s.contains(publicKeyInfo1)));
+				.forEach(s -> assertEquals(s, justKey1));
+	}
+
+	@Test(dependsOnMethods={"testStoreSignedTwice"})
+	public void testGetCacheSignedFilteredVerified() {
+		StateCacheSigned cacheSigned=cacheStorageSignedShared.getCacheSigned(VERSION, BASE_NAME, predicateSignatureVerified);
+		ImmutableSet<PublicKeyInfo> justKey1=ImmutableSet.of(publicKeyInfo1);
+		cacheSigned.getEntries().stream()
+				.map(StateCacheEntrySigned::getSignatures)
+				.map(this::fromSignaturePublicKeyInfos)
+				.forEach(s -> assertEquals(s, justKey1));
 	}
 
 	private Set<PublicKeyInfo> fromSignaturePublicKeyInfos(Set<SignaturePublicKeyInfo> signaturePublicKeyInfos) {

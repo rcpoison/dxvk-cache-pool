@@ -6,7 +6,10 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
@@ -102,6 +105,23 @@ public class StateCacheEntrySigned implements Serializable {
 		copy.setCacheEntry(getCacheEntry().copySafe());
 		copy.setSignatures(getSignatures());
 		return copy;
+	}
+
+	public StateCacheEntrySigned copyFilteredSignatures(Predicate<SignaturePublicKeyInfo> predicateSignature) {
+		StateCacheEntrySigned copy=new StateCacheEntrySigned();
+		copy.setCacheEntry(getCacheEntry());
+		copy.setSignatures(ImmutableSet.copyOf(Iterables.filter(getSignatures(), predicateSignature)));
+		return copy;
+	}
+
+	public static ImmutableSet<PublicKeyInfo> getUsedPublicKeyInfos(final Set<StateCacheEntrySigned> signedEntries) {
+		return signedEntries.parallelStream()
+				.map(StateCacheEntrySigned::getSignatures)
+				.filter(Predicates.notNull())
+				.flatMap(Set::stream)
+				.filter(Predicates.notNull())
+				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
+				.collect(ImmutableSet.toImmutableSet());
 	}
 
 	@Override
