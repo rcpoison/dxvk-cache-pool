@@ -31,7 +31,7 @@ public class KeyStoreNGTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		storagePath=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool-keystore").resolve(UUID.randomUUID().toString());
-		Files.createDirectory(storagePath);
+		Files.createDirectories(storagePath);
 	}
 
 	@AfterClass

@@ -15,19 +15,19 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
  */
 public class IdentifiedFirstOrdering extends Ordering<PublicKeyInfo> {
 
-	private final SignatureStorage signatureStorage;
+	private final IdentityStorage identityStorage;
 
 	public IdentifiedFirstOrdering(SignatureStorage signatureStorage) {
-		this.signatureStorage=signatureStorage;
+		this.identityStorage=signatureStorage;
 	}
 
 	@Override
 	public int compare(PublicKeyInfo left, PublicKeyInfo right) {
 		return ComparisonChain.start()
-				.compare(signatureStorage.getIdentity(left), signatureStorage.getIdentity(right), natural().nullsLast())
+				.compare(identityStorage.getIdentity(left), identityStorage.getIdentity(right), natural().nullsLast())
 				.compare(left, right)
 				.result();
-		
+
 	}
 
 }

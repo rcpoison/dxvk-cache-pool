@@ -16,7 +16,11 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.validators.StateCacheValidator;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentityStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
@@ -40,7 +44,7 @@ import javax.ws.rs.core.MediaType;
  * @author poison
  */
 @Path("pool")
-public class CachePoolREST implements CacheStorage, CacheStorageSigned {
+public class CachePoolREST implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
 	@Inject
 	private Configuration configuration;
@@ -224,6 +228,37 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned {
 				.map(signatureStorage::getPublicKey)
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@POST
+	@Path("identity")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Identity getIdentity(PublicKeyInfo keyInfo) {
+		return signatureStorage.getIdentity(keyInfo);
+	}
+
+	@POST
+	@Path("identityVerification")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public IdentityVerification getIdentityVerification(PublicKeyInfo publicKeyInfo) {
+		return signatureStorage.getIdentityVerification(publicKeyInfo);
+	}
+
+	@GET
+	@Path("verifiedKeyInfos")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<PublicKeyInfo> getVerifiedKeyInfos() {
+		return signatureStorage.getVerifiedKeyInfos();
+	}
+
+	@Override
+	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
+		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
 	}
 
 	@Override

@@ -7,6 +7,10 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client.rest;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentityStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
@@ -27,7 +31,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author poison
  */
-public class CachePoolRestClient extends AbstractRestClient implements CacheStorage, CacheStorageSigned {
+public class CachePoolRestClient extends AbstractRestClient implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
 	private static final String PATH="pool";
 
@@ -42,6 +46,8 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	private static final GenericType<Set<StateCacheEntrySigned>> TYPE_CACHE_ENTRY_SIGNED_SET=new GenericType<Set<StateCacheEntrySigned>>() {
 	};
 	private static final GenericType<Set<PublicKey>> TYPE_PUBLIC_KEY_SET=new GenericType<Set<PublicKey>>() {
+	};
+	private static final GenericType<Set<PublicKeyInfo>> TYPE_PUBLIC_KEY_INFO_SET=new GenericType<Set<PublicKeyInfo>>() {
 	};
 
 	public CachePoolRestClient(String baseUrl) {
@@ -175,6 +181,35 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path("storeSigned")
 				.request()
 				.post(Entity.json(cache));
+	}
+
+	@Override
+	public Identity getIdentity(PublicKeyInfo keyInfo) {
+		return getWebTarget()
+				.path("identity")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(keyInfo), Identity.class);
+	}
+
+	@Override
+	public IdentityVerification getIdentityVerification(PublicKeyInfo publicKeyInfo) {
+		return getWebTarget()
+				.path("identityVerification")
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(publicKeyInfo), IdentityVerification.class);
+	}
+
+	@Override
+	public Set<PublicKeyInfo> getVerifiedKeyInfos() {
+		return getWebTarget()
+				.path("verifiedKeyInfos")
+				.request(MediaType.APPLICATION_JSON)
+				.get(TYPE_PUBLIC_KEY_INFO_SET);
+	}
+
+	@Override
+	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
+		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
 	}
 
 }
