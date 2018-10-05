@@ -68,6 +68,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private static final Path PATH_SIGNATURES=Paths.get("signatures");
 	private static final Path PATH_KEYS=Paths.get("keys");
 	private static final Path PATH_IDENTITIES=Paths.get("identities");
+	private static final int MAX_SIGNATURES_STORE=32;
 
 	private final Path storageRoot;
 	private final Path signaturesPath;
@@ -210,10 +211,10 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			if (existingEntries.contains(publicKeyInfo)) {
 				return;
 			}
-
-			//if (existingEntries.size()>=MAX_SIGNATURES&&null!=getIdentity(publicKeyInfo)) {
-			//LOG.log(Level.INFO, "already have {0} unidentified for {1}", new Object[]{MAX_SIGNATURES, entryInfo});
-			//}
+			if (existingEntries.size()>=MAX_SIGNATURES_STORE&&null!=getIdentity(publicKeyInfo)) {
+				LOG.log(Level.INFO, "already have {0} unidentified for {1}", new Object[]{MAX_SIGNATURES_STORE, entryInfo});
+				return;
+			}
 			if (existingEntries.isEmpty()) {
 				Files.createDirectories(targetPath);
 			}
