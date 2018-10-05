@@ -168,6 +168,7 @@ public class CachePoolClient {
 	}
 
 	public synchronized ImmutableMap<String, StateCacheInfoSignees> getCacheDescriptorsByBaseNames() throws IOException {
+		// TODO: we don't actually need the descriptors anymore since we're not diffing against the remote
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 				System.err.println("looking up remote caches for "+getAvailableBaseNames().size()+" possible games");
