@@ -317,8 +317,9 @@ public class CachePoolClient {
 					for (StateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-						log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
 						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
+						log.log(ProgressLog.Level.SUB, baseName, "downloaded "+cacheSigned.getEntries().size()+" cache entries");
+						log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
 						if (!cacheSigned.verifyAllSignaturesValid()) {
 							throw new IllegalStateException("signatures could not be verified!");
 						}
@@ -369,7 +370,7 @@ public class CachePoolClient {
 						if (missingEntries.isEmpty()) {
 							log.log(ProgressLog.Level.SUB, baseName, "is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
-							log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
+							log.log(ProgressLog.Level.SUB, baseName, "verifying "+missingEntries.size()+" signatures");
 							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
 									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked)) // TODO: optimize, single request
 									.map(StateCacheEntrySigned::getCacheEntry)
