@@ -45,6 +45,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName) {
+		// TODO: predicate
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
 		if (null==cacheDescriptor) {
 			return null;
@@ -71,6 +72,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cache.copyShallowTo(cacheSigned);
+		// TODO: optimize: only read entries matching signature predicate
 		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries(), predicateStateCacheEntrySigned);
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
