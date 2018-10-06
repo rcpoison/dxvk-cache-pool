@@ -45,6 +45,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName) {
+		// TODO: predicate
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
 		if (null==cacheDescriptor) {
 			return null;
