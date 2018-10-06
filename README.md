@@ -6,7 +6,7 @@ This only works for regular wine prefixes, as steam/proton does it's own thing, 
 
 Client:
 - Fetches missing DxvkStateCacheEntry's and patches the .dxvk-cache.
-- Submits local DxvkStateCacheEntry's not present on server.
+- Submits DxvkStateCacheEntry's generated locally since the last run.
 
 Server:
 - Centralized storage. Provides REST interface to access caches.
@@ -44,11 +44,17 @@ Both client and server require Java >= 8.
 
 ```bash
 $ ./dxvk-cache-client -h
-usage: dvxk-cache-client  directory... [-h] [--host <url>]
+usage: dvxk-cache-client  directory... [--download-verified] [-h] [--host
+       <url>] [--init-keys] [--non-recursive] [--only-verified]
        [--verbose]
- -h,--help            show this help
-    --host <url>      Server URL
-    --verbose         verbose output
+    --download-verified   Download verified public keys and associated
+                          verification data
+ -h,--help                show this help
+    --host <url>          Server URL
+    --init-keys           Ensure keys exist and exit
+    --non-recursive       Do not scan direcories recursively
+    --only-verified       Only download entries from verified uploaders
+    --verbose             Verbose output
 ```
 
 #### Environment
