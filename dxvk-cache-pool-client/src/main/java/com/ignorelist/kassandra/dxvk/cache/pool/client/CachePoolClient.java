@@ -304,11 +304,12 @@ public class CachePoolClient {
 					for (StateCacheInfoSignees cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-						log.log(ProgressLog.Level.SUB, baseName, "writing to "+targetPath);
+						log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
 						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
 						if (!cacheSigned.verifyAllSignaturesValid()) {
 							throw new IllegalStateException("signatures could not be verified!");
 						}
+						log.log(ProgressLog.Level.SUB, baseName, "writing to "+targetPath);
 						final StateCache cacheUnsigned=cacheSigned.toUnsigned();
 						StateCacheIO.writeAtomic(targetPath, cacheUnsigned);
 						copyToReference(targetPath, baseName);
@@ -342,8 +343,9 @@ public class CachePoolClient {
 						//final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
 						final StateCache locallyBuilt=localCache.diff(localReferenceCache);
 						if (!locallyBuilt.getEntries().isEmpty()) {
-							log.log(ProgressLog.Level.SUB, baseName, "sending "+locallyBuilt.getEntries().size()+" locally built entries to remote");
+							log.log(ProgressLog.Level.SUB, baseName, "signing "+locallyBuilt.getEntries().size()+" locally built entries");
 							final StateCacheSigned locallyBuiltSigned=locallyBuilt.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+							log.log(ProgressLog.Level.SUB, baseName, "sending "+locallyBuilt.getEntries().size()+" locally built entries to remote");
 							restClient.storeSigned(locallyBuiltSigned);
 						}
 
@@ -354,11 +356,12 @@ public class CachePoolClient {
 						if (missingEntries.isEmpty()) {
 							log.log(ProgressLog.Level.SUB, baseName, "is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
-							log.log(ProgressLog.Level.SUB, baseName, "patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
+							log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
 							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
-									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked))
+									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked)) // TODO: optimize, single request
 									.map(StateCacheEntrySigned::getCacheEntry)
 									.collect(ImmutableSet.toImmutableSet());
+							log.log(ProgressLog.Level.SUB, baseName, "patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							localCache.patch(verifiedMissingEntries);
 							StateCacheIO.writeAtomic(cacheFile, localCache);
 						}
@@ -385,9 +388,10 @@ public class CachePoolClient {
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
 				final String baseName=entry.getKey();
-				log.log(ProgressLog.Level.SUB, baseName, "uploading");
 				final StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
+				log.log(ProgressLog.Level.SUB, baseName, "signing");
 				final StateCacheSigned cacheSigned=cache.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+				log.log(ProgressLog.Level.SUB, baseName, "uploading");
 				restClient.storeSigned(cacheSigned);
 
 				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
