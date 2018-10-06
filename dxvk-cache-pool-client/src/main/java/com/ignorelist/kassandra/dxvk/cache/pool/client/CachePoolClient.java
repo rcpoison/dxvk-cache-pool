@@ -182,8 +182,8 @@ public class CachePoolClient {
 		final BaseEncoding base16=BaseEncoding.base16();
 		Files.createDirectories(targetPath);
 		final ImmutableSet<PublicKeyInfo> localVerifiedKeys=Files.list(targetPath)
-				.map(Path::getFileName)
 				.filter(Files::isRegularFile)
+				.map(Path::getFileName)
 				.map(Path::toString)
 				.filter(Util.SHA_256_HEX_PATTERN.asPredicate())
 				.map(base16::decode)

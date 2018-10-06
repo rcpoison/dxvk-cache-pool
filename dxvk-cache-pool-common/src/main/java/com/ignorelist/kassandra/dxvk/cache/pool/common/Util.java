@@ -42,7 +42,7 @@ public final class Util {
 	}
 
 	public static final String DXVK_CACHE_EXT=".dxvk-cache";
-	public static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("[0-9A-F]{64}", Pattern.CASE_INSENSITIVE);
+	public static final Pattern SHA_256_HEX_PATTERN=Pattern.compile("^[0-9A-F]{64}$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern SAFE_BASE_NAME=Pattern.compile("^[\\w. -]+$", Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CHARACTER_CLASS);
 
 	private Util() {
