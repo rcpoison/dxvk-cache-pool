@@ -46,6 +46,8 @@ import javax.ws.rs.core.MediaType;
 @Path("pool")
 public class CachePoolREST implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
+	private static final int PROTOCOL_VERSION=1;
+
 	@Inject
 	private Configuration configuration;
 	@Inject
@@ -54,6 +56,13 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	private SignatureStorage signatureStorage;
 	@Inject
 	private CacheStorageSigned cacheStorageSigned;
+
+	@GET
+	@Path("protocolVersion")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getProtocolVersion() {
+		return Integer.toString(PROTOCOL_VERSION);
+	}
 
 	@POST
 	@Path("cacheDescriptors/{version}")

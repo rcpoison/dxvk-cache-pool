@@ -33,6 +33,8 @@ import javax.ws.rs.core.MediaType;
  */
 public class CachePoolRestClient extends AbstractRestClient implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
+	private static final int PROTOCOL_VERSION=1;
+
 	private static final String PATH="pool";
 
 	private static final GenericType<Set<String>> TYPE_STRING_SET=new GenericType<Set<String>>() {
@@ -57,6 +59,20 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	@Override
 	protected WebTarget getWebTarget() {
 		return super.getWebTarget().path(PATH);
+	}
+
+	public int getProtocolVersion() {
+		return getWebTarget()
+				.path("protocolVersion")
+				.request(MediaType.TEXT_PLAIN)
+				.get(Integer.class);
+	}
+
+	public void verifyProtocolVersion() {
+		final int serverProtocolVersion=getProtocolVersion();
+		if (PROTOCOL_VERSION!=serverProtocolVersion) {
+			throw new UnsupportedOperationException("Server protocol version: "+serverProtocolVersion+", client protocol version: "+PROTOCOL_VERSION+". Please upgrade.");
+		}
 	}
 
 	@Override

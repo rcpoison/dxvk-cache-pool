@@ -153,10 +153,25 @@ public class CachePoolClient {
 			client.getKeyStore();
 			System.exit(0);
 		}
+		try {
+			client.verifyProtocolVersion();
+		} catch (UnsupportedOperationException e) {
+			System.err.println("Version mismatch: "+e.getMessage());
+			System.exit(1);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.exit(1);
+		}
 		if (commandLine.hasOption("download-verified")) {
 			client.downloadVerifiedKeyData();
 		}
 		client.merge();
+	}
+
+	public void verifyProtocolVersion() throws IOException {
+		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+			restClient.verifyProtocolVersion();
+		}
 	}
 
 	public synchronized void downloadVerifiedKeyData() throws IOException {
