@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
+package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
@@ -19,15 +21,19 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntryInfo implements Serializable {
+public class PublicKeyInfo implements Serializable, Comparable<PublicKeyInfo> {
 
 	private byte[] hash;
 
-	public StateCacheEntryInfo() {
+	public PublicKeyInfo() {
 	}
 
-	public StateCacheEntryInfo(byte[] hash) {
+	public PublicKeyInfo(byte[] hash) {
 		this.hash=hash;
+	}
+
+	public PublicKeyInfo(PublicKey publicKey) {
+		this(Hashing.sha256().hashBytes(publicKey.getKey()).asBytes());
 	}
 
 	@NotNull
@@ -43,8 +49,8 @@ public class StateCacheEntryInfo implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int hash=5;
-		hash=53*hash+Arrays.hashCode(this.hash);
+		int hash=7;
+		hash=37*hash+Arrays.hashCode(this.hash);
 		return hash;
 	}
 
@@ -59,7 +65,7 @@ public class StateCacheEntryInfo implements Serializable {
 		if (getClass()!=obj.getClass()) {
 			return false;
 		}
-		final StateCacheEntryInfo other=(StateCacheEntryInfo) obj;
+		final PublicKeyInfo other=(PublicKeyInfo) obj;
 		if (!Arrays.equals(this.hash, other.hash)) {
 			return false;
 		}
@@ -69,8 +75,13 @@ public class StateCacheEntryInfo implements Serializable {
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				.add("hash", null==hash ? null : BaseEncoding.base16().encode(hash))
+				.add("hash", BaseEncoding.base16().encode(hash))
 				.toString();
+	}
+
+	@Override
+	public int compareTo(PublicKeyInfo o) {
+		return Util.compare(hash, o.getHash());
 	}
 
 }

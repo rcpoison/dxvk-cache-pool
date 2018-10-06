@@ -6,6 +6,9 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -13,23 +16,44 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
+import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.CachePoolRestClient;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.ProgressLog;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateMinimumSignatures;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.zip.GZIPInputStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -45,10 +69,26 @@ import org.apache.commons.cli.ParseException;
 public class CachePoolClient {
 
 	private final Configuration configuration;
+	private final ProgressLog log=new ProgressLogCli();
 
+	private final LoadingCache<PublicKeyInfo, PublicKey> publicKeyCache=CacheBuilder.newBuilder()
+			.<PublicKeyInfo, PublicKey>build(new CacheLoader<PublicKeyInfo, PublicKey>() {
+				@Override
+				public PublicKey load(PublicKeyInfo key) throws Exception {
+					try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+						com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey publicKey=restClient.getPublicKey(key);
+						if (null==publicKey) {
+							throw new NoSuchElementException();
+						}
+						return CryptoUtil.decodePublicKey(publicKey);
+					}
+				}
+			});
 	private FsScanner scanResult;
 	private ImmutableSet<String> availableBaseNames;
 	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
+	private KeyStore keyStore;
+	private PredicateStateCacheEntrySigned predicateStateCacheEntrySigned;
 
 	public CachePoolClient(Configuration c) {
 		this.configuration=c;
@@ -60,7 +100,7 @@ public class CachePoolClient {
 	public static void main(String[] args) throws IOException {
 		Options options=buildOptions();
 		CommandLineParser parser=new DefaultParser();
-		CommandLine commandLine;
+		CommandLine commandLine=null;
 		Configuration c=new Configuration();
 		try {
 			commandLine=parser.parse(options, args);
@@ -72,11 +112,20 @@ public class CachePoolClient {
 			if (commandLine.hasOption("host")) {
 				c.setHost(commandLine.getOptionValue("host"));
 			}
+			if (commandLine.hasOption("only-verified")) {
+				c.setOnlyVerified(true);
+			}
 			if (commandLine.hasOption("verbose")) {
 				c.setVerbose(true);
 			}
+			if (commandLine.hasOption("non-recursive")) {
+				c.setScanRecursive(false);
+			}
+			if (commandLine.hasOption("min-signatures")) {
+				c.setMinimumSignatures(Integer.parseInt(commandLine.getOptionValue("min-signatures")));
+			}
 
-			ImmutableSet<Path> paths=commandLine.getArgList().stream()
+			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.map(p -> {
 						try {
@@ -102,14 +151,97 @@ public class CachePoolClient {
 		}
 		System.err.println("target directory is: "+c.getCacheTargetPath());
 		CachePoolClient client=new CachePoolClient(c);
+		if (commandLine.hasOption("init-keys")) {
+			client.getKeyStore();
+			System.exit(0);
+		}
+		try {
+			client.verifyProtocolVersion();
+		} catch (UnsupportedOperationException e) {
+			System.err.println("Version mismatch: "+e.getMessage());
+			System.exit(1);
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.exit(1);
+		}
+		if (commandLine.hasOption("download-verified")) {
+			client.downloadVerifiedKeyData();
+		}
 		client.merge();
+	}
+
+	public void verifyProtocolVersion() throws IOException {
+		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+			restClient.verifyProtocolVersion();
+		}
+	}
+
+	public synchronized void downloadVerifiedKeyData() throws IOException {
+		final Path targetPath=configuration.getConfigurationPath().resolve("keystore");
+		log.log(ProgressLog.Level.MAIN, "downloading verified keys to: "+targetPath);
+		final BaseEncoding base16=BaseEncoding.base16();
+		Files.createDirectories(targetPath);
+		final ImmutableSet<PublicKeyInfo> localVerifiedKeys=Files.list(targetPath)
+				.filter(Files::isRegularFile)
+				.map(Path::getFileName)
+				.map(Path::toString)
+				.filter(Util.SHA_256_HEX_PATTERN.asPredicate())
+				.map(base16::decode)
+				.map(PublicKeyInfo::new)
+				.collect(ImmutableSet.toImmutableSet());
+		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+			final Set<PublicKeyInfo> availableVerifiedKeyInfos=restClient.getVerifiedKeyInfos();
+			Sets.SetView<PublicKeyInfo> toDownload=Sets.difference(availableVerifiedKeyInfos, localVerifiedKeys);
+			for (PublicKeyInfo publicKeyInfoToDownload : toDownload) {
+				try {
+					final String fileBaseName=base16.encode(publicKeyInfoToDownload.getHash());
+					final PublicKey publicKey=publicKeyCache.get(publicKeyInfoToDownload);
+					if (null==publicKey) {
+						throw new IllegalStateException("publicKey must not be null");
+					}
+					final Identity identity=restClient.getIdentity(publicKeyInfoToDownload);
+					if (null==identity) {
+						throw new IllegalStateException("identity must not be null");
+					}
+					final IdentityVerification identityVerification=restClient.getIdentityVerification(publicKeyInfoToDownload);
+					if (null==identityVerification) {
+						throw new IllegalStateException("IdentityVerification must not be null");
+					}
+					log.log(ProgressLog.Level.SUB, "writing: "+identity.getName()+" <"+identity.getEmail()+">", fileBaseName);
+					Files.write(targetPath.resolve(fileBaseName+".gpg"), identityVerification.getPublicKeyGPG());
+					Files.write(targetPath.resolve(fileBaseName+".sig"), identityVerification.getPublicKeySignature());
+					try (OutputStream out=Files.newOutputStream(targetPath.resolve(fileBaseName))) {
+						CryptoUtil.write(out, publicKey);
+					}
+				} catch (ExecutionException ex) {
+					throw new IOException(ex);
+				}
+			}
+		}
+	}
+
+	private synchronized KeyStore getKeyStore() throws IOException {
+		if (null==keyStore) {
+			keyStore=new KeyStore(configuration.getConfigurationPath());
+		}
+		return keyStore;
+	}
+
+	private synchronized PredicateStateCacheEntrySigned getCacheEntryPredicate() {
+		if (null==predicateStateCacheEntrySigned) {
+			predicateStateCacheEntrySigned=new PredicateStateCacheEntrySigned();
+			predicateStateCacheEntrySigned.setOnlyAcceptVerifiedKeys(configuration.isOnlyVerified());
+			PredicateMinimumSignatures minimumSignatures=new PredicateMinimumSignatures(configuration.getMinimumSignatures());
+			predicateStateCacheEntrySigned.setMinimumSignatures(minimumSignatures);
+		}
+		return predicateStateCacheEntrySigned;
 	}
 
 	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
-			System.err.println("scanning directories");
-			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
-			System.err.println("scanned "+scanResult.getVisitedFiles()+" files");
+			log.log(ProgressLog.Level.MAIN, "scanning directories");
+			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths(), configuration.isScanRecursive());
+			log.log(ProgressLog.Level.SUB, "scanned "+scanResult.getVisitedFiles()+" files");
 		}
 		return scanResult;
 	}
@@ -126,15 +258,17 @@ public class CachePoolClient {
 	}
 
 	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
+		// TODO: we don't actually need the descriptors anymore since we're not diffing against the remote
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-				System.err.println("looking up remove caches for "+getAvailableBaseNames().size()+" possible games");
-				Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
-				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheInfo::getBaseName);
-				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
+				log.log(ProgressLog.Level.MAIN, "looking up remote caches for "+getAvailableBaseNames().size()+" possible games");
+				final Set<StateCacheInfo> cacheDescriptors=restClient.getCacheDescriptors(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
+				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheMeta::getBaseName);
+				//cacheDescriptorsByBaseNameUnsigned=ImmutableMap.copyOf(Maps.transformValues(cacheDescriptorsByBaseName, StateCacheInfoSignees::toUnsigned));
+				log.log(ProgressLog.Level.SUB, "found "+cacheDescriptorsByBaseName.size()+" matching caches");
 				if (configuration.isVerbose()) {
 					cacheDescriptorsByBaseName.values().forEach(d -> {
-						System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
+						log.log(ProgressLog.Level.SUB, d.getBaseName(), "("+d.getEntries().size()+" entries)");
 					});
 				}
 
@@ -144,6 +278,7 @@ public class CachePoolClient {
 	}
 
 	public synchronized void merge() throws IOException {
+		getKeyStore();
 		prepareWinePrefixes();
 		downloadNew();
 		mergeExisting();
@@ -156,14 +291,15 @@ public class CachePoolClient {
 	 * @throws IOException
 	 */
 	public synchronized void prepareWinePrefixes() throws IOException {
-		System.err.println("preparing wine prefixes");
-		for (Path wineDriveC : getScanResult().getWineRoots()) {
+		final ImmutableSet<Path> wineRoots=getScanResult().getWineRoots();
+		log.log(ProgressLog.Level.MAIN, "preparing wine prefixes");
+		for (Path wineDriveC : wineRoots) {
 			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
 			if (!Files.isSymbolicLink(symLink)) {
 				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
-					System.err.println(" -> warning: "+symLink+" exists and is a directory/file instead of a symlink. dxvk-cache-pool will not work for this wine prefix.");
+					log.log(ProgressLog.Level.WARNING, symLink.toString(), "exists and is a directory/file instead of a symlink. dxvk-cache-pool will not work for this wine prefix.");
 				} else {
-					System.err.println("-> creating symlink from "+symLink+" to "+configuration.getCacheTargetPath());
+					log.log(ProgressLog.Level.SUB, "creating symlink from "+symLink+" to "+configuration.getCacheTargetPath());
 					Files.createSymbolicLink(symLink, configuration.getCacheTargetPath());
 				}
 			}
@@ -181,15 +317,22 @@ public class CachePoolClient {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
 			final Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
-			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
+			log.log(ProgressLog.Level.MAIN, "writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 					for (StateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-						System.err.println(" -> "+baseName+": writing to "+targetPath);
-						final StateCache cache=restClient.getCache(StateCacheHeaderInfo.getLatestVersion(), baseName);
-						StateCacheIO.write(targetPath, cache);
+						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
+						log.log(ProgressLog.Level.SUB, baseName, "downloaded "+cacheSigned.getEntries().size()+" cache entries");
+						log.log(ProgressLog.Level.SUB, baseName, "verifying signatures");
+						if (!cacheSigned.verifyAllSignaturesValid()) {
+							throw new IllegalStateException("signatures could not be verified!");
+						}
+						log.log(ProgressLog.Level.SUB, baseName, "writing to "+targetPath);
+						final StateCache cacheUnsigned=cacheSigned.toUnsigned();
+						StateCacheIO.writeAtomic(targetPath, cacheUnsigned);
+						copyToReference(targetPath, baseName);
 					}
 				}
 			}
@@ -207,30 +350,42 @@ public class CachePoolClient {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
 			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
-			System.err.println("updating "+entriesLocalCache.size()+" caches");
+			log.log(ProgressLog.Level.MAIN, "updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 					for (StateCacheInfo cacheInfo : entriesLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
+						final StateCache localReferenceCache=readReference(localCache.getVersion(), baseName);
+
+						//final StateCacheInfo cacheInfoUnsigned=cacheDescriptorsByBaseNameUnsigned.get(baseName);
+						//final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
+						final StateCache locallyBuilt=localCache.diff(localReferenceCache);
+						if (!locallyBuilt.getEntries().isEmpty()) {
+							log.log(ProgressLog.Level.SUB, baseName, "signing "+locallyBuilt.getEntries().size()+" locally built entries");
+							final StateCacheSigned locallyBuiltSigned=locallyBuilt.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+							log.log(ProgressLog.Level.SUB, baseName, "sending "+locallyBuilt.getEntries().size()+" locally built entries to remote");
+							restClient.storeSigned(locallyBuiltSigned);
+						}
 
 						final int localCacheEntriesSize=localCache.getEntries().size();
 						final StateCacheInfo localCacheInfo=localCache.toInfo();
-						final Set<StateCacheEntry> missingEntries=restClient.getMissingEntries(localCacheInfo);
+						localCacheInfo.setPredicateStateCacheEntrySigned(getCacheEntryPredicate());
+						final Set<StateCacheEntrySigned> missingEntries=restClient.getMissingEntriesSigned(localCacheInfo);
 						if (missingEntries.isEmpty()) {
-							System.err.println(" -> "+baseName+": is to date ("+localCacheEntriesSize+" entries)");
+							log.log(ProgressLog.Level.SUB, baseName, "is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
-							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
-							localCache.patch(missingEntries);
+							log.log(ProgressLog.Level.SUB, baseName, "verifying "+missingEntries.size()+" signatures");
+							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
+									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked)) // TODO: optimize, single request
+									.map(StateCacheEntrySigned::getCacheEntry)
+									.collect(ImmutableSet.toImmutableSet());
+							log.log(ProgressLog.Level.SUB, baseName, "patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
+							localCache.patch(verifiedMissingEntries);
 							StateCacheIO.writeAtomic(cacheFile, localCache);
 						}
-
-						final StateCache missingOnServer=localCache.diff(cacheInfo);
-						if (!missingOnServer.getEntries().isEmpty()) {
-							System.err.println(" -> "+baseName+": sending "+missingOnServer.getEntries().size()+" missing entries to remote");
-							restClient.store(missingOnServer);
-						}
+						copyToReference(cacheFile, baseName);
 					}
 				}
 			}
@@ -249,20 +404,51 @@ public class CachePoolClient {
 		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
 		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
 		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
-		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
+		log.log(ProgressLog.Level.MAIN, "found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
 				final String baseName=entry.getKey();
-				System.err.println(" -> uploading "+baseName);
 				final StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
-				restClient.store(cache);
+				log.log(ProgressLog.Level.SUB, baseName, "signing");
+				final StateCacheSigned cacheSigned=cache.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
+				log.log(ProgressLog.Level.SUB, baseName, "uploading");
+				restClient.storeSigned(cacheSigned);
 
 				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
+
 				if (!Files.exists(targetPath)) {
-					System.err.println(" -> "+baseName+" does not yet exist in target directory, copying to "+targetPath);
+					log.log(ProgressLog.Level.SUB, baseName, "does not yet exist in target directory, copying to "+targetPath);
 					StateCacheIO.writeAtomic(targetPath, cache);
 				}
+				copyToReference(targetPath, baseName);
 			}
+		}
+	}
+
+	private Path buildReferencePath(final String baseName) throws IOException {
+		final Path referencePath=configuration.getCacheReferencePath().resolve(baseName+Util.DXVK_CACHE_EXT+".gz");
+		return referencePath;
+	}
+
+	private void copyToReference(final Path source, final String baseName) throws IOException {
+		final Path referencePath=buildReferencePath(baseName);
+		final Path referencePathTmp=buildReferencePath(baseName).resolveSibling(baseName+Util.DXVK_CACHE_EXT+".gz.tmp");
+		Util.copyCompressed(source, referencePathTmp);
+		Files.move(referencePathTmp, referencePath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	private StateCache readReference(final int version, final String baseName) throws IOException {
+		final Path referencePath=buildReferencePath(baseName);
+		try (InputStream in=new BufferedInputStream(new GZIPInputStream(Files.newInputStream(referencePath)))) {
+			return StateCacheIO.parse(in);
+		} catch (IOException ioe) {
+			log.log(ProgressLog.Level.SUB, baseName, "couldn't find reference cache, assuming generated locally");
+			StateCache stateCache=new StateCache();
+			stateCache.setVersion(version);
+			stateCache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
+			stateCache.setBaseName(baseName);
+			stateCache.setEntries(ImmutableSet.of());
+			return stateCache;
 		}
 	}
 
@@ -290,6 +476,11 @@ public class CachePoolClient {
 		//options.addOption(Option.builder("t").longOpt("target").numberOfArgs(1).argName("path").desc("Target path to store caches").build());
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
+		options.addOption(Option.builder().longOpt("only-verified").desc("Only download entries from verified uploaders").build());
+		options.addOption(Option.builder().longOpt("download-verified").desc("Download verified public keys and associated verification data").build());
+		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
+		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
+		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
 		return options;
 	}
 

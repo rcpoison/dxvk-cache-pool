@@ -19,10 +19,16 @@ import java.util.Set;
 public class Configuration {
 
 	public static final String WINE_PREFIX_SYMLINK="dxvk-cache-pool";
+	public static final Path CONFIG_SUBDIR=Paths.get("dxvk-cache-pool");
 
 	private String host="http://kassandra.ignorelist.com:16969/";
 	private Path cacheTargetPath;
+	private Path configurationPath;
+	private Path cacheReferencePath;
 	private Set<Path> gamePaths;
+	private boolean scanRecursive=true;
+	private boolean onlyVerified=false;
+	private int minimumSignatures=2;
 	private boolean verbose=false;
 
 	public String getHost() {
@@ -55,12 +61,56 @@ public class Configuration {
 		return cacheTargetPath;
 	}
 
+	public synchronized Path getConfigurationPath() throws IOException {
+		if (null==configurationPath) {
+			Path configHome=Util.getEnvPath("XDG_CONFIG_HOME");
+			if (null==configHome) {
+				configHome=Paths.get(System.getProperty("user.home"), ".config");
+			}
+			configurationPath=configHome.resolve(CONFIG_SUBDIR);
+			Files.createDirectories(configurationPath);
+		}
+		return configurationPath;
+	}
+
+	public synchronized Path getCacheReferencePath() throws IOException {
+		if (null==cacheReferencePath) {
+			cacheReferencePath=getConfigurationPath().resolve("reference");
+			Files.createDirectories(cacheReferencePath);
+		}
+		return cacheReferencePath;
+	}
+
 	public Set<Path> getGamePaths() {
 		return gamePaths;
 	}
 
 	public void setGamePaths(Set<Path> gamePaths) {
 		this.gamePaths=gamePaths;
+	}
+
+	public boolean isScanRecursive() {
+		return scanRecursive;
+	}
+
+	public void setScanRecursive(boolean scanRecursive) {
+		this.scanRecursive=scanRecursive;
+	}
+
+	public boolean isOnlyVerified() {
+		return onlyVerified;
+	}
+
+	public void setOnlyVerified(boolean onlyVerified) {
+		this.onlyVerified=onlyVerified;
+	}
+
+	public int getMinimumSignatures() {
+		return minimumSignatures;
+	}
+
+	public void setMinimumSignatures(int minimumSignatures) {
+		this.minimumSignatures=minimumSignatures;
 	}
 
 	public boolean isVerbose() {

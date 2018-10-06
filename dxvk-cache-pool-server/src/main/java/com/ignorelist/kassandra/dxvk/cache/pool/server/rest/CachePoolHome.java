@@ -140,7 +140,7 @@ public class CachePoolHome {
 	}
 
 	@GET
-	@Path("s/{css:(.*\\.css)}")
+	@Path("s/{css:([a-z]+\\.css)}")
 	@Produces(TEXT_CSS)
 	public Response getCss(@Context Request request, @PathParam("css") String css) {
 		return buildResponseForStatic(request, "css/"+css, TEXT_CSS);

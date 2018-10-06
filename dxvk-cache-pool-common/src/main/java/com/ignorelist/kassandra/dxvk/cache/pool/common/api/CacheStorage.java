@@ -28,4 +28,6 @@ public interface CacheStorage extends Closeable {
 
 	Set<String> findBaseNames(int version, String subString);
 
+	Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames);
+
 }

@@ -36,6 +36,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 	private int entrySize;
 	private Long lastModified;
 	private Set<StateCacheEntryInfo> entries;
+	private PredicateStateCacheEntrySigned predicateStateCacheEntrySigned;
 
 	public StateCacheInfo() {
 	}
@@ -48,6 +49,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return baseName;
 	}
 
+	@Override
 	public void setBaseName(String executableInfo) {
 		this.baseName=executableInfo;
 	}
@@ -58,6 +60,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return version;
 	}
 
+	@Override
 	public void setVersion(int version) {
 		this.version=version;
 	}
@@ -67,6 +70,7 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		return entrySize;
 	}
 
+	@Override
 	public void setEntrySize(int entrySize) {
 		this.entrySize=entrySize;
 	}
@@ -87,6 +91,14 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 		this.lastModified=lastModified;
 	}
 
+	public PredicateStateCacheEntrySigned getPredicateStateCacheEntrySigned() {
+		return predicateStateCacheEntrySigned;
+	}
+
+	public void setPredicateStateCacheEntrySigned(PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		this.predicateStateCacheEntrySigned=predicateStateCacheEntrySigned;
+	}
+
 	@XmlTransient
 	public Instant getLastModifiedInstant() {
 		if (null==lastModified) {
@@ -102,7 +114,8 @@ public class StateCacheInfo implements StateCacheMeta, Serializable {
 	 * @return entries contained in this instance but missing in the passed instance
 	 */
 	public ImmutableSet<StateCacheEntryInfo> getMissingEntries(StateCacheInfo other) {
-		return ImmutableSet.copyOf(Sets.difference(getEntries(), other.getEntries()));
+		final Set<StateCacheEntryInfo> otherEntries=null==other.getEntries() ? ImmutableSet.of() : other.getEntries();
+		return ImmutableSet.copyOf(Sets.difference(getEntries(), otherEntries));
 	}
 
 	@Override

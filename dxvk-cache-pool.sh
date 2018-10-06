@@ -1,3 +1,5 @@
 #!/bin/bash
-export DXVK_STATE_CACHE_PATH="c:/dxvk-cache-pool"
+
+# $XDG_CACHE_HOME isn't available here, assume it's set to its default value
+export DXVK_STATE_CACHE_PATH="$HOME/.cache/dxvk-cache-pool"
 
