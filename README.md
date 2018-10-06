@@ -144,7 +144,7 @@ You can opt to only download cache entries which are signed by verified users (`
 
 ### Becoming a verified user
 
-See [Verification.md](Verification.md).
+See [Verification](Verification.md).
 
 
 ## Implementation problems
