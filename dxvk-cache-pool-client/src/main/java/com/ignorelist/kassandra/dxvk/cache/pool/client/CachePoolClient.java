@@ -339,8 +339,8 @@ public class CachePoolClient {
 				if (!Files.exists(targetPath)) {
 					log.log(ProgressLog.Level.SUB, baseName, "does not yet exist in target directory, copying to "+targetPath);
 					StateCacheIO.writeAtomic(targetPath, cache);
-					copyToReference(targetPath, baseName);
 				}
+				copyToReference(targetPath, baseName);
 			}
 		}
 	}
