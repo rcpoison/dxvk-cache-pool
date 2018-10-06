@@ -118,6 +118,29 @@ usage: dvxk-cache-server [-h] [--port <port>] [--storage <path>]
     --versions <version>   DXVK state cache versions to accept
 ```
 
+## Security
+
+All state cache entries are signed.
+
+
+### Submission
+
+The client will automatically generate a key pair on the first run.
+Every entry uploaded by the client will be signed with your public key.
+The signature for each entry is validated on the server and kept for every uploader.
+
+
+### Download
+
+The user decides on the desired level of security.
+By default only cache entries with more than two signature will be downloaded.
+You can opt to only download cache entries which are signed by verified users (`--only-verified`).
+
+### Identity verification
+
+See [Verification.md](Verification.md).
+
+
 ## Implementation problems
 
 ### Identifying a game
@@ -130,10 +153,5 @@ Possible Solutions:
 - ~~Exe name plus parent directory.~~ ~~Still suboptimal but right now what I opted for. Assumes users don't go around changing the installation folder name. Should work well for Steam.~~
 
 
-### Security
 
-There is none.
-
-- Anybody can submit entries. Nothing prevents cache poisoning. Even authentication and a network of trust would be of little help as:
-- Currently there is no way to validate the DxvkStateCacheEntry struct and its members. Doing so would be hard to impossible.
 
