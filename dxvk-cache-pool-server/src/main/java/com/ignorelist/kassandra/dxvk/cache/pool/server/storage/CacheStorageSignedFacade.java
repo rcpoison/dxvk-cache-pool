@@ -71,6 +71,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cache.copyShallowTo(cacheSigned);
+		// TODO: optimize: only read entries matching signature predicate
 		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries(), predicateStateCacheEntrySigned);
 		cacheSigned.setEntries(signedEntries);
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
