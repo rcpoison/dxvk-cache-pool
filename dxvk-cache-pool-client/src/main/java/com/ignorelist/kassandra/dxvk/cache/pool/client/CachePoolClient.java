@@ -120,6 +120,9 @@ public class CachePoolClient {
 			if (commandLine.hasOption("non-recursive")) {
 				c.setScanRecursive(false);
 			}
+			if (commandLine.hasOption("min-signatures")) {
+				c.setMinimumSignatures(Integer.parseInt(commandLine.getOptionValue("min-signatures")));
+			}
 
 			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
@@ -474,6 +477,7 @@ public class CachePoolClient {
 		options.addOption(Option.builder().longOpt("download-verified").desc("Download verified public keys and associated verification data").build());
 		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
+		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
 		return options;
 	}
 
