@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 import com.google.common.base.Predicate;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,7 +40,7 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 	@Override
 	public boolean apply(StateCacheEntrySigned entry) {
 		if (null!=acceptedPublicKeys&&!acceptedPublicKeys.isEmpty()) {
-			return null!=entry.getSignatures()&&entry.getSignatures().containsAll(acceptedPublicKeys); // TODO: containsAny
+			return null!=entry.getSignatures()&&!Collections.disjoint(acceptedPublicKeys, entry.getSignatures());
 		}
 		return true;
 	}
