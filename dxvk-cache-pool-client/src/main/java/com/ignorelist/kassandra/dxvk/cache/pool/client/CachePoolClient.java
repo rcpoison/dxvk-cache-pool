@@ -168,7 +168,7 @@ public class CachePoolClient {
 	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
 			log.log(ProgressLog.Level.MAIN, "scanning directories");
-			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
+			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths(), configuration.isScanRecursive());
 			log.log(ProgressLog.Level.SUB, "scanned "+scanResult.getVisitedFiles()+" files");
 		}
 		return scanResult;
