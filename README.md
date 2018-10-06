@@ -1,6 +1,6 @@
-# DXVK cache pool (Beta)
+# DXVK cache pool
 
-Client/server to share DXVK pipeline caches.
+Share your DXVK pipeline cache states for smoother (wine) gaming!
 
 This only works for regular wine prefixes, as steam/proton does it's own thing, and probably much better.
 
@@ -8,8 +8,8 @@ Client:
 - Fetches missing DxvkStateCacheEntry's and patches the .dxvk-cache.
 - Submits DxvkStateCacheEntry's generated locally since the last run.
 
-Server:
-- Centralized storage. Provides REST interface to access caches.
+Server (users do not need this):
+- Centralized storage. Provides REST interface to access caches and signatures.
 
 
 Not affiliated with the DXVK project, please don't blame him if this destroys your cache files.
