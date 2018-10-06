@@ -62,7 +62,7 @@ usage: dvxk-cache-client  directory... [--download-verified] [-h] [--host
 
 #### Environment
 
-For wine to use the shared caches you should set DXVK_STATE_CACHE_PATH as a variable and point it to either:
+For wine to use the shared caches you should set the DXVK_STATE_CACHE_PATH environment variable and point it to either:
 - `$XDG_CACHE_HOME/dxvk-cache-pool` will work for most people
 - or `c:/dxvk-cache-pool` if you did sandbox your wine prefix (`winetricks sandbox`) as in that case wine can't access your home directory. You need to run `dxvk-cache-client` against all your wine prefixes in this case.
 
