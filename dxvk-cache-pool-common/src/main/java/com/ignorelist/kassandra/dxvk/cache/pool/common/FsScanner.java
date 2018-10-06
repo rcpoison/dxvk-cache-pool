@@ -95,7 +95,7 @@ public class FsScanner {
 		return visitedFiles;
 	}
 
-	public static FsScanner scan(Path targetPath, Set<Path> baseDirectories) {
+	public static FsScanner scan(Path targetPath, Set<Path> baseDirectories, boolean recursive) {
 		// walking the FS is slow, only do it once.
 		final AtomicInteger visited=new AtomicInteger();
 		final ImmutableSet<Path> pathsToScan=ImmutableSet.<Path>builder()
@@ -103,7 +103,7 @@ public class FsScanner {
 				.add(targetPath)
 				.build();
 		final ImmutableSet<Path> paths=pathsToScan.parallelStream()
-				.map(s -> FsScanner.scan(s, visited))
+				.map(s -> FsScanner.scan(s, visited, recursive))
 				.flatMap(Collection::stream)
 				.collect(ImmutableSet.toImmutableSet());
 
@@ -123,10 +123,10 @@ public class FsScanner {
 		return new FsScanner(targetPath, exec, cachePaths, wineRoots, visited.get());
 	}
 
-	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited) {
+	private static ImmutableSet<Path> scan(final Path baseDirectory, final AtomicInteger visited, boolean recursive) {
 		try {
 			// doesn't properly handle symlinks, need to refactor.
-			final ImmutableSet<Path> paths=Files.walk(baseDirectory)
+			final ImmutableSet<Path> paths=Files.walk(baseDirectory, recursive ? Integer.MAX_VALUE : 1)
 					.map(Path::toAbsolutePath)
 					.peek(p -> visited.incrementAndGet())
 					.filter(p -> null!=p.getParent())

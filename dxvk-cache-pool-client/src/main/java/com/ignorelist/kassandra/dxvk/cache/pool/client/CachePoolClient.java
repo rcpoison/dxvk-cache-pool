@@ -113,6 +113,9 @@ public class CachePoolClient {
 			if (commandLine.hasOption("verbose")) {
 				c.setVerbose(true);
 			}
+			if (commandLine.hasOption("non-recursive")) {
+				c.setScanRecursive(false);
+			}
 
 			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
@@ -165,7 +168,7 @@ public class CachePoolClient {
 	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
 			log.log(ProgressLog.Level.MAIN, "scanning directories");
-			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
+			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths(), configuration.isScanRecursive());
 			log.log(ProgressLog.Level.SUB, "scanned "+scanResult.getVisitedFiles()+" files");
 		}
 		return scanResult;
@@ -397,6 +400,7 @@ public class CachePoolClient {
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
 		options.addOption(Option.builder().longOpt("only-verified").desc("Only download entries from verified uploaders").build());
+		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		return options;
 	}

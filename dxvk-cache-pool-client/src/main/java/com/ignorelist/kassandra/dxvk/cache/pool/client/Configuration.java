@@ -26,6 +26,7 @@ public class Configuration {
 	private Path configurationPath;
 	private Path cacheReferencePath;
 	private Set<Path> gamePaths;
+	private boolean scanRecursive=true;
 	private boolean onlyVerified=false;
 	private boolean verbose=false;
 
@@ -85,6 +86,14 @@ public class Configuration {
 
 	public void setGamePaths(Set<Path> gamePaths) {
 		this.gamePaths=gamePaths;
+	}
+
+	public boolean isScanRecursive() {
+		return scanRecursive;
+	}
+
+	public void setScanRecursive(boolean scanRecursive) {
+		this.scanRecursive=scanRecursive;
 	}
 
 	public boolean isOnlyVerified() {
