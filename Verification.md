@@ -11,7 +11,4 @@ And create a tarball/zip it.
 
 (Or you can just use the [requestVerification.sh](requestVerification.sh) script.)
 
-Either create a ticket and attach your verification request or send it to me by email (rc dot poison at gmail dot com).
-
-
-
+Either create a ticket and attach your verification information or send it to me by email (rc dot poison at gmail dot com).
