@@ -45,16 +45,19 @@ Both client and server require Java >= 8.
 ```bash
 $ ./dxvk-cache-client -h
 usage: dvxk-cache-client  directory... [--download-verified] [-h] [--host
-       <url>] [--init-keys] [--non-recursive] [--only-verified]
-       [--verbose]
-    --download-verified   Download verified public keys and associated
-                          verification data
- -h,--help                show this help
-    --host <url>          Server URL
-    --init-keys           Ensure keys exist and exit
-    --non-recursive       Do not scan direcories recursively
-    --only-verified       Only download entries from verified uploaders
-    --verbose             Verbose output
+       <url>] [--init-keys] [--min-signatures <count>] [--non-recursive]
+       [--only-verified] [--verbose]
+    --download-verified        Download verified public keys and
+                               associated verification data
+ -h,--help                     show this help
+    --host <url>               Server URL
+    --init-keys                Ensure keys exist and exit
+    --min-signatures <count>   Minimum required signatures to download a
+                               cache entry
+    --non-recursive            Do not scan direcories recursively
+    --only-verified            Only download entries from verified
+                               uploaders
+    --verbose                  Verbose output
 ```
 
 #### Environment
