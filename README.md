@@ -59,7 +59,9 @@ usage: dvxk-cache-client  directory... [--download-verified] [-h] [--host
 
 #### Environment
 
-For wine to use the shared caches you should set DXVK_STATE_CACHE_PATH as a variable and point it to `c:/dxvk-cache-pool`.
+For wine to use the shared caches you should set DXVK_STATE_CACHE_PATH as a variable and point it to either:
+- `$XDG_CACHE_HOME/dxvk-cache-pool` will work for most people
+- or `c:/dxvk-cache-pool` if you did sandbox your wine prefix (`winetricks sandbox`) as in that case wine can't access your home directory. You need to run `dxvk-cache-client` against all your wine prefixes in this case.
 
 It doesn't affect steam/proton, proton is doing it's own thing and overrides that variable.
 
@@ -69,9 +71,6 @@ It doesn't affect steam/proton, proton is doing it's own thing and overrides tha
 Set it up globally.
 
 See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly into `/etc/profile.d/`. The arch package already includes it.
-
-Warning: in this case you need to run the client against all your wine prefixes,
-otherwise the symlinks to the cache directory will be missing and DXVK won't be able to open/create a cache file.
 
 
 ##### The hard way
@@ -83,7 +82,7 @@ You can probably configure it in Lutris for the wine prefix you want to use or c
 
 ##### Why this is necessary
 
-The client will create a symlink inside each wine prefix it encounters when scanning from drive_c/dxvk-cache-pool to $XDG_CACHE_HOME/dxvk-cache-pool.
+The client will create a symlink inside each wine prefix it encounters when scanning from `drive_c/dxvk-cache-pool` to `$XDG_CACHE_HOME/dxvk-cache-pool`.
 
 All caches will be written to $XDG_CACHE_HOME/dxvk-cache-pool, 
 so if your wine prefix is missing that symlink or the DXVK_STATE_CACHE_PATH isn't set DXVK won't find the cache.
