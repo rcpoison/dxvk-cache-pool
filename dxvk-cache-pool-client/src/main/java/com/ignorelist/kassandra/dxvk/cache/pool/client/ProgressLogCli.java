@@ -22,7 +22,7 @@ public class ProgressLogCli implements ProgressLog {
 	public void log(Level level, CharSequence prefix, CharSequence message) {
 		if (Level.SUB==level) {
 			System.err.print(" -> ");
-		} else if (Level.WANING==level) {
+		} else if (Level.WARNING==level) {
 			System.err.print("Warning: ");
 		} else if (Level.ERROR==level) {
 			System.err.print("Error: ");

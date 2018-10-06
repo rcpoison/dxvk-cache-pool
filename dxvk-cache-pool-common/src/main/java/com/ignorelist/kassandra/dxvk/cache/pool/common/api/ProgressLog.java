@@ -14,7 +14,7 @@ public interface ProgressLog {
 	enum Level {
 		MAIN,
 		SUB,
-		WANING,
+		WARNING,
 		ERROR
 	}
 
