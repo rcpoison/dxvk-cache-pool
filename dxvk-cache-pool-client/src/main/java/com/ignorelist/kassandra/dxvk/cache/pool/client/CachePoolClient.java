@@ -21,6 +21,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.ProgressLog;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
@@ -62,6 +63,7 @@ import org.apache.commons.cli.ParseException;
 public class CachePoolClient {
 
 	private final Configuration configuration;
+	private final ProgressLog log=new ProgressLogCli();
 
 	private final LoadingCache<PublicKeyInfo, PublicKey> publicKeyCache=CacheBuilder.newBuilder()
 			.<PublicKeyInfo, PublicKey>build(new CacheLoader<PublicKeyInfo, PublicKey>() {
@@ -162,9 +164,9 @@ public class CachePoolClient {
 
 	public synchronized FsScanner getScanResult() throws IOException {
 		if (null==scanResult) {
-			System.err.println("scanning directories");
+			log.log(ProgressLog.Level.MAIN, "scanning directories");
 			scanResult=FsScanner.scan(configuration.getCacheTargetPath(), configuration.getGamePaths());
-			System.err.println("scanned "+scanResult.getVisitedFiles()+" files");
+			log.log(ProgressLog.Level.SUB, "scanned "+scanResult.getVisitedFiles()+" files");
 		}
 		return scanResult;
 	}
@@ -184,14 +186,14 @@ public class CachePoolClient {
 		// TODO: we don't actually need the descriptors anymore since we're not diffing against the remote
 		if (null==cacheDescriptorsByBaseName) {
 			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-				System.err.println("looking up remote caches for "+getAvailableBaseNames().size()+" possible games");
+				log.log(ProgressLog.Level.MAIN, "looking up remote caches for "+getAvailableBaseNames().size()+" possible games");
 				Set<StateCacheInfoSignees> cacheDescriptors=restClient.getCacheDescriptorsSignees(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames());
 				cacheDescriptorsByBaseName=Maps.uniqueIndex(cacheDescriptors, StateCacheMeta::getBaseName);
 				//cacheDescriptorsByBaseNameUnsigned=ImmutableMap.copyOf(Maps.transformValues(cacheDescriptorsByBaseName, StateCacheInfoSignees::toUnsigned));
-				System.err.println("found "+cacheDescriptorsByBaseName.size()+" matching caches");
+				log.log(ProgressLog.Level.SUB, "found "+cacheDescriptorsByBaseName.size()+" matching caches");
 				if (configuration.isVerbose()) {
 					cacheDescriptorsByBaseName.values().forEach(d -> {
-						System.err.println(" -> "+d.getBaseName()+" ("+d.getEntries().size()+" entries)");
+						log.log(ProgressLog.Level.SUB, d.getBaseName(), "("+d.getEntries().size()+" entries)");
 					});
 				}
 
@@ -215,14 +217,14 @@ public class CachePoolClient {
 	 */
 	public synchronized void prepareWinePrefixes() throws IOException {
 		final ImmutableSet<Path> wineRoots=getScanResult().getWineRoots();
-		System.err.println("preparing wine prefixes");
+		log.log(ProgressLog.Level.MAIN, "preparing wine prefixes");
 		for (Path wineDriveC : wineRoots) {
 			final Path symLink=wineDriveC.resolve(Configuration.WINE_PREFIX_SYMLINK);
 			if (!Files.isSymbolicLink(symLink)) {
 				if (Files.isDirectory(symLink, LinkOption.NOFOLLOW_LINKS)||Files.isRegularFile(symLink, LinkOption.NOFOLLOW_LINKS)) {
-					System.err.println(" -> warning: "+symLink+" exists and is a directory/file instead of a symlink. dxvk-cache-pool will not work for this wine prefix.");
+					log.log(ProgressLog.Level.WARNING, symLink.toString(), "exists and is a directory/file instead of a symlink. dxvk-cache-pool will not work for this wine prefix.");
 				} else {
-					System.err.println("-> creating symlink from "+symLink+" to "+configuration.getCacheTargetPath());
+					log.log(ProgressLog.Level.SUB, "creating symlink from "+symLink+" to "+configuration.getCacheTargetPath());
 					Files.createSymbolicLink(symLink, configuration.getCacheTargetPath());
 				}
 			}
@@ -240,13 +242,13 @@ public class CachePoolClient {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
 			final Map<String, StateCacheInfoSignees> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
-			System.err.println("writing "+entriesWithoutLocalCache.size()+" new caches");
+			log.log(ProgressLog.Level.MAIN, "writing "+entriesWithoutLocalCache.size()+" new caches");
 			if (!entriesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 					for (StateCacheInfoSignees cacheInfo : entriesWithoutLocalCache.values()) {
 						final String baseName=cacheInfo.getBaseName();
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
-						System.err.println(" -> "+baseName+": writing to "+targetPath);
+						log.log(ProgressLog.Level.SUB, baseName, "writing to "+targetPath);
 						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
 						if (!cacheSigned.verifyAllSignaturesValid()) {
 							throw new IllegalStateException("signatures could not be verified!");
@@ -271,7 +273,7 @@ public class CachePoolClient {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
 			final Map<String, StateCacheInfoSignees> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
-			System.err.println("updating "+entriesLocalCache.size()+" caches");
+			log.log(ProgressLog.Level.MAIN, "updating "+entriesLocalCache.size()+" caches");
 			if (!entriesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 					for (StateCacheInfoSignees cacheInfo : entriesLocalCache.values()) {
@@ -284,7 +286,7 @@ public class CachePoolClient {
 						//final StateCacheInfo cacheInfoUnsigned=cacheInfo.toUnsigned();
 						final StateCache locallyBuilt=localCache.diff(localReferenceCache);
 						if (!locallyBuilt.getEntries().isEmpty()) {
-							System.err.println(" -> "+baseName+": sending "+locallyBuilt.getEntries().size()+" locally built to remote");
+							log.log(ProgressLog.Level.SUB, baseName, "sending "+locallyBuilt.getEntries().size()+" locally built entries to remote");
 							final StateCacheSigned locallyBuiltSigned=locallyBuilt.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
 							restClient.storeSigned(locallyBuiltSigned);
 						}
@@ -294,9 +296,9 @@ public class CachePoolClient {
 						localCacheInfo.setPredicateStateCacheEntrySigned(getCacheEntryPredicate());
 						final Set<StateCacheEntrySigned> missingEntries=restClient.getMissingEntriesSigned(localCacheInfo);
 						if (missingEntries.isEmpty()) {
-							System.err.println(" -> "+baseName+": is up to date ("+localCacheEntriesSize+" entries)");
+							log.log(ProgressLog.Level.SUB, baseName, "is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
-							System.err.println(" -> "+baseName+": patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
+							log.log(ProgressLog.Level.SUB, baseName, "patching ("+localCacheEntriesSize+" existing entries, adding "+missingEntries.size()+" entries)");
 							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
 									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked))
 									.map(StateCacheEntrySigned::getCacheEntry)
@@ -323,11 +325,11 @@ public class CachePoolClient {
 		ImmutableMap<String, StateCacheInfoSignees> descriptors=getCacheDescriptorsByBaseNames();
 		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
 		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
-		System.err.println("found "+pathsToUpload.keySet().size()+" candidates for upload");
+		log.log(ProgressLog.Level.MAIN, "found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
 				final String baseName=entry.getKey();
-				System.err.println(" -> uploading "+baseName);
+				log.log(ProgressLog.Level.SUB, baseName, "uploading");
 				final StateCache cache=readMerged(ImmutableSet.copyOf(entry.getValue()));
 				final StateCacheSigned cacheSigned=cache.sign(getKeyStore().getPrivateKey(), getKeyStore().getPublicKey());
 				restClient.storeSigned(cacheSigned);
@@ -335,7 +337,7 @@ public class CachePoolClient {
 				final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 
 				if (!Files.exists(targetPath)) {
-					System.err.println(" -> "+baseName+" does not yet exist in target directory, copying to "+targetPath);
+					log.log(ProgressLog.Level.SUB, baseName, "does not yet exist in target directory, copying to "+targetPath);
 					StateCacheIO.writeAtomic(targetPath, cache);
 					copyToReference(targetPath, baseName);
 				}
@@ -360,7 +362,7 @@ public class CachePoolClient {
 		try (InputStream in=new BufferedInputStream(new GZIPInputStream(Files.newInputStream(referencePath)))) {
 			return StateCacheIO.parse(in);
 		} catch (IOException ioe) {
-			System.err.println(baseName+" -> couldn't find reference cache, assuming new");
+			log.log(ProgressLog.Level.SUB, baseName, "couldn't find reference cache, assuming generated locally");
 			StateCache stateCache=new StateCache();
 			stateCache.setVersion(version);
 			stateCache.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
