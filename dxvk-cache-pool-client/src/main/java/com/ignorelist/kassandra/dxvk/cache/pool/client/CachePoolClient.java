@@ -29,6 +29,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateMinimumSignatures;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -119,6 +120,9 @@ public class CachePoolClient {
 			}
 			if (commandLine.hasOption("non-recursive")) {
 				c.setScanRecursive(false);
+			}
+			if (commandLine.hasOption("min-signatures")) {
+				c.setMinimumSignatures(Integer.parseInt(commandLine.getOptionValue("min-signatures")));
 			}
 
 			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
@@ -227,6 +231,8 @@ public class CachePoolClient {
 		if (null==predicateStateCacheEntrySigned) {
 			predicateStateCacheEntrySigned=new PredicateStateCacheEntrySigned();
 			predicateStateCacheEntrySigned.setOnlyAcceptVerifiedKeys(configuration.isOnlyVerified());
+			PredicateMinimumSignatures minimumSignatures=new PredicateMinimumSignatures(configuration.getMinimumSignatures());
+			predicateStateCacheEntrySigned.setMinimumSignatures(minimumSignatures);
 		}
 		return predicateStateCacheEntrySigned;
 	}
@@ -474,6 +480,7 @@ public class CachePoolClient {
 		options.addOption(Option.builder().longOpt("download-verified").desc("Download verified public keys and associated verification data").build());
 		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
+		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
 		return options;
 	}
 

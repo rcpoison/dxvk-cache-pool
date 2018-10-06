@@ -28,6 +28,7 @@ public class Configuration {
 	private Set<Path> gamePaths;
 	private boolean scanRecursive=true;
 	private boolean onlyVerified=false;
+	private int minimumSignatures=2;
 	private boolean verbose=false;
 
 	public String getHost() {
@@ -102,6 +103,14 @@ public class Configuration {
 
 	public void setOnlyVerified(boolean onlyVerified) {
 		this.onlyVerified=onlyVerified;
+	}
+
+	public int getMinimumSignatures() {
+		return minimumSignatures;
+	}
+
+	public void setMinimumSignatures(int minimumSignatures) {
+		this.minimumSignatures=minimumSignatures;
 	}
 
 	public boolean isVerbose() {
