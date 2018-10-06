@@ -142,7 +142,7 @@ The user decides on the desired level of security.
 By default only cache entries with more than two signature will be downloaded.
 You can opt to only download cache entries which are signed by verified users (`--only-verified`).
 
-### Identity verification
+### Becoming a verified user
 
 See [Verification.md](Verification.md).
 
