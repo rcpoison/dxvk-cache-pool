@@ -16,6 +16,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
+import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.client.rest.CachePoolRestClient;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.FsScanner;
@@ -23,6 +25,8 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.ProgressLog;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
@@ -36,6 +40,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -47,6 +52,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -147,7 +153,54 @@ public class CachePoolClient {
 			client.getKeyStore();
 			System.exit(0);
 		}
+		if (commandLine.hasOption("download-verified")) {
+			client.downloadVerifiedKeyData();
+		}
 		client.merge();
+	}
+
+	public synchronized void downloadVerifiedKeyData() throws IOException {
+		final Path targetPath=configuration.getConfigurationPath().resolve("keystore");
+		log.log(ProgressLog.Level.MAIN, "downloading verified keys to: "+targetPath);
+		final BaseEncoding base16=BaseEncoding.base16();
+		Files.createDirectories(targetPath);
+		final ImmutableSet<PublicKeyInfo> localVerifiedKeys=Files.list(targetPath)
+				.map(Path::getFileName)
+				.filter(Files::isRegularFile)
+				.map(Path::toString)
+				.filter(Util.SHA_256_HEX_PATTERN.asPredicate())
+				.map(base16::decode)
+				.map(PublicKeyInfo::new)
+				.collect(ImmutableSet.toImmutableSet());
+		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+			final Set<PublicKeyInfo> availableVerifiedKeyInfos=restClient.getVerifiedKeyInfos();
+			Sets.SetView<PublicKeyInfo> toDownload=Sets.difference(availableVerifiedKeyInfos, localVerifiedKeys);
+			for (PublicKeyInfo publicKeyInfoToDownload : toDownload) {
+				try {
+					final String fileBaseName=base16.encode(publicKeyInfoToDownload.getHash());
+					final PublicKey publicKey=publicKeyCache.get(publicKeyInfoToDownload);
+					if (null==publicKey) {
+						throw new IllegalStateException("publicKey must not be null");
+					}
+					final Identity identity=restClient.getIdentity(publicKeyInfoToDownload);
+					if (null==identity) {
+						throw new IllegalStateException("identity must not be null");
+					}
+					final IdentityVerification identityVerification=restClient.getIdentityVerification(publicKeyInfoToDownload);
+					if (null==identityVerification) {
+						throw new IllegalStateException("IdentityVerification must not be null");
+					}
+					log.log(ProgressLog.Level.SUB, "writing: "+identity.getName()+" <"+identity.getEmail()+">", fileBaseName);
+					Files.write(targetPath.resolve(fileBaseName+".gpg"), identityVerification.getPublicKeyGPG());
+					Files.write(targetPath.resolve(fileBaseName+".sig"), identityVerification.getPublicKeySignature());
+					try (OutputStream out=Files.newOutputStream(targetPath.resolve(fileBaseName))) {
+						CryptoUtil.write(out, publicKey);
+					}
+				} catch (ExecutionException ex) {
+					throw new IOException(ex);
+				}
+			}
+		}
 	}
 
 	private synchronized KeyStore getKeyStore() throws IOException {
@@ -400,6 +453,7 @@ public class CachePoolClient {
 		options.addOption(Option.builder().longOpt("host").numberOfArgs(1).argName("url").desc("Server URL").build());
 		options.addOption(Option.builder().longOpt("verbose").desc("Verbose output").build());
 		options.addOption(Option.builder().longOpt("only-verified").desc("Only download entries from verified uploaders").build());
+		options.addOption(Option.builder().longOpt("download-verified").desc("Download verified public keys and associated verification data").build());
 		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		return options;
