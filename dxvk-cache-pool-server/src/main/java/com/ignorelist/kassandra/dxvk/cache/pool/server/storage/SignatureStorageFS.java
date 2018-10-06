@@ -94,7 +94,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		Files.createDirectories(keysPath);
 
 		identitiesPath=storageRoot.resolve(PATH_IDENTITIES);
-		identityStorage=new IdentityStorageFS(storageRoot, publicKeyInfoInterner);
+		identityStorage=new IdentityStorageFS(identitiesPath, publicKeyInfoInterner);
 
 		identifiedFirstOrdering=new IdentifiedFirstOrdering(this);
 	}
