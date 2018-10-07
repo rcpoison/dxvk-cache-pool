@@ -74,20 +74,20 @@ public class StateCacheIO {
 		};
 		 */
 		byte[] magicBytes=new byte[4];
-		inputStream.read(magicBytes);
+		ByteStreams.readFully(inputStream, magicBytes);
 		final String magicString=new String(magicBytes, Charsets.US_ASCII);
 		if (!"DXVK".equals(magicString)) {
 			throw new UnsupportedOperationException("wrong header: "+magicString);
 		}
 		byte[] versionBytes=new byte[4];
-		inputStream.read(versionBytes);
+		ByteStreams.readFully(inputStream, versionBytes);
 		final int version=parseUnsignedInt(versionBytes);
 		if (!StateCacheHeaderInfo.getKnownVersions().contains(version)) {
-			LOG.log(Level.WARNING, "unknon version encountered: {0}", version);
+			LOG.log(Level.WARNING, "unknown version encountered: {0}", version);
 		}
 
 		byte[] entrySizeBytes=new byte[4];
-		inputStream.read(entrySizeBytes);
+		ByteStreams.readFully(inputStream, entrySizeBytes);
 		final int entrySize=parseUnsignedInt(entrySizeBytes);
 		if (entrySize<=1||entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX||(StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize)) {
 			throw new IllegalStateException("header corrupt? entry size: "+entrySize);
