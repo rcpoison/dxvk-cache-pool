@@ -36,7 +36,7 @@ public class StateCacheIO {
 	/**
 	 * Parse StateCache and its entries.
 	 *
-	 * Will set basename base on the passed Path
+	 * Will set basename based on the passed Path
 	 *
 	 * @param path
 	 * @return
