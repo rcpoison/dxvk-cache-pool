@@ -61,6 +61,10 @@ public class Configuration {
 		return cacheTargetPath;
 	}
 
+	public synchronized void setCacheTargetPath(Path cacheTargetPath) {
+		this.cacheTargetPath=cacheTargetPath;
+	}
+
 	public synchronized Path getConfigurationPath() throws IOException {
 		if (null==configurationPath) {
 			Path configHome=Util.getEnvPath("XDG_CONFIG_HOME");

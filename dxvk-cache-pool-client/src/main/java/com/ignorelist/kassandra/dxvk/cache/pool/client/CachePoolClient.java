@@ -124,7 +124,10 @@ public class CachePoolClient {
 			if (commandLine.hasOption("min-signatures")) {
 				c.setMinimumSignatures(Integer.parseInt(commandLine.getOptionValue("min-signatures")));
 			}
-
+			if (commandLine.hasOption("cache-target-dir")) {
+				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));
+			}
+			
 			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.map(p -> {
@@ -481,6 +484,7 @@ public class CachePoolClient {
 		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
+		options.addOption(Option.builder().longOpt("cache-target-dir").numberOfArgs(1).argName("dir").desc("Override default cache target directory").build());
 		return options;
 	}
 
