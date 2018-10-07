@@ -46,7 +46,7 @@ It doesn't affect steam/proton as proton is doing its own thing and overrides th
 
 ### Example
 
-Assuming you store your wine prefixes in `/usr/local/games/wine`, you can run it like:
+Assuming the game files are stored somewhere in `/usr/local/games/wine`, you can run it like so:
 
 ```bash
 $ ./dxvk-cache-client /usr/local/games/wine
@@ -64,8 +64,26 @@ updating 2 caches
 found 0 candidates for upload
 ```
 
-You can pass multiple directories. The directories should contain wine prefixes.
-It will search for exe files in the passed directories and automatically update the .dxvk-cache's for you.
+You can pass multiple game directories. For each passed directory, the client will recursively search for exe files and automatically create the .dxvk-cache's for you if they did not already exist.
+
+Alternatively, if the .dxvk-cache's already exist (i.e. you have already ran each game at least once), you can pass no directories at all like so:
+
+```bash
+$ dxvk-cache-client 
+target directory is: /home/owner/.cache/dxvk-cache-pool
+scanning directories
+ -> scanned 3 files
+preparing wine prefixes
+looking up remote caches for 2 possible games
+ -> found 2 matching caches
+writing 0 new caches
+updating 2 caches
+ -> QuakeChampions: is up to date (2008 entries)
+ -> UE4-Win64-Shipping: is up to date (2928 entries)
+found 0 candidates for upload
+```
+
+If you are using a sandboxed wine prefix, then the directories should be wine prefixes instead of game files (with game files and binaries stored in the prefix).
 
 ## Security
 
