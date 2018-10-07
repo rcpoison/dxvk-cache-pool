@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 public class StateCacheIO {
 
 	private static final Logger LOG=Logger.getLogger(StateCacheIO.class.getName());
+	private static final String MAGIC_BYTES="DXVK";
 
 	/**
 	 * Parse StateCache and its entries.
@@ -76,7 +77,7 @@ public class StateCacheIO {
 		byte[] magicBytes=new byte[4];
 		ByteStreams.readFully(inputStream, magicBytes);
 		final String magicString=new String(magicBytes, Charsets.US_ASCII);
-		if (!"DXVK".equals(magicString)) {
+		if (!MAGIC_BYTES.equals(magicString)) {
 			throw new UnsupportedOperationException("wrong header: "+magicString);
 		}
 		byte[] versionBytes=new byte[4];
@@ -139,7 +140,7 @@ public class StateCacheIO {
 		if (entrySize<=1) {
 			throw new IllegalStateException("illegal entry size: "+entrySize);
 		}
-		out.write("DXVK".getBytes(Charsets.US_ASCII));
+		out.write(MAGIC_BYTES.getBytes(Charsets.US_ASCII));
 		out.write(toUnsignedIntBytes(version));
 		out.write(toUnsignedIntBytes(entrySize));
 		cache.getEntries().stream()
