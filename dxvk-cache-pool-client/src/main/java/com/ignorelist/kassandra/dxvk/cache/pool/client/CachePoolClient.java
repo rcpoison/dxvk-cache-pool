@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -216,7 +215,7 @@ public class CachePoolClient {
 					try (OutputStream out=Files.newOutputStream(targetPath.resolve(fileBaseName))) {
 						CryptoUtil.write(out, publicKey);
 					}
-				} catch (ExecutionException ex) {
+				} catch (Exception ex) {
 					//throw new IOException(ex);
 					log.log(ProgressLog.Level.WARNING, "failed downloading entry for: "+publicKeyInfoToDownload);
 				}
