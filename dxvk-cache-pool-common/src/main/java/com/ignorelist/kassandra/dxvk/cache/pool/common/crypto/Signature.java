@@ -8,7 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -28,7 +28,7 @@ public class Signature implements Serializable {
 	}
 
 	@NotNull
-	@XmlAttribute(required=true)
+	@XmlElement(required=true)
 	public byte[] getSignature() {
 		return signature;
 	}

@@ -9,7 +9,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -51,7 +50,7 @@ public class PublicKey implements Serializable, Comparable<PublicKey> {
 	}
 
 	@NotNull
-	@XmlAttribute(required=true)
+	@XmlElement(required=true)
 	public PublicKeyInfo getKeyInfo() {
 		return keyInfo;
 	}
