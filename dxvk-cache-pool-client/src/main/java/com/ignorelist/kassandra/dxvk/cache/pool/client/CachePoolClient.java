@@ -127,7 +127,7 @@ public class CachePoolClient {
 			if (commandLine.hasOption("cache-target-dir")) {
 				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));
 			}
-			
+
 			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
 					.map(Paths::get)
 					.map(p -> {
@@ -217,7 +217,8 @@ public class CachePoolClient {
 						CryptoUtil.write(out, publicKey);
 					}
 				} catch (ExecutionException ex) {
-					throw new IOException(ex);
+					//throw new IOException(ex);
+					log.log(ProgressLog.Level.WARNING, "failed downloading entry for: "+publicKeyInfoToDownload);
 				}
 			}
 		}
