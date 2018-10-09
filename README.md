@@ -8,37 +8,11 @@ Client:
 - Fetches missing DxvkStateCacheEntry's and patches the .dxvk-cache.
 - Submits DxvkStateCacheEntry's generated locally since the last run.
 
-Server (users do not need this):
-- Centralized storage. Provides REST interface to access caches and signatures.
-
-
 Not affiliated with the DXVK project, please don't blame him if this destroys your cache files.
-
-## Building
-
-Prerequisites:
-- maven 3
-- openjdk >= 8
-
-Build: 
-```bash
-./build.sh
-```
-
-Executables:
-```bash
-dxvk-cache-client
-dxvk-cache-server
-```
-
-Archlinux:
-
-See [PKGBUILD](arch/PKGBUILD)
-
 
 ## Usage
 
-Both client and server require Java >= 8.
+The client requires Java >= 8.
 
 ### Client
 
@@ -60,40 +34,19 @@ usage: dvxk-cache-client  directory... [--download-verified] [-h] [--host
     --verbose                  Verbose output
 ```
 
-#### Environment
+### Environment
 
 For wine to use the shared caches you should set the DXVK_STATE_CACHE_PATH environment variable and point it to either:
 - `$XDG_CACHE_HOME/dxvk-cache-pool` will work for most people
 - or `c:/dxvk-cache-pool` if you did sandbox your wine prefix (`winetricks sandbox`) as in that case wine can't access your home directory. You need to run `dxvk-cache-client` against all your wine prefixes in this case.
 
-It doesn't affect steam/proton, proton is doing it's own thing and overrides that variable.
+This environment variable can be setup globally by putting [dxvk-cache-pool.sh](dxvk-cache-pool.sh) into `/etc/profile.d/`. The arch package already includes it.
 
+It doesn't affect steam/proton as proton is doing its own thing and overrides that variable.
 
-##### The convenient way
+### Example
 
-Set it up globally.
-
-See [dxvk-cache-pool.sh](dxvk-cache-pool.sh) for an example you can put directly into `/etc/profile.d/`. The arch package already includes it.
-
-
-##### The hard way
-
-If you don't want to set it up globally you have to set it before running wine, otherwise it won't use the shared caches.
-
-You can probably configure it in Lutris for the wine prefix you want to use or create a wrapper script.
-
-
-##### Why this is necessary
-
-The client will create a symlink inside each wine prefix it encounters when scanning from `drive_c/dxvk-cache-pool` to `$XDG_CACHE_HOME/dxvk-cache-pool`.
-
-All caches will be written to $XDG_CACHE_HOME/dxvk-cache-pool, 
-so if your wine prefix is missing that symlink or the DXVK_STATE_CACHE_PATH isn't set DXVK won't find the cache.
-
-
-#### Example
-
-Assuming you store your wine prefixes in `/usr/local/games/wine`, you can run it like:
+Assuming the game files are stored somewhere in `/usr/local/games/wine`, you can run it like so:
 
 ```bash
 $ ./dxvk-cache-client /usr/local/games/wine
@@ -111,20 +64,26 @@ updating 2 caches
 found 0 candidates for upload
 ```
 
-You can pass multiple directories. The directories should contain wine prefixes.
-It will search for exe files in the passed directories and automatically update the .dxvk-cache's for you.
+You can pass multiple game directories. For each passed directory, the client will recursively search for exe files and automatically create the .dxvk-cache's for you if they did not already exist.
 
+Alternatively, if the .dxvk-cache's already exist (i.e. you have already ran each game at least once), you can pass no directories at all like so:
 
-### Server
 ```bash
-$ ./dxvk-cache-server -h
-usage: dvxk-cache-server [-h] [--port <port>] [--storage <path>]
-       [--versions <version>]
- -h,--help                 show this help
-    --port <port>          Server port
-    --storage <path>       Storage path
-    --versions <version>   DXVK state cache versions to accept
+$ dxvk-cache-client 
+target directory is: /home/owner/.cache/dxvk-cache-pool
+scanning directories
+ -> scanned 3 files
+preparing wine prefixes
+looking up remote caches for 2 possible games
+ -> found 2 matching caches
+writing 0 new caches
+updating 2 caches
+ -> QuakeChampions: is up to date (2008 entries)
+ -> UE4-Win64-Shipping: is up to date (2928 entries)
+found 0 candidates for upload
 ```
+
+If you are using a sandboxed wine prefix, then the directories should be wine prefixes instead of game files (with game files and binaries stored in the prefix).
 
 ## Security
 
@@ -148,18 +107,6 @@ You can opt to only download cache entries which are signed by verified users (`
 
 See [Verification](Verification.md).
 
+## Miscellaneous
 
-## Implementation problems
-
-### Identifying a game
-
-Possible Solutions:
-
-- Just the exe's filename. After a bit of discussion the only possible choice: https://github.com/doitsujin/dxvk/issues/677
-- ~~SHA1 of the exe.~~ Don't want to loose the cache if the application is updated. Games built using an engine can have the same exact binary.
-- ~~Steam game id.~~ The most robust and my preferred solution, but would make it exclusive to Steam.
-- ~~Exe name plus parent directory.~~ ~~Still suboptimal but right now what I opted for. Assumes users don't go around changing the installation folder name. Should work well for Steam.~~
-
-
-
-
+For frequently asked questions, see [FAQ.md](FAQ.md). For building, see the [Building.md](Building.md). For server documentation, see the [server README](dxvk-cache-pool-server/README.md).

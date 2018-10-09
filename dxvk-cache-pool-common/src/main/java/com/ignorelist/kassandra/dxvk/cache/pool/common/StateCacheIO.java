@@ -32,11 +32,12 @@ import java.util.logging.Logger;
 public class StateCacheIO {
 
 	private static final Logger LOG=Logger.getLogger(StateCacheIO.class.getName());
+	private static final String MAGIC_BYTES="DXVK";
 
 	/**
 	 * Parse StateCache and its entries.
 	 *
-	 * Will set basename base on the passed Path
+	 * Will set basename based on the passed Path
 	 *
 	 * @param path
 	 * @return
@@ -74,20 +75,20 @@ public class StateCacheIO {
 		};
 		 */
 		byte[] magicBytes=new byte[4];
-		inputStream.read(magicBytes);
+		ByteStreams.readFully(inputStream, magicBytes);
 		final String magicString=new String(magicBytes, Charsets.US_ASCII);
-		if (!"DXVK".equals(magicString)) {
+		if (!MAGIC_BYTES.equals(magicString)) {
 			throw new UnsupportedOperationException("wrong header: "+magicString);
 		}
 		byte[] versionBytes=new byte[4];
-		inputStream.read(versionBytes);
+		ByteStreams.readFully(inputStream, versionBytes);
 		final int version=parseUnsignedInt(versionBytes);
 		if (!StateCacheHeaderInfo.getKnownVersions().contains(version)) {
-			LOG.log(Level.WARNING, "unknon version encountered: {0}", version);
+			LOG.log(Level.WARNING, "unknown version encountered: {0}", version);
 		}
 
 		byte[] entrySizeBytes=new byte[4];
-		inputStream.read(entrySizeBytes);
+		ByteStreams.readFully(inputStream, entrySizeBytes);
 		final int entrySize=parseUnsignedInt(entrySizeBytes);
 		if (entrySize<=1||entrySize>StateCacheHeaderInfo.ENTRY_SIZE_MAX||(StateCacheHeaderInfo.getKnownVersions().contains(version)&&StateCacheHeaderInfo.getEntrySize(version)!=entrySize)) {
 			throw new IllegalStateException("header corrupt? entry size: "+entrySize);
@@ -139,7 +140,7 @@ public class StateCacheIO {
 		if (entrySize<=1) {
 			throw new IllegalStateException("illegal entry size: "+entrySize);
 		}
-		out.write("DXVK".getBytes(Charsets.US_ASCII));
+		out.write(MAGIC_BYTES.getBytes(Charsets.US_ASCII));
 		out.write(toUnsignedIntBytes(version));
 		out.write(toUnsignedIntBytes(entrySize));
 		cache.getEntries().stream()

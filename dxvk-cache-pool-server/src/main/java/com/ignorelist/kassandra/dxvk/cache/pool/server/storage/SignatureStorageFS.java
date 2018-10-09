@@ -15,7 +15,6 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
-import com.google.common.io.ByteStreams;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
@@ -34,7 +33,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,6 +77,10 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 	private final Cache<PublicKeyInfo, PublicKey> publicKeyStorageCache=CacheBuilder.newBuilder()
 			.weigher((PublicKeyInfo i, PublicKey k) -> k.getKey().length)
 			.maximumWeight(8*1024*1024) // 8MiB
+			.build();
+	private final Cache<Path, Signature> signatureDataCache=CacheBuilder.newBuilder()
+			.weigher((Path p, Signature s) -> s.getSignature().length)
+			.maximumWeight(32*1024*1024) // 32MiB
 			.build();
 	private final IdentityStorage identityStorage;
 	private final IdentifiedFirstOrdering identifiedFirstOrdering;
@@ -255,12 +257,15 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		}
 	}
 
-	private static SignaturePublicKeyInfo readSignature(final Path basePath, final PublicKeyInfo keyInfo) {
+	private SignaturePublicKeyInfo readSignature(final Path basePath, final PublicKeyInfo keyInfo) {
 		final Path filePath=buildTargetPathFile(basePath, keyInfo);
-		try (InputStream in=Files.newInputStream(filePath)) {
-			final byte[] signature=ByteStreams.toByteArray(in);
-			final Signature s=new Signature(signature);
-			return new SignaturePublicKeyInfo(s, keyInfo);
+		try {
+			final Signature signature=signatureDataCache.get(filePath, () -> {
+				final byte[] signatureBytes=Files.readAllBytes(filePath);
+				final Signature s=new Signature(signatureBytes);
+				return s;
+			});
+			return new SignaturePublicKeyInfo(signature, keyInfo);
 		} catch (Exception e) {
 			LOG.log(Level.WARNING, "failed to read: "+keyInfo, e);
 			throw new IllegalStateException("failed to read: "+keyInfo, e);

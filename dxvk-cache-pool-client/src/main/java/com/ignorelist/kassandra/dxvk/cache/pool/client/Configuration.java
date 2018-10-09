@@ -21,7 +21,7 @@ public class Configuration {
 	public static final String WINE_PREFIX_SYMLINK="dxvk-cache-pool";
 	public static final Path CONFIG_SUBDIR=Paths.get("dxvk-cache-pool");
 
-	private String host="http://kassandra.ignorelist.com:16969/";
+	private String host="http://173.212.215.164:16969";
 	private Path cacheTargetPath;
 	private Path configurationPath;
 	private Path cacheReferencePath;
@@ -59,6 +59,10 @@ public class Configuration {
 			cacheTargetPath=t;
 		}
 		return cacheTargetPath;
+	}
+
+	public synchronized void setCacheTargetPath(Path cacheTargetPath) {
+		this.cacheTargetPath=cacheTargetPath;
 	}
 
 	public synchronized Path getConfigurationPath() throws IOException {

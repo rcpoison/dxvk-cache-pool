@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -32,7 +32,7 @@ public class StateCacheEntryInfo implements Serializable {
 
 	@NotNull
 	@Size(min=32, max=32)
-	@XmlAttribute(required=true)
+	@XmlElement(required=true)
 	public byte[] getHash() {
 		return hash;
 	}

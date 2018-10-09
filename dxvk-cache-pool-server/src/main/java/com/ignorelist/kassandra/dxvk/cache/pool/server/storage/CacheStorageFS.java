@@ -142,7 +142,7 @@ public class CacheStorageFS implements CacheStorage {
 		StateCacheInfo cacheInfo=new StateCacheInfo();
 		cacheInfo.setVersion(version);
 		cacheInfo.setEntrySize(StateCacheHeaderInfo.getEntrySize(version));
-		cacheInfo.setBaseName(Util.baseName(relativePath));
+		cacheInfo.setBaseName(relativePath.getFileName().toString());
 		final Set<StateCacheEntryInfo> entryDescriptors=cacheEntryPaths.stream()
 				.map(Path::getFileName)
 				.map(Path::toString)

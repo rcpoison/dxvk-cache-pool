@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicateSignature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.google.common.base.Predicates;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -28,12 +29,16 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSigne
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author poison
  */
 public class CacheStorageSignedFacade implements CacheStorageSigned {
+
+	private static final Logger LOG=Logger.getLogger(CacheStorageSignedFacade.class.getName());
 
 	private final CacheStorage cacheStorage;
 	private final SignatureStorage signatureStorage;
@@ -110,13 +115,22 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 			signatureStorage.storePublicKey(publicKey);
 
 			final ImmutableMap<PublicKeyInfo, java.security.PublicKey> keyByInfo=ImmutableMap.of(publicKey.getKeyInfo(), CryptoUtil.decodePublicKey(publicKey.getKey()));
+
+			Stopwatch stopwatch=Stopwatch.createStarted();
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
 					.map(StateCacheEntrySigned::copySafe) // do not trust info, rebuild
 					.filter(e -> 1==e.getSignatures().size())
 					.filter(e -> 1==e.verifiedSignatures(keyByInfo::get).size())
 					.collect(ImmutableSet.toImmutableSet());
+			stopwatch.stop();
+			LOG.log(Level.INFO, "{0}: verified {1} entries in {2}ms", new Object[]{cache.getBaseName(), verifiedEntries.size(), stopwatch.elapsed().toMillis()});
+			stopwatch.reset();
+
+			stopwatch.start();
 			verifiedEntries.parallelStream()
 					.forEach(e -> signatureStorage.addSignee(e.getCacheEntry().getEntryInfo(), Iterables.getOnlyElement(e.getSignatures())));
+			stopwatch.stop();
+			LOG.log(Level.INFO, "{0}: stored signatures for {1} entries in {2}ms", new Object[]{cache.getBaseName(), verifiedEntries.size(), stopwatch.elapsed().toMillis()});
 
 			StateCache unsigned=new StateCache();
 			cache.copyShallowTo(unsigned);
