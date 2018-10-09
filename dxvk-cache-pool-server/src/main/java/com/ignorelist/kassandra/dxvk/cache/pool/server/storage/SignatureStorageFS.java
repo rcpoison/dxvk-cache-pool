@@ -345,5 +345,8 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		if (null!=storageThreadPool) {
 			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
 		}
+		if (null!=identityStorage) {
+			identityStorage.close();
+		}
 	}
 }

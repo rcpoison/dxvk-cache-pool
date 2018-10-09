@@ -188,4 +188,8 @@ public class IdentityStorageFS implements IdentityStorage {
 		}
 	}
 
+	@Override
+	public void close() throws IOException {
+	}
+
 }
