@@ -80,7 +80,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			.build();
 	private final Cache<Path, Signature> signatureDataCache=CacheBuilder.newBuilder()
 			.weigher((Path p, Signature s) -> s.getSignature().length)
-			.maximumWeight(32*1024*1024) // 64MiB
+			.maximumWeight(32*1024*1024) // 32MiB
 			.build();
 	private final IdentityStorage identityStorage;
 	private final IdentifiedFirstOrdering identifiedFirstOrdering;
