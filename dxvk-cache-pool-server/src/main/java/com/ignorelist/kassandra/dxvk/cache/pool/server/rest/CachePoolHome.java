@@ -150,7 +150,14 @@ public class CachePoolHome {
 	public Response getCss(@Context Request request, @PathParam("css") String css) {
 		return buildResponseForStatic(request, "css/"+css, TEXT_CSS);
 	}
-	
+
+	@GET
+	@Path("s/{js:([a-z]+\\.js)}")
+	@Produces("application/javascript")
+	public Response getJs(@Context Request request, @PathParam("js") String css) {
+		return buildResponseForStatic(request, "js/"+css, TEXT_CSS);
+	}
+
 	@GET
 	@Path("signatureStats/{baseName}")
 	@Produces(MediaType.APPLICATION_JSON)

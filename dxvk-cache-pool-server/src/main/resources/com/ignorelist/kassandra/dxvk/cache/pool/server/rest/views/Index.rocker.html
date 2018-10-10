@@ -13,6 +13,7 @@
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script src="/s/main.js"></script>
 	</head>
 	<body>
 		<div class="topnav">
@@ -44,8 +45,8 @@
 		@if (!entries.isEmpty()) {
 		<ul>
 			@for (entry : entries) {
-			<li class="entry">
-				<span class="gameName">@entry.getBaseName()</span> <span class="entryCount">(@entry.getEntries().size())</span>
+			<li class="entry" data-baseName="@entry.getBaseName()">
+				<span class="gameName">@entry.getBaseName()</span> <a class="entryCount" href="#" title="">(@entry.getEntries().size())</a>
 				<a class="download" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
 			</li>
 			}
