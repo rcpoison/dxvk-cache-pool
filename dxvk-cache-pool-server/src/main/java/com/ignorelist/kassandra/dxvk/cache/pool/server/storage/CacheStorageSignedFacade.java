@@ -12,6 +12,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.TreeMultiset;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -144,6 +147,13 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		} catch (Exception ex) {
 			throw new IOException(ex);
 		}
+	}
+
+	public Multiset<Integer> buildSignatureCountStats(final int version, final String baseName) {
+		return cacheStorage.getCacheDescriptor(version, baseName).getEntries().stream()
+				.map(signatureStorage::getSignedBy)
+				.map(Set::size)
+				.collect(Collectors.toCollection(TreeMultiset::create));
 	}
 
 	@Override
