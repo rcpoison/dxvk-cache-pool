@@ -19,6 +19,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySign
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.test.TestUtil;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -56,7 +57,7 @@ public class SignatureStorageFSNGTest {
 		cache.setBaseName(BASE_NAME);
 		keyPair=CryptoUtil.generate();
 		cacheSigned=cache.sign(keyPair.getPrivate(), new PublicKey(keyPair.getPublic()));
-		storageShared=new SignatureStorageFS(storageRoot);
+		storageShared=buildSignatureStorage();
 	}
 
 	@AfterClass
@@ -70,6 +71,10 @@ public class SignatureStorageFSNGTest {
 
 	@AfterMethod
 	public void tearDownMethod() throws Exception {
+	}
+
+	private static SignatureStorageFS buildSignatureStorage() throws IOException {
+		return new SignatureStorageFS(storageRoot);
 	}
 
 	@DataProvider(parallel=true)
@@ -88,7 +93,7 @@ public class SignatureStorageFSNGTest {
 	 */
 	@Test(dependsOnMethods={"testAddSignee"})
 	public void testGetSignedBy() throws Exception {
-		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+		try (SignatureStorageFS storage=buildSignatureStorage()) {
 			for (StateCacheEntrySigned entry : cacheSigned.getEntries()) {
 				final StateCacheEntryInfo entryInfo=entry.getCacheEntry().getEntryInfo();
 				final ImmutableSet<PublicKeyInfo> publicKeyInfos=entry.getSignatures().stream()
@@ -114,7 +119,7 @@ public class SignatureStorageFSNGTest {
 	 */
 	@Test(dependsOnMethods={"testAddSignee"})
 	public void testGetSignatures() throws Exception {
-		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+		try (SignatureStorageFS storage=buildSignatureStorage()) {
 			storage.init();
 			Stopwatch stopwatch=Stopwatch.createStarted();
 			for (StateCacheEntrySigned entry : cacheSigned.getEntries()) {
@@ -133,7 +138,7 @@ public class SignatureStorageFSNGTest {
 	 */
 	@Test(dependsOnMethods={"testStorePublicKey"})
 	public void testGetPublicKey() throws Exception {
-		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+		try (SignatureStorageFS storage=buildSignatureStorage()) {
 			final PublicKey expected=new PublicKey(keyPair.getPublic());
 			final PublicKey storedKey=storage.getPublicKey(expected.getKeyInfo());
 			Assert.assertEquals(storedKey, expected);
@@ -145,7 +150,7 @@ public class SignatureStorageFSNGTest {
 	 */
 	@Test
 	public void testStorePublicKey() throws Exception {
-		try (SignatureStorageFS storage=new SignatureStorageFS(storageRoot)) {
+		try (SignatureStorageFS storage=buildSignatureStorage()) {
 			final PublicKey publicKey=new PublicKey(keyPair.getPublic());
 			storage.storePublicKey(publicKey);
 			final PublicKey storedKey=storage.getPublicKey(publicKey.getKeyInfo());
