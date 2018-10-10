@@ -34,6 +34,5 @@ function buildStatsTooltip(element) {
 		table += '<tr><td>' + v.signatureCount + '</td><td>' + v.occurences + '</td></tr>';
 	});
 	table += '</table';
-	console.log(table);
 	return table;
 }
