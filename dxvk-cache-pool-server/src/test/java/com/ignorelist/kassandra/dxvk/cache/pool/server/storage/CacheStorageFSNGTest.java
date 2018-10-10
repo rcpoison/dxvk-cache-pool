@@ -59,16 +59,20 @@ public class CacheStorageFSNGTest {
 	public void tearDownMethod() throws Exception {
 	}
 
+	private static CacheStorageFS buildCacheStorage() {
+		return new CacheStorageFS(storagePath);
+	}
+
 	@Test
 	public void testInit() throws Exception {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			instance.init();
 		}
 	}
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testFindBaseNames() throws IOException {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			Set<String> findBaseNames=instance.findBaseNames(cache.getVersion(), "beat");
 			assertEquals(findBaseNames, ImmutableSet.of(BASE_NAME));
 		}
@@ -77,7 +81,7 @@ public class CacheStorageFSNGTest {
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingNone() throws IOException {
 		StateCacheInfo existingCache=cache.copy().toInfo();
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			Set<StateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
 			assertTrue(missingEntries.isEmpty());
 
@@ -86,7 +90,7 @@ public class CacheStorageFSNGTest {
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetMissingEntriesMissingAll() throws IOException {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			StateCacheInfo empty=cache.copy().toInfo();
 			empty.setEntries(ImmutableSet.of());
 			Set<StateCacheEntry> missingEntriesForEmpty=instance.getMissingEntries(empty);
@@ -103,7 +107,7 @@ public class CacheStorageFSNGTest {
 		StateCacheEntryInfo missing=iterator.next();
 		iterator.remove();
 		existingCache.setEntries(entries);
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			final Set<StateCacheEntry> missingEntries=instance.getMissingEntries(existingCache);
 			assertEntrySize(missingEntries);
 			Set<StateCacheEntryInfo> missingEntryInfos=missingEntries.stream()
@@ -116,7 +120,7 @@ public class CacheStorageFSNGTest {
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetCacheDescriptor() throws IOException {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			StateCacheInfo result=instance.getCacheDescriptor(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache.toInfo());
 			assertEquals(result.getVersion(), cache.getVersion());
@@ -126,7 +130,7 @@ public class CacheStorageFSNGTest {
 
 	@Test(dependsOnMethods={"testStore"})
 	public void testGetCache() throws IOException {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			StateCache result=instance.getCache(cache.getVersion(), BASE_NAME);
 			assertEquals(result, cache);
 			assertEquals(result.getVersion(), cache.getVersion());
@@ -143,7 +147,7 @@ public class CacheStorageFSNGTest {
 
 	@Test
 	public void testStore() throws Exception {
-		try (CacheStorageFS instance=new CacheStorageFS(storagePath)) {
+		try (CacheStorageFS instance=buildCacheStorage()) {
 			instance.store(cache);
 			StateCache retrieved=instance.getCache(cache.getVersion(), BASE_NAME);
 			assertEquals(retrieved, cache);
