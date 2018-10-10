@@ -8,8 +8,6 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolREST;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.IllegalArgumentExceptionMapper;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.SignatureStorageFS;
@@ -46,11 +44,15 @@ public class CachePoolServer implements Closeable {
 	private static final Logger LOG=Logger.getLogger(CachePoolServer.class.getName());
 
 	private final Configuration configuration;
-	private final CacheStorage cacheStorage;
-	private final SignatureStorage signatureStorage;
+	private CacheStorageFS cacheStorage;
+	private SignatureStorageFS signatureStorage;
 	private Server server;
 
-	public CachePoolServer(final Configuration configuration, final CacheStorage cacheStorage, final SignatureStorage signatureStorage) {
+	public CachePoolServer(final Configuration configuration) {
+		this.configuration=configuration;
+	}
+
+	public CachePoolServer(Configuration configuration, CacheStorageFS cacheStorage, SignatureStorageFS signatureStorage) {
 		this.configuration=configuration;
 		this.cacheStorage=cacheStorage;
 		this.signatureStorage=signatureStorage;
@@ -60,6 +62,16 @@ public class CachePoolServer implements Closeable {
 		if (null!=server) {
 			throw new IllegalStateException("server already started");
 		}
+		if (null==cacheStorage) {
+			cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"));
+			cacheStorage.init();
+		}
+
+		if (null==signatureStorage) {
+			signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
+			signatureStorage.init();
+		}
+
 		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
 		ResourceConfig resourceConfig=buildResourceConfig();
 
@@ -117,11 +129,7 @@ public class CachePoolServer implements Closeable {
 			System.exit(1);
 		}
 
-		try (final CacheStorageFS storage=new CacheStorageFS(configuration.getStorage().resolve("cache"));
-				final SignatureStorageFS signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
-				final CachePoolServer js=new CachePoolServer(configuration, storage, signatureStorage)) {
-			storage.init();
-			signatureStorage.init();
+		try (final CachePoolServer js=new CachePoolServer(configuration)) {
 			js.start();
 			js.join();
 		}
