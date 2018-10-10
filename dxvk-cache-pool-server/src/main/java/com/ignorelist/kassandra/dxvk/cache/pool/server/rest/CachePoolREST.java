@@ -30,6 +30,9 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -46,6 +49,8 @@ import javax.ws.rs.core.MediaType;
 @Path("pool")
 public class CachePoolREST implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
+	private static final Logger LOG=Logger.getLogger(CachePoolREST.class.getName());
+
 	private static final int PROTOCOL_VERSION=1;
 
 	@Inject
@@ -56,6 +61,8 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	private SignatureStorage signatureStorage;
 	@Inject
 	private CacheStorageSigned cacheStorageSigned;
+	@Inject
+	private ExecutorService executorService;
 
 	@GET
 	@Path("protocolVersion")
@@ -199,7 +206,13 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 			throw new IllegalArgumentException("missing cache");
 		}
 		new StateCacheValidator().validate(cache);
-		cacheStorageSigned.storeSigned(cache);
+		executorService.submit(() -> {
+			try {
+				cacheStorageSigned.storeSigned(cache);
+			} catch (Exception ex) {
+				LOG.log(Level.SEVERE, null, ex);
+			}
+		});
 	}
 
 	@GET
