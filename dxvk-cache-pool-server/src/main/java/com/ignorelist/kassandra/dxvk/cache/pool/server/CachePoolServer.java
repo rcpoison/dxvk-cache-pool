@@ -22,6 +22,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.cli.CommandLine;
@@ -46,7 +47,33 @@ import org.glassfish.jersey.server.filter.EncodingFilter;
  */
 public class CachePoolServer implements Closeable {
 
-	private static final Logger LOG=Logger.getLogger(CachePoolServer.class.getName());
+	public static class DelayedResetLogManager extends LogManager {
+
+		private static DelayedResetLogManager instance;
+
+		public DelayedResetLogManager() {
+			instance=this;
+		}
+
+		@Override
+		public void reset() {
+		}
+
+		private void actuallyReset() {
+			super.reset();
+		}
+
+		public static void resetStatic() {
+			instance.actuallyReset();
+		}
+	}
+
+	private static final Logger LOG;
+
+	static {
+		System.setProperty("java.util.logging.manager", DelayedResetLogManager.class.getName());
+		LOG=Logger.getLogger(CachePoolServer.class.getName());
+	}
 
 	private final Configuration configuration;
 	private CacheStorageFS cacheStorage;
@@ -113,11 +140,14 @@ public class CachePoolServer implements Closeable {
 			LOG.warning("no server");
 			return;
 		}
+		LOG.info("closing storage");
 		cacheStorage.close();
 		signatureStorage.close();
+		LOG.info("shutting down executors");
 		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
 		MoreExecutors.shutdownAndAwaitTermination(scheduledExecutorService, 2, TimeUnit.MINUTES);
 		try {
+			LOG.info("stopping server");
 			server.stop();
 			server.destroy();
 			server=null;
@@ -140,6 +170,23 @@ public class CachePoolServer implements Closeable {
 
 		try (final CachePoolServer js=new CachePoolServer(configuration)) {
 			js.start();
+
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					LOG.info("attempting graceful shutdown");
+					try {
+						js.close();
+					} catch (Exception ex) {
+						LOG.log(Level.SEVERE, "failed to shutdown gracefully", ex);
+					} finally {
+						LOG.info("finished graceful shutdown");
+						DelayedResetLogManager.resetStatic();
+					}
+				}
+
+			});
+
 			js.join();
 		}
 	}
