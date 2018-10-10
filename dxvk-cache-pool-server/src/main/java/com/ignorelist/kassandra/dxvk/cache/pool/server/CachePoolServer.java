@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolREST;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.IllegalArgumentExceptionMapper;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.SignatureStorageFS;
@@ -16,6 +17,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
@@ -46,6 +49,7 @@ public class CachePoolServer implements Closeable {
 	private final Configuration configuration;
 	private CacheStorageFS cacheStorage;
 	private SignatureStorageFS signatureStorage;
+	private ForkJoinPool forkJoinPool;
 	private Server server;
 
 	public CachePoolServer(final Configuration configuration) {
@@ -72,9 +76,11 @@ public class CachePoolServer implements Closeable {
 			signatureStorage.init();
 		}
 
-		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+
 		ResourceConfig resourceConfig=buildResourceConfig();
 
+		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
 		server=JettyHttpContainerFactory.createServer(baseUri, resourceConfig);
 		server.setRequestLog(new RequestLog() {
 			@Override
@@ -89,7 +95,7 @@ public class CachePoolServer implements Closeable {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(CachePoolREST.class);
 		resourceConfig.register(CachePoolHome.class);
-		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage));
+		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage, forkJoinPool));
 		resourceConfig.register(IllegalArgumentExceptionMapper.class);
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
@@ -108,6 +114,7 @@ public class CachePoolServer implements Closeable {
 			LOG.warning("no server");
 			return;
 		}
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
 		try {
 			server.stop();
 			server.destroy();
