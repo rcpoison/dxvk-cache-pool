@@ -16,7 +16,6 @@ import com.google.common.collect.Interners;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentifiedFirstOrdering;
@@ -44,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
@@ -84,11 +82,12 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			.build();
 	private final IdentityStorage identityStorage;
 	private final IdentifiedFirstOrdering identifiedFirstOrdering;
+	private final ForkJoinPool storageThreadPool;
 	private ConcurrentMap<StateCacheEntryInfo, Set<PublicKeyInfo>> signatureStorageCache;
-	private ForkJoinPool storageThreadPool;
 
-	public SignatureStorageFS(Path storageRoot) throws IOException {
+	public SignatureStorageFS(final Path storageRoot, final ForkJoinPool storageThreadPool) throws IOException {
 		this.storageRoot=storageRoot;
+		this.storageThreadPool=storageThreadPool;
 		signaturesPath=storageRoot.resolve(PATH_SIGNATURES);
 		Files.createDirectories(signaturesPath);
 
@@ -101,10 +100,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		identifiedFirstOrdering=new IdentifiedFirstOrdering(this);
 	}
 
-	private synchronized ForkJoinPool getThreadPool() {
-		if (null==storageThreadPool) {
-			storageThreadPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()/2));
-		}
+	private ForkJoinPool getThreadPool() {
 		return storageThreadPool;
 	}
 
@@ -342,9 +338,6 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	@Override
 	public void close() throws IOException {
-		if (null!=storageThreadPool) {
-			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
-		}
 		if (null!=identityStorage) {
 			identityStorage.close();
 		}

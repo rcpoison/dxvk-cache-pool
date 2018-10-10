@@ -69,7 +69,7 @@ public class CachePoolServer implements Closeable {
 		}
 
 		if (null==signatureStorage) {
-			signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
+			signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"), forkJoinPool);
 			signatureStorage.init();
 		}
 

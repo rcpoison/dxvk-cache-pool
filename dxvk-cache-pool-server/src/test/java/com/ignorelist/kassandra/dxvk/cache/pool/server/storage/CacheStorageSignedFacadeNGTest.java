@@ -89,7 +89,7 @@ public class CacheStorageSignedFacadeNGTest {
 		cacheSigned1=cache.sign(keyPair1.getPrivate(), new PublicKey(keyPair1.getPublic()));
 		cacheSignedInvalid=cache.sign(keyPair1.getPrivate(), new PublicKey(keyPair0.getPublic()));
 		cacheStorageShared=new CacheStorageFS(storageRoot.resolve("cache"), forkJoinPool);
-		SignatureStorageShared=new SignatureStorageFS(storageRoot.resolve("signatures"));
+		SignatureStorageShared=new SignatureStorageFS(storageRoot.resolve("signatures"), forkJoinPool);
 		cacheStorageSignedShared=new CacheStorageSignedFacade(cacheStorageShared, SignatureStorageShared);
 		publicKeyInfo0=new PublicKeyInfo(new PublicKey(keyPair0.getPublic()));
 		publicKeyInfo1=new PublicKeyInfo(new PublicKey(keyPair1.getPublic()));

@@ -37,9 +37,9 @@ import org.testng.annotations.Test;
 public class CacheStorageFSNGTest {
 
 	private static final String BASE_NAME="Beat Saber";
+	private static ForkJoinPool forkJoinPool;
 	private static Path storagePath;
 	private static StateCache cache;
-	private static ForkJoinPool forkJoinPool;
 
 	public CacheStorageFSNGTest() {
 	}

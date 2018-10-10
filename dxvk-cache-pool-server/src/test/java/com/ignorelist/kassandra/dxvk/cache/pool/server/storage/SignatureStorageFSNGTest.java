@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
@@ -26,6 +27,8 @@ import java.security.KeyPair;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -41,6 +44,7 @@ import org.testng.annotations.Test;
 public class SignatureStorageFSNGTest {
 
 	private static final String BASE_NAME="Beat Saber";
+	private static ForkJoinPool forkJoinPool;
 	private static Path storageRoot;
 	private static StateCache cache;
 	private static KeyPair keyPair;
@@ -52,6 +56,7 @@ public class SignatureStorageFSNGTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
 		storageRoot=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool-signatures").resolve(UUID.randomUUID().toString());
 		cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		cache.setBaseName(BASE_NAME);
@@ -63,6 +68,7 @@ public class SignatureStorageFSNGTest {
 	@AfterClass
 	public static void tearDownClass() throws Exception {
 		storageShared.close();
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 1, TimeUnit.MINUTES);
 	}
 
 	@BeforeMethod
@@ -74,7 +80,7 @@ public class SignatureStorageFSNGTest {
 	}
 
 	private static SignatureStorageFS buildSignatureStorage() throws IOException {
-		return new SignatureStorageFS(storageRoot);
+		return new SignatureStorageFS(storageRoot, forkJoinPool);
 	}
 
 	@DataProvider(parallel=true)
