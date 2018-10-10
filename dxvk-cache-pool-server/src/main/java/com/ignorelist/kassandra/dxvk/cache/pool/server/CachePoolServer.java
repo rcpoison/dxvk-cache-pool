@@ -17,7 +17,9 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,6 +52,7 @@ public class CachePoolServer implements Closeable {
 	private CacheStorageFS cacheStorage;
 	private SignatureStorageFS signatureStorage;
 	private ForkJoinPool forkJoinPool;
+	private ScheduledExecutorService scheduledExecutorService;
 	private Server server;
 
 	public CachePoolServer(final Configuration configuration) {
@@ -62,7 +65,8 @@ public class CachePoolServer implements Closeable {
 		}
 
 		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
-		
+		scheduledExecutorService=Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+
 		if (null==cacheStorage) {
 			cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
 			cacheStorage.init();
@@ -90,7 +94,7 @@ public class CachePoolServer implements Closeable {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(CachePoolREST.class);
 		resourceConfig.register(CachePoolHome.class);
-		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage, forkJoinPool));
+		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage, forkJoinPool, scheduledExecutorService));
 		resourceConfig.register(IllegalArgumentExceptionMapper.class);
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
@@ -112,6 +116,7 @@ public class CachePoolServer implements Closeable {
 		cacheStorage.close();
 		signatureStorage.close();
 		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
+		MoreExecutors.shutdownAndAwaitTermination(scheduledExecutorService, 2, TimeUnit.MINUTES);
 		try {
 			server.stop();
 			server.destroy();
