@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
@@ -38,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
@@ -63,17 +61,15 @@ public class CacheStorageFS implements CacheStorage {
 
 	private final Path storageRoot;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
+	private final ForkJoinPool storageThreadPool;
 	private ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> storageCache;
-	private ForkJoinPool storageThreadPool;
 
-	public CacheStorageFS(Path storageRoot) {
+	public CacheStorageFS(final Path storageRoot, final ForkJoinPool storageThreadPool) {
 		this.storageRoot=storageRoot;
+		this.storageThreadPool=storageThreadPool;
 	}
 
-	private synchronized ForkJoinPool getThreadPool() {
-		if (null==storageThreadPool) {
-			storageThreadPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()/2));
-		}
+	private ForkJoinPool getThreadPool() {
 		return storageThreadPool;
 	}
 
@@ -326,9 +322,6 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public void close() throws IOException {
-		if (null!=storageThreadPool) {
-			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
-		}
 	}
 
 	@Override

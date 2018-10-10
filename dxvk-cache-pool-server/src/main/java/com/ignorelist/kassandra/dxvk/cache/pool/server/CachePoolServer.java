@@ -56,18 +56,15 @@ public class CachePoolServer implements Closeable {
 		this.configuration=configuration;
 	}
 
-	public CachePoolServer(Configuration configuration, CacheStorageFS cacheStorage, SignatureStorageFS signatureStorage) {
-		this.configuration=configuration;
-		this.cacheStorage=cacheStorage;
-		this.signatureStorage=signatureStorage;
-	}
-
 	public synchronized void start() throws Exception {
 		if (null!=server) {
 			throw new IllegalStateException("server already started");
 		}
+
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+		
 		if (null==cacheStorage) {
-			cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"));
+			cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
 			cacheStorage.init();
 		}
 
@@ -75,8 +72,6 @@ public class CachePoolServer implements Closeable {
 			signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
 			signatureStorage.init();
 		}
-
-		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
 
 		ResourceConfig resourceConfig=buildResourceConfig();
 
@@ -114,6 +109,8 @@ public class CachePoolServer implements Closeable {
 			LOG.warning("no server");
 			return;
 		}
+		cacheStorage.close();
+		signatureStorage.close();
 		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
 		try {
 			server.stop();

@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
@@ -32,6 +33,8 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -48,6 +51,7 @@ public class CacheStorageSignedFacadeNGTest {
 	private static final int VERSION=2;
 	private static final String BASE_NAME="Beat Saber";
 
+	private static ForkJoinPool forkJoinPool;
 	private static StateCache cache;
 	private static KeyPair keyPair0;
 	private static KeyPair keyPair1;
@@ -73,6 +77,8 @@ public class CacheStorageSignedFacadeNGTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+		
 		storageRoot=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool-signed").resolve(UUID.randomUUID().toString());
 		cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		cache.setBaseName(BASE_NAME);
@@ -82,7 +88,7 @@ public class CacheStorageSignedFacadeNGTest {
 
 		cacheSigned1=cache.sign(keyPair1.getPrivate(), new PublicKey(keyPair1.getPublic()));
 		cacheSignedInvalid=cache.sign(keyPair1.getPrivate(), new PublicKey(keyPair0.getPublic()));
-		cacheStorageShared=new CacheStorageFS(storageRoot.resolve("cache"));
+		cacheStorageShared=new CacheStorageFS(storageRoot.resolve("cache"), forkJoinPool);
 		SignatureStorageShared=new SignatureStorageFS(storageRoot.resolve("signatures"));
 		cacheStorageSignedShared=new CacheStorageSignedFacade(cacheStorageShared, SignatureStorageShared);
 		publicKeyInfo0=new PublicKeyInfo(new PublicKey(keyPair0.getPublic()));
@@ -104,6 +110,7 @@ public class CacheStorageSignedFacadeNGTest {
 	public static void tearDownClass() throws Exception {
 		cacheStorageShared.close();
 		SignatureStorageShared.close();
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 1, TimeUnit.MINUTES);
 	}
 
 	@BeforeMethod

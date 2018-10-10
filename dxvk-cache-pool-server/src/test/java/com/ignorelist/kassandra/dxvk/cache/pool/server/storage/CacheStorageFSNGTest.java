@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -20,6 +21,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -36,12 +39,14 @@ public class CacheStorageFSNGTest {
 	private static final String BASE_NAME="Beat Saber";
 	private static Path storagePath;
 	private static StateCache cache;
+	private static ForkJoinPool forkJoinPool;
 
 	public CacheStorageFSNGTest() {
 	}
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
 		storagePath=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool").resolve(UUID.randomUUID().toString());
 		cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		cache.setBaseName(BASE_NAME);
@@ -49,6 +54,7 @@ public class CacheStorageFSNGTest {
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 1, TimeUnit.MINUTES);
 	}
 
 	@BeforeMethod
@@ -60,7 +66,7 @@ public class CacheStorageFSNGTest {
 	}
 
 	private static CacheStorageFS buildCacheStorage() {
-		return new CacheStorageFS(storagePath);
+		return new CacheStorageFS(storagePath, forkJoinPool);
 	}
 
 	@Test
