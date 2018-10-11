@@ -23,6 +23,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerificati
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
@@ -276,6 +277,14 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	@Override
 	public Set<PublicKeyInfo> getVerifiedKeyInfos() {
 		return signatureStorage.getVerifiedKeyInfos();
+	}
+
+	@GET
+	@Path("signatureCounts/{version}/{baseName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<SignatureCount> getSignatureCounts(@PathParam("version") int version, @PathParam("baseName") String baseName) {
+		return cacheStorageSigned.getSignatureCounts(version, baseName);
 	}
 
 	@Override

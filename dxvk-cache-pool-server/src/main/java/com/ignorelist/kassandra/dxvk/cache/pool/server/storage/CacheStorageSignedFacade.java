@@ -12,13 +12,13 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
@@ -149,17 +149,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 	}
 
-	public SortedMultiset<Integer> buildSignatureCountStats(StateCacheInfo stateCacheInfo) {
-		return stateCacheInfo.getEntries().stream()
-				.map(signatureStorage::getSignedBy)
-				.map(Set::size)
-				.collect(Collectors.toCollection(TreeMultiset::create));
-	}
-
-	public SortedMultiset<Integer> buildSignatureCountStats(final int version, final String baseName) {
-		return buildSignatureCountStats(cacheStorage.getCacheDescriptor(version, baseName));
-	}
-
 	@Override
 	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
 		final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned=null==existingCache.getPredicateStateCacheEntrySigned() ? new PredicateStateCacheEntrySigned() : existingCache.getPredicateStateCacheEntrySigned();
@@ -174,6 +163,14 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.map(bN -> getCacheDescriptorSignees(version, bN))
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
+	}
+	
+	public Set<SignatureCount> getSignatureCounts(final int version, final String baseName) {
+		TreeMultiset<Integer> signatureCounts=cacheStorage.getCacheDescriptor(version, baseName).getEntries().stream()
+				.map(signatureStorage::getSignedBy)
+				.map(Set::size)
+				.collect(Collectors.toCollection(TreeMultiset::create));
+		return SignatureCount.build(signatureCounts);
 	}
 
 }

@@ -7,7 +7,6 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.SortedMultiset;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Set;
@@ -63,7 +62,7 @@ public class SignatureCount implements Serializable, Comparable<SignatureCount> 
 		return hash;
 	}
 
-	public static Set<SignatureCount> build(SortedMultiset<Integer> stats) {
+	public static Set<SignatureCount> build(Multiset<Integer> stats) {
 		return stats.entrySet().stream()
 				.map(SignatureCount::new)
 				.collect(ImmutableSet.toImmutableSet());

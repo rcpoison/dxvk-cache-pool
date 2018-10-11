@@ -10,7 +10,6 @@ import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SortedMultiset;
 import com.google.common.io.ByteStreams;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
@@ -20,7 +19,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Index;
-import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageSignedFacade;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
@@ -167,14 +165,6 @@ public class CachePoolHome {
 		if (Strings.isNullOrEmpty(baseName)) {
 			throw new IllegalArgumentException("baseName may not be empty");
 		}
-		final StateCacheInfo cache=cacheStorage.getCacheDescriptor(VERSION, baseName);
-		if (null==cache) {
-			throw new IllegalStateException("cache not found for: "+baseName);
-		}
-		if (cacheStorageSigned instanceof CacheStorageSignedFacade) {
-			SortedMultiset<Integer> signatureStats=((CacheStorageSignedFacade) cacheStorageSigned).buildSignatureCountStats(cache);
-			return SignatureCount.build(signatureStats);
-		}
-		throw new UnsupportedOperationException();
+		return cacheStorageSigned.getSignatureCounts(VERSION, baseName);
 	}
 }
