@@ -53,6 +53,24 @@ body {
 	background-color: #e8ddcb;
 }
 
+a.download {
+	
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table.stats {
+	font-size: 0.6em;
+}
+
+table, th, td {
+    border: 1px solid #e8ddcb;
+}
+
+table
+
 .topnav h1 {
 	float: left;
 	display: block;

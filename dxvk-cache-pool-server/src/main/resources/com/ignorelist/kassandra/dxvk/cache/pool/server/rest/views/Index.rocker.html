@@ -46,8 +46,8 @@
 		<ul>
 			@for (entry : entries) {
 			<li class="entry" data-baseName="@entry.getBaseName()">
-				<span class="gameName">@entry.getBaseName()</span> <a class="entryCount" href="#" title="">(@entry.getEntries().size())</a>
-				<a class="download" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
+				<span class="gameName">@entry.getBaseName()</span> <span class="entryCount" title="">(@entry.getEntries().size())</span>
+				<a class="download" title="" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
 			</li>
 			}
 		</ul>
