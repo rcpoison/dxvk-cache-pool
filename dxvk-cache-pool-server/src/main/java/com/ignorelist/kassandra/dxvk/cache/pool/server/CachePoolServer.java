@@ -140,12 +140,6 @@ public class CachePoolServer implements Closeable {
 			LOG.warning("no server");
 			return;
 		}
-		LOG.info("closing storage");
-		cacheStorage.close();
-		signatureStorage.close();
-		LOG.info("shutting down executors");
-		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
-		MoreExecutors.shutdownAndAwaitTermination(scheduledExecutorService, 2, TimeUnit.MINUTES);
 		try {
 			LOG.info("stopping server");
 			server.stop();
@@ -155,6 +149,12 @@ public class CachePoolServer implements Closeable {
 			LOG.log(Level.SEVERE, null, ex);
 			throw new IOException(ex);
 		}
+		LOG.info("closing storage");
+		cacheStorage.close();
+		signatureStorage.close();
+		LOG.info("shutting down executors");
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
+		MoreExecutors.shutdownAndAwaitTermination(scheduledExecutorService, 2, TimeUnit.MINUTES);
 	}
 
 	/**
