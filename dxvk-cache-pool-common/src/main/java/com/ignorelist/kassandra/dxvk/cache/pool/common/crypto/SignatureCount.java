@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ignorelist.kassandra.dxvk.cache.pool.server.rest;
+package com.ignorelist.kassandra.dxvk.cache.pool.common.crypto;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
