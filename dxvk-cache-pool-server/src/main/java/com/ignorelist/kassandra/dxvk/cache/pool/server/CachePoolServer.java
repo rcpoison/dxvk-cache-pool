@@ -95,10 +95,24 @@ public class CachePoolServer implements Closeable {
 		scheduledExecutorService=Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
 		cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
-		cacheStorage.init();
+		scheduledExecutorService.submit(() -> {
+			try {
+				cacheStorage.init();
+			} catch (IOException ex) {
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				throw new IllegalStateException(ex);
+			}
+		});
 
 		signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"), forkJoinPool);
-		signatureStorage.init();
+		scheduledExecutorService.submit(() -> {
+			try {
+				signatureStorage.init();
+			} catch (IOException ex) {
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				throw new IllegalStateException(ex);
+			}
+		});
 
 		ResourceConfig resourceConfig=buildResourceConfig();
 
