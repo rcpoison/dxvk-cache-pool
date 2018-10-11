@@ -48,6 +48,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.PublicKey;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -126,20 +127,25 @@ public class CachePoolClient {
 			if (commandLine.hasOption("cache-target-dir")) {
 				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));
 			}
-
-			final ImmutableSet<Path> paths=commandLine.getArgList().stream()
-					.map(Paths::get)
-					.map(p -> {
-						try {
-							return p.toRealPath();
-						} catch (IOException ex) {
-							System.err.println("directory could not be resolved: "+ex.getMessage());
-							return null;
-						}
-					})
-					.filter(Predicates.notNull())
-					.collect(ImmutableSet.toImmutableSet());
-			c.setGamePaths(paths);
+			final List<String> argList=commandLine.getArgList();
+			if (1==argList.size()&&Files.isRegularFile(Paths.get(argList.get(0)))) {
+				c.setGamePaths(ImmutableSet.of(Paths.get(argList.get(0)).getParent()));
+				c.setScanRecursive(false);
+			} else {
+				final ImmutableSet<Path> paths=argList.stream()
+						.map(Paths::get)
+						.map(p -> {
+							try {
+								return p.toRealPath();
+							} catch (IOException ex) {
+								System.err.println("directory could not be resolved: "+ex.getMessage());
+								return null;
+							}
+						})
+						.filter(Predicates.notNull())
+						.collect(ImmutableSet.toImmutableSet());
+				c.setGamePaths(paths);
+			}
 		} catch (ParseException pe) {
 			System.err.println(pe.getMessage());
 			System.err.println();
