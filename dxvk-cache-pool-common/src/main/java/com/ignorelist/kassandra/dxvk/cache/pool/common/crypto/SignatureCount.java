@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.SortedMultiset;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -17,7 +18,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class SignatureCount implements Serializable {
+public class SignatureCount implements Serializable, Comparable<SignatureCount> {
+
+	private static final Comparator<SignatureCount> DEFAULT_COMPARATOR=Comparator
+			.comparingInt(SignatureCount::getSignatureCount)
+			.thenComparingInt(SignatureCount::getOccurences);
 
 	private int signatureCount;
 	private int occurences;
@@ -83,6 +88,11 @@ public class SignatureCount implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public int compareTo(SignatureCount o) {
+		return DEFAULT_COMPARATOR.compare(this, o);
 	}
 
 }
