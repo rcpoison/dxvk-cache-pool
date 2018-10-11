@@ -52,7 +52,8 @@ public class CachePoolHome {
 	private static final int PAGE_SIZE=64;
 	private static final int VERSION=StateCacheHeaderInfo.getLatestVersion();
 	private static final Date LAST_MODIFIED=new Date();
-	private static final String TEXT_CSS="text/css";
+	private static final String MIME_CSS="text/css";
+	private static final String MIME_JAVASCRIPT="application/javascript";
 
 	@Inject
 	private CacheStorage cacheStorage;
@@ -146,16 +147,16 @@ public class CachePoolHome {
 
 	@GET
 	@Path("s/{css:([a-z]+\\.css)}")
-	@Produces(TEXT_CSS)
+	@Produces(MIME_CSS)
 	public Response getCss(@Context Request request, @PathParam("css") String css) {
-		return buildResponseForStatic(request, "css/"+css, TEXT_CSS);
+		return buildResponseForStatic(request, "css/"+css, MIME_CSS);
 	}
 
 	@GET
 	@Path("s/{js:([a-z]+\\.js)}")
-	@Produces("application/javascript")
-	public Response getJs(@Context Request request, @PathParam("js") String css) {
-		return buildResponseForStatic(request, "js/"+css, TEXT_CSS);
+	@Produces(MIME_JAVASCRIPT)
+	public Response getJs(@Context Request request, @PathParam("js") String js) {
+		return buildResponseForStatic(request, "js/"+js, MIME_JAVASCRIPT);
 	}
 
 	@GET
