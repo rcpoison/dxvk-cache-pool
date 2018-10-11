@@ -94,15 +94,11 @@ public class CachePoolServer implements Closeable {
 		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
 		scheduledExecutorService=Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
-		if (null==cacheStorage) {
-			cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
-			cacheStorage.init();
-		}
+		cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
+		cacheStorage.init();
 
-		if (null==signatureStorage) {
-			signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"), forkJoinPool);
-			signatureStorage.init();
-		}
+		signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"), forkJoinPool);
+		signatureStorage.init();
 
 		ResourceConfig resourceConfig=buildResourceConfig();
 
