@@ -234,7 +234,7 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	@Override
 	public Set<SignatureCount> getSignatureCounts(int version, String baseName) {
 		return getWebTarget()
-				.path("stateCache")
+				.path("signatureCounts")
 				.path(Integer.toString(version))
 				.path(baseName)
 				.request(MediaType.APPLICATION_JSON)
