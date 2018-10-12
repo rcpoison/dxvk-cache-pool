@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntryInfoSignees implements Serializable {
+public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntrySignees {
 
 	private StateCacheEntryInfo entryInfo;
 	private Set<PublicKeyInfo> publicKeyInfos;
@@ -41,6 +41,7 @@ public class StateCacheEntryInfoSignees implements Serializable {
 		this.entryInfo=entryInfo;
 	}
 
+	@Override
 	public Set<PublicKeyInfo> getPublicKeyInfos() {
 		return publicKeyInfos;
 	}
