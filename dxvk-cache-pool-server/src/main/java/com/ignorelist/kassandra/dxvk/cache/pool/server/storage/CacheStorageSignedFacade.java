@@ -9,6 +9,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicateSignature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -172,6 +173,14 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.map(Set::size)
 				.collect(Collectors.toCollection(TreeMultiset::create));
 		return SignatureCount.build(signatureCounts);
+	}
+	
+	private HashMultiset<PublicKeyInfo> buildSigneeSignatureCount(final int version, final String baseName) {
+		return cacheStorage.getCacheDescriptor(version, baseName).getEntries().stream()
+				.map(signatureStorage::getSignedBy)
+				.flatMap(Set::stream)
+				.collect(Collectors.toCollection(HashMultiset::create));
+		
 	}
 
 }
