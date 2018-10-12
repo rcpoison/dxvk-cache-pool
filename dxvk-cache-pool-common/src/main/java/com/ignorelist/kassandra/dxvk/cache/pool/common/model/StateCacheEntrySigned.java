@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntrySigned implements Serializable {
+public class StateCacheEntrySigned implements Serializable, StateCacheEntrySignees {
 
 	private static final Logger LOG=Logger.getLogger(StateCacheEntrySigned.class.getName());
 
@@ -120,6 +120,13 @@ public class StateCacheEntrySigned implements Serializable {
 				.filter(Predicates.notNull())
 				.flatMap(Set::stream)
 				.filter(Predicates.notNull())
+				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@Override
+	public Set<PublicKeyInfo> getPublicKeyInfos() {
+		return getSignatures().stream()
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.collect(ImmutableSet.toImmutableSet());
 	}
