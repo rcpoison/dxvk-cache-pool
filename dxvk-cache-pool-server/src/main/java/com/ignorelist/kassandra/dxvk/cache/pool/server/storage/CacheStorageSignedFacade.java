@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeMultiset;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicatePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
@@ -50,6 +51,35 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	public CacheStorageSignedFacade(CacheStorage cacheStorage, SignatureStorage signatureStorage) {
 		this.cacheStorage=cacheStorage;
 		this.signatureStorage=signatureStorage;
+	}
+
+	private StateCacheInfoSignees getCacheDescriptorSignees(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
+		if (null==cacheDescriptor) {
+			return null;
+		}
+		StateCacheInfoSignees cacheInfoSignees=new StateCacheInfoSignees();
+		cacheDescriptor.copyShallowTo(cacheInfoSignees);
+		final PredicatePublicKeyInfo predicatePublicKeyInfo=PredicatePublicKeyInfo.buildFrom(signatureStorage, predicateStateCacheEntrySigned);
+		final int signatureLimit;
+		if (null!=predicateStateCacheEntrySigned.getMinimumSignatures()&&null!=predicateStateCacheEntrySigned.getMinimumSignatures().getMinimumSignatures()) {
+			signatureLimit=predicateStateCacheEntrySigned.getMinimumSignatures().getMinimumSignatures();
+		} else {
+			signatureLimit=PredicateStateCacheEntrySigned.DEFAULT_SIGNATURE_MINIMUM;
+		}
+		final ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=cacheDescriptor.getEntries().parallelStream()
+				.map(e -> new StateCacheEntryInfoSignees(e, getPublicKeyInfosFiltered(predicatePublicKeyInfo, signatureLimit, e)))
+				.filter(predicateStateCacheEntrySigned)
+				.collect(ImmutableSet.toImmutableSet());
+		cacheInfoSignees.setEntries(entriesSignees);
+		return cacheInfoSignees;
+	}
+
+	private Set<PublicKeyInfo> getPublicKeyInfosFiltered(final PredicatePublicKeyInfo predicatePublicKeyInfo, int signatureLimit, final StateCacheEntryInfo stateCacheEntryInfo) {
+		return signatureStorage.getSignedBy(stateCacheEntryInfo).stream()
+				.filter(predicatePublicKeyInfo)
+				.limit(signatureLimit)
+				.collect(ImmutableSet.toImmutableSet());
 	}
 
 	@Override
