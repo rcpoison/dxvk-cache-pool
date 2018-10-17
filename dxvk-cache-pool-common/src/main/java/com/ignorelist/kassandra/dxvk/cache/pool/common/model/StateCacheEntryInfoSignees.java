@@ -52,7 +52,7 @@ public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntry
 
 	@Override
 	public int getSignatureCount() {
-		return publicKeyInfos.size();
+		return null==publicKeyInfos ? 0 : publicKeyInfos.size();
 	}
 
 	@Override

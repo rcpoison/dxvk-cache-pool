@@ -133,7 +133,7 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 
 	@Override
 	public int getSignatureCount() {
-		return signatures.size();
+		return null==signatures ? 0 : signatures.size();
 	}
 
 	@Override
