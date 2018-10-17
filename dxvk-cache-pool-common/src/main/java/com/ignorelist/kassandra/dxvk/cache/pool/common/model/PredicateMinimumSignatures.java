@@ -6,10 +6,8 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 
 import com.google.common.base.Predicate;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -39,8 +37,7 @@ public class PredicateMinimumSignatures implements Serializable, Predicate<State
 	@Override
 	public boolean apply(StateCacheEntrySignees entry) {
 		if (null!=minimumSignatures&&0!=minimumSignatures) {
-			final Set<PublicKeyInfo> publicKeyInfos=entry.getPublicKeyInfos();
-			return null!=publicKeyInfos&&publicKeyInfos.size()>=minimumSignatures;
+			return entry.getSignatureCount()>=minimumSignatures;
 		}
 		return true;
 	}
