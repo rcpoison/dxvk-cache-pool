@@ -8,6 +8,8 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
+import java.util.Set;
 
 /**
  *
@@ -35,6 +37,16 @@ public class PredicatePublicKeyInfo implements Predicate<PublicKeyInfo> {
 			accept&=acceptedPublicKeys.contains(input);
 		}
 		return accept;
+	}
+
+	public static PredicatePublicKeyInfo buildFrom(final IdentityStorage identityStorage, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		if (null!=predicateStateCacheEntrySigned.getAcceptedPublicKeys()) {
+			Set<PublicKeyInfo> accepted=predicateStateCacheEntrySigned.getAcceptedPublicKeys().getAcceptedPublicKeys();
+			if (null!=accepted&&!accepted.isEmpty()) {
+				return new PredicatePublicKeyInfo(identityStorage, ImmutableSet.copyOf(accepted), predicateStateCacheEntrySigned.isOnlyAcceptVerifiedKeys());
+			}
+		}
+		return new PredicatePublicKeyInfo(identityStorage, null, predicateStateCacheEntrySigned.isOnlyAcceptVerifiedKeys());
 	}
 
 }
