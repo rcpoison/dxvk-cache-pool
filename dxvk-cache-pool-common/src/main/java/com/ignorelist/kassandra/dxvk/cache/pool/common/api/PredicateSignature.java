@@ -7,7 +7,6 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.IdentityStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
