@@ -132,6 +132,11 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 	}
 
 	@Override
+	public int getSignatureCount() {
+		return signatures.size();
+	}
+
+	@Override
 	public int hashCode() {
 		int hash=3;
 		hash=71*hash+Objects.hashCode(this.cacheEntry);

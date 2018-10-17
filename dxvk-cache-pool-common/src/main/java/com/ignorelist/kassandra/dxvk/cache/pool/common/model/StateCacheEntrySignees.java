@@ -15,5 +15,7 @@ import java.util.Set;
 public interface StateCacheEntrySignees {
 
 	Set<PublicKeyInfo> getPublicKeyInfos();
-	
+
+	int getSignatureCount();
+
 }

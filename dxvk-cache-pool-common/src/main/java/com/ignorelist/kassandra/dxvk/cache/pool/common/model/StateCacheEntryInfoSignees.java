@@ -51,6 +51,11 @@ public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntry
 	}
 
 	@Override
+	public int getSignatureCount() {
+		return publicKeyInfos.size();
+	}
+
+	@Override
 	public int hashCode() {
 		int hash=7;
 		hash=47*hash+Objects.hashCode(this.entryInfo);
