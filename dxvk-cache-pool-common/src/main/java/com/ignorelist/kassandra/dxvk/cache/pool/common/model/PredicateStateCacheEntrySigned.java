@@ -17,7 +17,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class PredicateStateCacheEntrySigned implements Serializable, Predicate<StateCacheEntrySignees> {
 
-	public static final Predicate<StateCacheEntrySignees> DEFAULT_PREDICATE=new PredicateMinimumSignatures(2);
+	public static final int DEFAULT_SIGNATURE_MINIMUM=2;
+
+	public static final Predicate<StateCacheEntrySignees> DEFAULT_PREDICATE=new PredicateMinimumSignatures(DEFAULT_SIGNATURE_MINIMUM);
 
 	private PredicateAcceptedPublicKeys acceptedPublicKeys;
 	private PredicateMinimumSignatures minimumSignatures;
