@@ -13,6 +13,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultiset;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicatePublicKeyInfo;
@@ -53,7 +54,8 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		this.signatureStorage=signatureStorage;
 	}
 
-	private StateCacheInfoSignees getCacheDescriptorSignees(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+	public StateCacheInfoSignees getCacheDescriptorSignees(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		Stopwatch stopwatch=Stopwatch.createStarted();
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
 		if (null==cacheDescriptor) {
 			return null;
@@ -75,7 +77,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return cacheInfoSignees;
 	}
 
-	private Set<PublicKeyInfo> getPublicKeyInfosFiltered(final PredicatePublicKeyInfo predicatePublicKeyInfo, int signatureLimit, final StateCacheEntryInfo stateCacheEntryInfo) {
+	private Set<PublicKeyInfo> getPublicKeyInfosFiltered(final PredicatePublicKeyInfo predicatePublicKeyInfo, final int signatureLimit, final StateCacheEntryInfo stateCacheEntryInfo) {
 		return signatureStorage.getSignedBy(stateCacheEntryInfo).stream()
 				.filter(predicatePublicKeyInfo)
 				.limit(signatureLimit)
@@ -83,19 +85,8 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	}
 
 	@Override
-	public StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName) {
-		// TODO: predicate
-		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
-		if (null==cacheDescriptor) {
-			return null;
-		}
-		StateCacheInfoSignees cacheInfoSignees=new StateCacheInfoSignees();
-		cacheDescriptor.copyShallowTo(cacheInfoSignees);
-		final ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=cacheDescriptor.getEntries().parallelStream()
-				.map(e -> new StateCacheEntryInfoSignees(e, signatureStorage.getSignedBy(e)))
-				.collect(ImmutableSet.toImmutableSet());
-		cacheInfoSignees.setEntries(entriesSignees);
-		return cacheInfoSignees;
+	public StateCacheInfoSignees getCacheDescriptorSignees(final int version, final String baseName) {
+		return getCacheDescriptorSignees(version, baseName, new PredicateStateCacheEntrySigned());
 	}
 
 	@Override
@@ -105,17 +96,29 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public StateCacheSigned getCacheSigned(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
-		final StateCache cache=cacheStorage.getCache(version, baseName);
-		if (null==cache) {
+		final StateCacheInfoSignees cacheDescriptorSignees=getCacheDescriptorSignees(version, baseName, predicateStateCacheEntrySigned);
+		if (null==cacheDescriptorSignees) {
 			return null;
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
-		cache.copyShallowTo(cacheSigned);
-		// TODO: optimize: only read entries matching signature predicate
-		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cache.getEntries(), predicateStateCacheEntrySigned);
+		cacheDescriptorSignees.copyShallowTo(cacheSigned);
+
+		final ImmutableSet<StateCacheEntryInfo> cacheEntryInfos=cacheDescriptorSignees.getEntries().stream()
+				.map(StateCacheEntryInfoSignees::getEntryInfo)
+				.collect(ImmutableSet.toImmutableSet());
+		final Set<StateCacheEntry> cacheEntries=cacheStorage.getCacheEntries(cacheSigned, cacheEntryInfos);
+		final ImmutableMap<StateCacheEntryInfo, StateCacheEntry> entriesByInfo=Maps.uniqueIndex(cacheEntries, StateCacheEntry::getEntryInfo);
+
+		final ImmutableSet<StateCacheEntrySigned> signedEntries=cacheDescriptorSignees.getEntries().parallelStream()
+				//.filter(iS -> null!=entriesByInfo.get(iS.getEntryInfo()))
+				.map(iS -> new StateCacheEntrySigned(entriesByInfo.get(iS.getEntryInfo()), signatureStorage.getSignatures(iS.getEntryInfo(), iS.getPublicKeyInfos())))
+				.collect(ImmutableSet.toImmutableSet());
+
 		cacheSigned.setEntries(signedEntries);
+
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
+
 		return cacheSigned;
 	}
 
@@ -195,7 +198,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 	}
-	
+
 	@Override
 	public Set<SignatureCount> getSignatureCounts(final int version, final String baseName) {
 		TreeMultiset<Integer> signatureCounts=cacheStorage.getCacheDescriptor(version, baseName).getEntries().stream()
@@ -204,13 +207,13 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.collect(Collectors.toCollection(TreeMultiset::create));
 		return SignatureCount.build(signatureCounts);
 	}
-	
+
 	private HashMultiset<PublicKeyInfo> buildSigneeSignatureCount(final int version, final String baseName) {
 		return cacheStorage.getCacheDescriptor(version, baseName).getEntries().stream()
 				.map(signatureStorage::getSignedBy)
 				.flatMap(Set::stream)
 				.collect(Collectors.toCollection(HashMultiset::create));
-		
+
 	}
 
 }
