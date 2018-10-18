@@ -135,8 +135,11 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			} catch (Exception ex) {
 				throw new IOException(ex);
 			}
+			final int signatureCount=m.values().stream()
+					.mapToInt(Set::size)
+					.sum();
 			stopwatch.stop();
-			LOG.log(Level.INFO, "populated signatureStorageCache in {0}ms with {1} keys and {2} values", new Object[]{stopwatch.elapsed().toMillis(), m.size(), m.values().size()});
+			LOG.log(Level.INFO, "populated signatureStorageCache in {0}ms with {2} signatures for {1} entries", new Object[]{stopwatch.elapsed().toMillis(), m.size(), signatureCount});
 			signatureStorageCache=m;
 		}
 		return signatureStorageCache;
