@@ -238,6 +238,7 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		return getSignatures(entryInfo, signedBy);
 	}
 
+	@Override
 	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo, final Set<PublicKeyInfo> signedBy) {
 		final Path targetPath=buildTargetPath(entryInfo);
 		final Lock readLock=getReadLock(targetPath);
