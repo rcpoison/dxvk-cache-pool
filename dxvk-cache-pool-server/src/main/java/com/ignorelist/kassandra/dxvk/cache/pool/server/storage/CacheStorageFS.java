@@ -220,7 +220,6 @@ public class CacheStorageFS implements CacheStorage {
 			if (null==cacheDescriptor) {
 				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
 			}
-			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
 
 			StateCache cache=new StateCache();
 			cacheDescriptor.copyShallowTo(cache);
