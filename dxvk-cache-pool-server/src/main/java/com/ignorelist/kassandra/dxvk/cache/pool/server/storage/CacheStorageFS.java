@@ -213,29 +213,19 @@ public class CacheStorageFS implements CacheStorage {
 	@Override
 	public StateCache getCache(final int version, final String baseName) {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
-		final Lock readLock=getReadLock(baseName);
-		readLock.lock();
-		try {
-			final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
-			if (null==cacheDescriptor) {
-				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
-			}
-
-			StateCache cache=new StateCache();
-			cacheDescriptor.copyShallowTo(cache);
-			final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
-			cache.setEntries(cacheEntries);
-
-			final Duration elapsed=stopwatch.elapsed();
-			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
-			return cache;
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			readLock.unlock();
+		final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
+		if (null==cacheDescriptor) {
+			throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
 		}
+
+		StateCache cache=new StateCache();
+		cacheDescriptor.copyShallowTo(cache);
+		final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
+		cache.setEntries(cacheEntries);
+
+		final Duration elapsed=stopwatch.elapsed();
+		LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
+		return cache;
 	}
 
 	@Override
