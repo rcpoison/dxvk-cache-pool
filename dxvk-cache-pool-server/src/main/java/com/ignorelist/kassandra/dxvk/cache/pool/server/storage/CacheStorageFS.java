@@ -226,15 +226,32 @@ public class CacheStorageFS implements CacheStorage {
 			cache.setBaseName(baseName);
 			cache.setVersion(cacheDescriptor.getVersion());
 			cache.setEntrySize(cacheDescriptor.getEntrySize());
-			final ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
-					-> cacheDescriptor.getEntries().parallelStream()
-							.map(e -> readCacheEntry(targetDirectory, e))
-							.collect(ImmutableSet.toImmutableSet()));
-			cache.setEntries(task.get());
+			final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
+			cache.setEntries(cacheEntries);
 
 			final Duration elapsed=stopwatch.elapsed();
 			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
 			return cache;
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			readLock.unlock();
+		}
+	}
+
+	public Set<StateCacheEntry> getCacheEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfo> cacheEntryInfos) {
+		final String baseName=cacheMeta.getBaseName();
+		final Lock readLock=getReadLock(baseName);
+		readLock.lock();
+		try {
+			final Path targetDirectory=buildTargetDirectory(cacheMeta);
+			final ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
+					-> cacheEntryInfos.parallelStream()
+							.map(e -> readCacheEntry(targetDirectory, e))
+							.collect(ImmutableSet.toImmutableSet()));
+			return task.get();
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
