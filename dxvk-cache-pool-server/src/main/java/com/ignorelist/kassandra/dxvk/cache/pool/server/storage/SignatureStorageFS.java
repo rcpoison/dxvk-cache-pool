@@ -234,11 +234,15 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	@Override
 	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo) {
+		final Set<PublicKeyInfo> signedBy=getSignedBy(entryInfo);
+		return getSignatures(entryInfo, signedBy);
+	}
+
+	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo, final Set<PublicKeyInfo> signedBy) {
 		final Path targetPath=buildTargetPath(entryInfo);
 		final Lock readLock=getReadLock(targetPath);
 		readLock.lock();
 		try {
-			final Set<PublicKeyInfo> signedBy=getSignedBy(entryInfo);
 			if (null==signedBy||signedBy.isEmpty()) {
 				return ImmutableSet.of();
 			}
