@@ -25,8 +25,10 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
@@ -290,6 +292,11 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	@Override
 	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
 		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
+	}
+
+	@Override
+	public Set<StateCacheEntry> getCacheEntries(StateCacheMeta cacheMeta, Set<StateCacheEntryInfo> cacheEntryInfos) {
+		throw new UnsupportedOperationException("Not supported."); // TODO: I don't think this needs to be exported through REST. Maybe introduce another iface.
 	}
 
 	@Override
