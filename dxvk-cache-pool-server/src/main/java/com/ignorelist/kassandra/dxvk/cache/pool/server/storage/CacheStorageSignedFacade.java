@@ -96,6 +96,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public StateCacheSigned getCacheSigned(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
+		Stopwatch stopwatch=Stopwatch.createStarted();
 		final StateCacheInfoSignees cacheDescriptorSignees=getCacheDescriptorSignees(version, baseName, predicateStateCacheEntrySigned);
 		if (null==cacheDescriptorSignees) {
 			return null;
@@ -118,6 +119,13 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
+
+		final int signatureCount=signedEntries.stream()
+				.mapToInt(StateCacheEntrySigned::getSignatureCount)
+				.sum();
+		stopwatch.stop();
+
+		LOG.log(Level.INFO, "{0}: read {1} with {2} signatures in {3}ms", new Object[]{baseName, signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
 
 		return cacheSigned;
 	}
