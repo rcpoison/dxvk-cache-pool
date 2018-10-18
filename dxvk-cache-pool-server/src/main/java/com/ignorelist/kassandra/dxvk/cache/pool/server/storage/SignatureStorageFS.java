@@ -238,6 +238,10 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		return getSignatures(entryInfo, signedBy);
 	}
 
+	public Set<SignaturePublicKeyInfo> getSignatures(StateCacheEntryInfoSignees cacheEntryInfoSignees) {
+		return getSignatures(cacheEntryInfoSignees.getEntryInfo(), cacheEntryInfoSignees.getPublicKeyInfos());
+	}
+
 	@Override
 	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo, final Set<PublicKeyInfo> signedBy) {
 		final Path targetPath=buildTargetPath(entryInfo);
