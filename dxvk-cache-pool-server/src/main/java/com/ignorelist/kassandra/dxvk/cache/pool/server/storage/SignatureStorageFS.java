@@ -178,9 +178,9 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		try {
 			final Set<PublicKeyInfo> signedBy=getSignatureStorageCache().get(entryInfo);
 			if (null!=signedBy) {
-				if (signedBy.size()<=MAX_SIGNATURES) {
-					return signedBy;
-				}
+//				if (signedBy.size()<=MAX_SIGNATURES) {
+//					return signedBy;
+//				}
 				return signedBy.stream()
 						.sorted(identifiedFirstOrdering)
 						.limit(MAX_SIGNATURES)
