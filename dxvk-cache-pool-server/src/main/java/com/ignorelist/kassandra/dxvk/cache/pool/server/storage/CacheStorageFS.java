@@ -223,9 +223,7 @@ public class CacheStorageFS implements CacheStorage {
 			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
 
 			StateCache cache=new StateCache();
-			cache.setBaseName(baseName);
-			cache.setVersion(cacheDescriptor.getVersion());
-			cache.setEntrySize(cacheDescriptor.getEntrySize());
+			cacheDescriptor.copyShallowTo(cache);
 			final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
 			cache.setEntries(cacheEntries);
 
