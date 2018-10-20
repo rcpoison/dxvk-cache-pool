@@ -54,7 +54,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	}
 
 	public StateCacheInfoSignees getCacheDescriptorSignees(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
-		Stopwatch stopwatch=Stopwatch.createStarted();
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(version, baseName);
 		if (null==cacheDescriptor) {
 			return null;
@@ -76,6 +75,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	 * @return
 	 */
 	private ImmutableSet<StateCacheEntryInfoSignees> buildCacheEntryInfosSignees(final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned, final Set<StateCacheEntryInfo> cacheInfos) {
+		Stopwatch stopwatch=Stopwatch.createStarted();
 		final PredicatePublicKeyInfo predicatePublicKeyInfo=PredicatePublicKeyInfo.buildFrom(signatureStorage, predicateStateCacheEntrySigned);
 		final int signatureLimit;
 		if (null!=predicateStateCacheEntrySigned.getMinimumSignatures()&&null!=predicateStateCacheEntrySigned.getMinimumSignatures().getMinimumSignatures()) {
@@ -87,6 +87,9 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.map(e -> new StateCacheEntryInfoSignees(e, getPublicKeyInfosFiltered(predicatePublicKeyInfo, signatureLimit, e)))
 				.filter(predicateStateCacheEntrySigned)
 				.collect(ImmutableSet.toImmutableSet());
+
+		stopwatch.stop();
+		LOG.log(Level.INFO, "built {0} filtered entries in {1}ms", new Object[]{entriesSignees.size(), stopwatch.elapsed().toMillis()});
 		return entriesSignees;
 	}
 
@@ -204,12 +207,12 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 		final ImmutableSet<StateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
 		final ImmutableSet<StateCacheEntryInfoSignees> missingEntriesSignees=buildCacheEntryInfosSignees(predicateStateCacheEntrySigned, missingEntries);
-		
+
 		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cacheDescriptor, missingEntriesSignees);
 		stopwatch.stop();
 
 		int signatureCount=getSignatureCount(signedEntries);
-		
+
 		LOG.log(Level.INFO, "{0}: read {1} entries with {2} signatures in {3}ms", new Object[]{cacheDescriptor.getBaseName(), signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
 		return signedEntries;
 	}
