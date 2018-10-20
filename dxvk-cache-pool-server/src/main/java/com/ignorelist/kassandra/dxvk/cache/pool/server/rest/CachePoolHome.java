@@ -9,6 +9,10 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
@@ -26,8 +30,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -46,6 +53,7 @@ import javax.ws.rs.core.StreamingOutput;
  *
  * @author poison
  */
+@Singleton
 @Path("/")
 public class CachePoolHome {
 
@@ -57,10 +65,25 @@ public class CachePoolHome {
 	private static final String MIME_CSS="text/css";
 	private static final String MIME_JAVASCRIPT="application/javascript";
 
+	private final Supplier<Set<SignatureCount>> totalSignatureCount;
+	private final LoadingCache<String, Set<SignatureCount>> signatureCountCache;
+
 	@Inject
 	private CacheStorage cacheStorage;
 	@Inject
 	private CacheStorageSigned cacheStorageSigned;
+
+	public CachePoolHome() {
+		totalSignatureCount=Suppliers.memoizeWithExpiration(() -> cacheStorageSigned.getTotalSignatureCounts(VERSION), 2, TimeUnit.MINUTES);
+		this.signatureCountCache=CacheBuilder.newBuilder()
+				.expireAfterWrite(1, TimeUnit.MINUTES)
+				.build(new CacheLoader<String, Set<SignatureCount>>() {
+					@Override
+					public Set<SignatureCount> load(String baseName) throws Exception {
+						return cacheStorageSigned.getSignatureCounts(VERSION, baseName);
+					}
+				});
+	}
 
 	private Response buildResponse(final RockerModel rockerModel) {
 		StreamingOutput output=(OutputStream out) -> {
@@ -125,11 +148,11 @@ public class CachePoolHome {
 		Index template=Index.template(cacheInfosForPage, lastPage, page, search);
 		return buildResponse(template);
 	}
-	
+
 	private SetMultimap<String, SignatureCount> buildSignatureCounts(final Set<String> baseNames) {
 		ImmutableSetMultimap.Builder<String, SignatureCount> builder=ImmutableSetMultimap.<String, SignatureCount>builder();
 		for (String baseName : baseNames) {
-			builder.putAll(baseName, cacheStorageSigned.getSignatureCounts(VERSION, baseName));
+			builder.putAll(baseName, signatureCountCache.getUnchecked(baseName));
 		}
 		return builder.build();
 	}
@@ -138,8 +161,8 @@ public class CachePoolHome {
 	@Path("stats.html")
 	@Produces(MediaType.TEXT_HTML)
 	public Response stats(@QueryParam("page") int page, @QueryParam("search") String search) {
-		final Set<SignatureCount> totalSignatureCounts=cacheStorageSigned.getTotalSignatureCounts(VERSION);
-		
+		final Set<SignatureCount> totalSignatureCounts=totalSignatureCount.get();
+
 		final Set<String> cacheInfos=cacheStorage.findBaseNames(VERSION, search);
 		final int lastPage=cacheInfos.size()/PAGE_SIZE;
 		final int offset=PAGE_SIZE*Math.min(Math.max(page, 0), lastPage);
@@ -196,6 +219,6 @@ public class CachePoolHome {
 		if (Strings.isNullOrEmpty(baseName)) {
 			throw new IllegalArgumentException("baseName may not be empty");
 		}
-		return cacheStorageSigned.getSignatureCounts(VERSION, baseName);
+		return signatureCountCache.getUnchecked(baseName);
 	}
 }
