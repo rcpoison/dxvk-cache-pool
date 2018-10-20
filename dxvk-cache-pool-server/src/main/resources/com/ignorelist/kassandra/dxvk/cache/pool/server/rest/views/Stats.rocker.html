@@ -5,7 +5,7 @@
 @import com.google.common.collect.SetMultimap
 @import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount
 
-@args (SetMultimap<String, SignatureCount> signatureCounts, int pages, int page, String search)
+@args (Set<SignatureCount> signatureCountsTotal, SetMultimap<String, SignatureCount> signatureCounts, int pages, int page, String search)
 <!DOCTYPE html>
 <html>
 	<head>
@@ -28,6 +28,20 @@
 			</div>
 		</div>
 		<h2>Stats</h2>
+		@if(!signatureCountsTotal.isEmpty()) {
+		<table class="statsBig">
+			<tr><th colspan="2" class="baseName">Total</th></tr>
+			<tr><th>Signees</th><th>Entries</th></tr>
+			@for (signatureCount : signatureCountsTotal) {
+				<tr>
+					<td class="signeeCount">@signatureCount.getSignatureCount()</td>
+					<td class="entryCount">@signatureCount.getOccurences()</td>
+				</tr>
+			}
+		</table>
+		}
+		
+		<h2>Per game</h2>
 		@if (pages>1) {
 		<div class="pagination">
 			@for (int p=0; p < pages; ++p) {

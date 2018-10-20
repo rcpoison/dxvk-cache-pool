@@ -138,7 +138,7 @@ public class CachePoolHome {
 	@Path("stats.html")
 	@Produces(MediaType.TEXT_HTML)
 	public Response stats(@QueryParam("page") int page, @QueryParam("search") String search) {
-		//final Set<SignatureCount> totalSignatureCounts=cacheStorageSigned.getTotalSignatureCounts(VERSION);
+		final Set<SignatureCount> totalSignatureCounts=cacheStorageSigned.getTotalSignatureCounts(VERSION);
 		
 		final Set<String> cacheInfos=cacheStorage.findBaseNames(VERSION, search);
 		final int lastPage=cacheInfos.size()/PAGE_SIZE;
@@ -150,7 +150,7 @@ public class CachePoolHome {
 				.collect(ImmutableSet.toImmutableSet());
 		SetMultimap<String, SignatureCount> signatureCounts=buildSignatureCounts(baseNames);
 		//signatureCounts.
-		Stats template=Stats.template(signatureCounts, lastPage, page, search);
+		Stats template=Stats.template(totalSignatureCounts, signatureCounts, lastPage, page, search);
 		return buildResponse(template);
 	}
 
