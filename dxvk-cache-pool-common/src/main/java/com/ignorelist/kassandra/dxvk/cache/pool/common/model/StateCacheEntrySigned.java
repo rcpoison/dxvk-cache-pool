@@ -22,13 +22,14 @@ import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntrySigned implements Serializable {
+public class StateCacheEntrySigned implements Serializable, StateCacheEntrySignees {
 
 	private static final Logger LOG=Logger.getLogger(StateCacheEntrySigned.class.getName());
 
@@ -122,6 +123,20 @@ public class StateCacheEntrySigned implements Serializable {
 				.filter(Predicates.notNull())
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@XmlTransient
+	@Override
+	public Set<PublicKeyInfo> getPublicKeyInfos() {
+		return getSignatures().stream()
+				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@XmlTransient
+	@Override
+	public int getSignatureCount() {
+		return null==signatures ? 0 : signatures.size();
 	}
 
 	@Override

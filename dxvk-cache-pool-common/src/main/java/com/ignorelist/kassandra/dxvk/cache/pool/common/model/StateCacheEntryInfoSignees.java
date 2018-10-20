@@ -12,13 +12,14 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntryInfoSignees implements Serializable {
+public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntrySignees {
 
 	private StateCacheEntryInfo entryInfo;
 	private Set<PublicKeyInfo> publicKeyInfos;
@@ -41,12 +42,19 @@ public class StateCacheEntryInfoSignees implements Serializable {
 		this.entryInfo=entryInfo;
 	}
 
+	@Override
 	public Set<PublicKeyInfo> getPublicKeyInfos() {
 		return publicKeyInfos;
 	}
 
 	public void setPublicKeyInfos(Set<PublicKeyInfo> publicKeyInfos) {
 		this.publicKeyInfos=publicKeyInfos;
+	}
+
+	@XmlTransient
+	@Override
+	public int getSignatureCount() {
+		return null==publicKeyInfos ? 0 : publicKeyInfos.size();
 	}
 
 	@Override

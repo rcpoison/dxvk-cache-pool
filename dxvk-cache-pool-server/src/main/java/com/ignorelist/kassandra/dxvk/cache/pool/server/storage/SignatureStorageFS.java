@@ -135,8 +135,11 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 			} catch (Exception ex) {
 				throw new IOException(ex);
 			}
+			final int signatureCount=m.values().stream()
+					.mapToInt(Set::size)
+					.sum();
 			stopwatch.stop();
-			LOG.log(Level.INFO, "populated signatureStorageCache in {0}ms with {1} keys and {2} values", new Object[]{stopwatch.elapsed().toMillis(), m.size(), m.values().size()});
+			LOG.log(Level.INFO, "populated signatureStorageCache in {0}ms with {2} signatures for {1} entries", new Object[]{stopwatch.elapsed().toMillis(), m.size(), signatureCount});
 			signatureStorageCache=m;
 		}
 		return signatureStorageCache;
@@ -178,9 +181,9 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 		try {
 			final Set<PublicKeyInfo> signedBy=getSignatureStorageCache().get(entryInfo);
 			if (null!=signedBy) {
-				if (signedBy.size()<=MAX_SIGNATURES) {
-					return signedBy;
-				}
+//				if (signedBy.size()<=MAX_SIGNATURES) {
+//					return signedBy;
+//				}
 				return signedBy.stream()
 						.sorted(identifiedFirstOrdering)
 						.limit(MAX_SIGNATURES)
@@ -231,11 +234,20 @@ public class SignatureStorageFS implements Closeable, SignatureStorage {
 
 	@Override
 	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo) {
+		final Set<PublicKeyInfo> signedBy=getSignedBy(entryInfo);
+		return getSignatures(entryInfo, signedBy);
+	}
+
+	public Set<SignaturePublicKeyInfo> getSignatures(StateCacheEntryInfoSignees cacheEntryInfoSignees) {
+		return getSignatures(cacheEntryInfoSignees.getEntryInfo(), cacheEntryInfoSignees.getPublicKeyInfos());
+	}
+
+	@Override
+	public Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo, final Set<PublicKeyInfo> signedBy) {
 		final Path targetPath=buildTargetPath(entryInfo);
 		final Lock readLock=getReadLock(targetPath);
 		readLock.lock();
 		try {
-			final Set<PublicKeyInfo> signedBy=getSignedBy(entryInfo);
 			if (null==signedBy||signedBy.isEmpty()) {
 				return ImmutableSet.of();
 			}

@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PredicateMinimumSignatures implements Serializable, Predicate<StateCacheEntrySigned> {
+public class PredicateMinimumSignatures implements Serializable, Predicate<StateCacheEntrySignees> {
 
 	private Integer minimumSignatures;
 
@@ -35,9 +35,9 @@ public class PredicateMinimumSignatures implements Serializable, Predicate<State
 	}
 
 	@Override
-	public boolean apply(StateCacheEntrySigned entry) {
+	public boolean apply(StateCacheEntrySignees entry) {
 		if (null!=minimumSignatures&&0!=minimumSignatures) {
-			return null!=entry.getSignatures()&&entry.getSignatures().size()>=minimumSignatures;
+			return entry.getSignatureCount()>=minimumSignatures;
 		}
 		return true;
 	}

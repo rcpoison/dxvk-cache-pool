@@ -213,28 +213,33 @@ public class CacheStorageFS implements CacheStorage {
 	@Override
 	public StateCache getCache(final int version, final String baseName) {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
+		final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
+		if (null==cacheDescriptor) {
+			throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
+		}
+
+		StateCache cache=new StateCache();
+		cacheDescriptor.copyShallowTo(cache);
+		final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
+		cache.setEntries(cacheEntries);
+
+		final Duration elapsed=stopwatch.elapsed();
+		LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
+		return cache;
+	}
+
+	@Override
+	public Set<StateCacheEntry> getCacheEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfo> cacheEntryInfos) {
+		final String baseName=cacheMeta.getBaseName();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
 		try {
-			final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
-			if (null==cacheDescriptor) {
-				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
-			}
-			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
-
-			StateCache cache=new StateCache();
-			cache.setBaseName(baseName);
-			cache.setVersion(cacheDescriptor.getVersion());
-			cache.setEntrySize(cacheDescriptor.getEntrySize());
+			final Path targetDirectory=buildTargetDirectory(cacheMeta);
 			final ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
-					-> cacheDescriptor.getEntries().parallelStream()
+					-> cacheEntryInfos.parallelStream()
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
-			cache.setEntries(task.get());
-
-			final Duration elapsed=stopwatch.elapsed();
-			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
-			return cache;
+			return task.get();
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
