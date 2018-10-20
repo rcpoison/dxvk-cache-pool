@@ -1,3 +1,5 @@
+# Maintainer: poison <rc dot poison at gmail dot com>
+
 _pkgname=dxvk-cache-pool
 pkgname=("dxvk-cache-server-git" "dxvk-cache-client-git")
 pkgver=r149.0291c01
