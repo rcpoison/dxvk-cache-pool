@@ -228,7 +228,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	
 	@Override
 	public Set<SignatureCount> getTotalSignatureCounts(final int version) {
-		final TreeMultiset<Integer> signatureCounts=cacheStorage.findBaseNames(version, null).stream()
+		final TreeMultiset<Integer> signatureCounts=cacheStorage.findBaseNames(version, null).parallelStream()
 				.map(bN -> cacheStorage.getCacheDescriptor(version, bN))
 				.map(StateCacheInfo::getEntries)
 				.flatMap(Set::stream)
