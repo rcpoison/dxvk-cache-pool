@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -50,6 +51,7 @@ public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntry
 		this.publicKeyInfos=publicKeyInfos;
 	}
 
+	@XmlTransient
 	@Override
 	public int getSignatureCount() {
 		return null==publicKeyInfos ? 0 : publicKeyInfos.size();
