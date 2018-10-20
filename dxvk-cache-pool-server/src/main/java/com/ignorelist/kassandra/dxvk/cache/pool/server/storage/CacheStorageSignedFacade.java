@@ -31,6 +31,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
 import java.util.Set;
@@ -117,17 +118,9 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 		StateCacheSigned cacheSigned=new StateCacheSigned();
 		cacheDescriptorSignees.copyShallowTo(cacheSigned);
+		final Set<StateCacheEntryInfoSignees> entryInfosSignees=cacheDescriptorSignees.getEntries();
 
-		final ImmutableSet<StateCacheEntryInfo> cacheEntryInfos=cacheDescriptorSignees.getEntries().stream()
-				.map(StateCacheEntryInfoSignees::getEntryInfo)
-				.collect(ImmutableSet.toImmutableSet());
-		final Set<StateCacheEntry> cacheEntries=cacheStorage.getCacheEntries(cacheSigned, cacheEntryInfos);
-		final ImmutableMap<StateCacheEntryInfo, StateCacheEntry> entriesByInfo=Maps.uniqueIndex(cacheEntries, StateCacheEntry::getEntryInfo);
-
-		final ImmutableSet<StateCacheEntrySigned> signedEntries=cacheDescriptorSignees.getEntries().parallelStream()
-				//.filter(iS -> null!=entriesByInfo.get(iS.getEntryInfo()))
-				.map(iS -> new StateCacheEntrySigned(entriesByInfo.get(iS.getEntryInfo()), signatureStorage.getSignatures(iS.getEntryInfo(), iS.getPublicKeyInfos())))
-				.collect(ImmutableSet.toImmutableSet());
+		ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cacheSigned, entryInfosSignees);
 
 		cacheSigned.setEntries(signedEntries);
 
@@ -142,6 +135,19 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		LOG.log(Level.INFO, "{0}: read {1} with {2} signatures in {3}ms", new Object[]{baseName, signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
 
 		return cacheSigned;
+	}
+
+	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfoSignees> entryInfosSignees) {
+		final ImmutableSet<StateCacheEntryInfo> cacheEntryInfos=entryInfosSignees.stream()
+				.map(StateCacheEntryInfoSignees::getEntryInfo)
+				.collect(ImmutableSet.toImmutableSet());
+		final Set<StateCacheEntry> cacheEntries=cacheStorage.getCacheEntries(cacheMeta, cacheEntryInfos);
+		final ImmutableMap<StateCacheEntryInfo, StateCacheEntry> entriesByInfo=Maps.uniqueIndex(cacheEntries, StateCacheEntry::getEntryInfo);
+		final ImmutableSet<StateCacheEntrySigned> signedEntries=entryInfosSignees.parallelStream()
+				//.filter(iS -> null!=entriesByInfo.get(iS.getEntryInfo()))
+				.map(iS -> new StateCacheEntrySigned(entriesByInfo.get(iS.getEntryInfo()), signatureStorage.getSignatures(iS.getEntryInfo(), iS.getPublicKeyInfos())))
+				.collect(ImmutableSet.toImmutableSet());
+		return signedEntries;
 	}
 
 	private ImmutableSet<PublicKey> getUsedPublicKeys(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
