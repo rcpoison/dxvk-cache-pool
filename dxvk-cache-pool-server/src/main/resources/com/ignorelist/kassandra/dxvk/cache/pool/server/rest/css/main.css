@@ -35,12 +35,27 @@ h2 {
 	border-bottom: 2px solid #e8ddcb;
 }
 
+h3 {
+	color: #033649;
+	border-bottom: 2px solid #e8ddcb;
+}
+
+th.baseName {
+	color: #033649;
+	background-color: #e8ddcb;
+}
+
+td.signeeCount {
+	text-align: right;
+}
+
 .gameName {
 	color: #036564
 }
-.entryCount {
+span.entryCount {
 	font-size: 0.8em;
 }
+
 * {box-sizing: border-box;}
 
 body {
@@ -63,6 +78,14 @@ table {
 
 table.stats {
 	font-size: 0.6em;
+}
+
+table.statsBig td.entryCount {
+	text-align: right;
+}
+
+table.statsBig th {
+	color: #033649;
 }
 
 table, th, td {

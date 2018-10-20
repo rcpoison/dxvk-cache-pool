@@ -225,6 +225,18 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 	}
+	
+	@Override
+	public Set<SignatureCount> getTotalSignatureCounts(final int version) {
+		final TreeMultiset<Integer> signatureCounts=cacheStorage.findBaseNames(version, null).parallelStream()
+				.map(bN -> cacheStorage.getCacheDescriptor(version, bN))
+				.map(StateCacheInfo::getEntries)
+				.flatMap(Set::stream)
+				.map(signatureStorage::getSignedBy)
+				.map(Set::size)
+				.collect(Collectors.toCollection(TreeMultiset::create));
+		return SignatureCount.build(signatureCounts);
+	}
 
 	@Override
 	public Set<SignatureCount> getSignatureCounts(final int version, final String baseName) {

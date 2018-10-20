@@ -299,6 +299,14 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 		return cacheStorageSigned.getSignatureCounts(version, baseName);
 	}
 
+	@GET
+	@Path("totalSignatureCounts/{version}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<SignatureCount> getTotalSignatureCounts(@PathParam("version") int version) {
+		return cacheStorageSigned.getTotalSignatureCounts(version);
+	}
+
 	@Override
 	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
 		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
