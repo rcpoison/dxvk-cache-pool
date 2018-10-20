@@ -72,6 +72,8 @@ public class CachePoolServer implements Closeable {
 
 	static {
 		System.setProperty("java.util.logging.manager", DelayedResetLogManager.class.getName());
+		//System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %2$s %5$s%6$s%n");
+		System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s %2$s %5$s%6$s%n");
 		LOG=Logger.getLogger(CachePoolServer.class.getName());
 	}
 
