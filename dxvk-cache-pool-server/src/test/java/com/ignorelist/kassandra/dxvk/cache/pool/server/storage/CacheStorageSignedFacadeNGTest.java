@@ -21,6 +21,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateAcceptedPu
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateMinimumSignatures;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfoSignees;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
@@ -31,6 +32,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
@@ -78,7 +81,7 @@ public class CacheStorageSignedFacadeNGTest {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
-		
+
 		storageRoot=Paths.get(System.getProperty("java.io.tmpdir")).resolve("dxvk-cache-pool-signed").resolve(UUID.randomUUID().toString());
 		cache=StateCacheIO.parse(new ByteArrayInputStream(TestUtil.readStateCacheData()));
 		cache.setBaseName(BASE_NAME);
@@ -242,6 +245,21 @@ public class CacheStorageSignedFacadeNGTest {
 		cacheSigned0.copyShallowTo(stateCacheInfo);
 		Set<StateCacheEntrySigned> missingEntriesSignedAllMIssing=cacheStorageSignedShared.getMissingEntriesSigned(stateCacheInfo);
 		assertEquals(missingEntriesSignedAllMIssing, cacheSigned0.getEntries());
+	}
+
+	@Test(dependsOnMethods={"testStoreSignedTwice"})
+	public void testGetMissingEntriesSignedMissingOne() {
+		final StateCacheInfo infoExisting=cacheSigned0.toUnsigned().toInfo();
+		Set<StateCacheEntryInfo> entries=new HashSet<>(infoExisting.getEntries());
+		Iterator<StateCacheEntryInfo> iterator=entries.iterator();
+		StateCacheEntryInfo missing=iterator.next();
+		iterator.remove();
+		infoExisting.setEntries(entries);
+
+		Set<StateCacheEntrySigned> missingEntriesSigned=cacheStorageSignedShared.getMissingEntriesSigned(infoExisting);
+		assertEquals(missingEntriesSigned.size(), 1);
+
+		assertEquals(missingEntriesSigned.iterator().next().getCacheEntry().getEntryInfo(), missing);
 	}
 
 }
