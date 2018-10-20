@@ -29,9 +29,9 @@ $(document).ready(function () {
 });
 
 function buildStatsTooltip(element) {
-	var table = '<table class="stats"><tr><th>Signature count</th><th>Occurences</th></tr>';
+	var table = '<table class="stats"><tr><th>Signees</th><th>Entries</th></tr>';
 	$.each($(element).closest('li').data('stats'), function (k, v) {
-		table += '<tr><td>' + v.signatureCount + '</td><td>' + v.occurences + '</td></tr>';
+		table += '<tr><td>' + v.signatureCount + '</td><td>' + v.entryCount + '</td></tr>';
 	});
 	table += '</table';
 	return table;

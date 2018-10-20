@@ -21,17 +21,17 @@ public class SignatureCount implements Serializable, Comparable<SignatureCount> 
 
 	private static final Comparator<SignatureCount> DEFAULT_COMPARATOR=Comparator
 			.comparingInt(SignatureCount::getSignatureCount)
-			.thenComparingInt(SignatureCount::getOccurences);
+			.thenComparingInt(SignatureCount::getEntryCount);
 
 	private int signatureCount;
-	private int occurences;
+	private int entryCount;
 
 	public SignatureCount() {
 	}
 
 	public SignatureCount(int signature, int count) {
 		this.signatureCount=signature;
-		this.occurences=count;
+		this.entryCount=count;
 	}
 
 	public SignatureCount(Multiset.Entry<Integer> e) {
@@ -46,19 +46,19 @@ public class SignatureCount implements Serializable, Comparable<SignatureCount> 
 		this.signatureCount=signatureCount;
 	}
 
-	public int getOccurences() {
-		return occurences;
+	public int getEntryCount() {
+		return entryCount;
 	}
 
-	public void setOccurences(int occurences) {
-		this.occurences=occurences;
+	public void setEntryCount(int entryCount) {
+		this.entryCount=entryCount;
 	}
 
 	@Override
 	public int hashCode() {
 		int hash=3;
 		hash=71*hash+this.signatureCount;
-		hash=71*hash+this.occurences;
+		hash=71*hash+this.entryCount;
 		return hash;
 	}
 
@@ -83,7 +83,7 @@ public class SignatureCount implements Serializable, Comparable<SignatureCount> 
 		if (this.signatureCount!=other.signatureCount) {
 			return false;
 		}
-		if (this.occurences!=other.occurences) {
+		if (this.entryCount!=other.entryCount) {
 			return false;
 		}
 		return true;

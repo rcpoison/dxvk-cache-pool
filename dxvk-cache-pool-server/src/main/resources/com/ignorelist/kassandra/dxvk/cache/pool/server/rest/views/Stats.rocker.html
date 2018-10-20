@@ -35,7 +35,7 @@
 			@for (signatureCount : signatureCountsTotal) {
 				<tr>
 					<td class="signeeCount">@signatureCount.getSignatureCount()</td>
-					<td class="entryCount">@signatureCount.getOccurences()</td>
+					<td class="entryCount">@signatureCount.getEntryCount()</td>
 				</tr>
 			}
 		</table>
@@ -62,7 +62,7 @@
 				@for (signatureCount : signatureCounts.get(baseName)) {
 				<tr>
 					<td class="signeeCount">@signatureCount.getSignatureCount()</td>
-					<td class="entryCount">@signatureCount.getOccurences()</td>
+					<td class="entryCount">@signatureCount.getEntryCount()</td>
 				</tr>
 				}
 			}
