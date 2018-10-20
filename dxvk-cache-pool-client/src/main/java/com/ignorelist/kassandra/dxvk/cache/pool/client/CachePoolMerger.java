@@ -240,8 +240,11 @@ public class CachePoolMerger {
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
 						log.log(ProgressLog.Level.SUB, baseName, "downloaded "+cacheSigned.getEntries().size()+" cache entries");
+						if (cacheSigned.getEntries().isEmpty()) {
+							continue;
+						}
 						final int totalSignatureCount=StateCacheEntrySigned.countTotalSignatures(cacheSigned.getEntries());
-						log.log(ProgressLog.Level.SUB, baseName, "verifying "+totalSignatureCount+" for "+cacheSigned.getEntries().size()+" entries");
+						log.log(ProgressLog.Level.SUB, baseName, "verifying "+totalSignatureCount+" signatures for "+cacheSigned.getEntries().size()+" entries");
 						if (!cacheSigned.verifyAllSignaturesValid()) {
 							throw new IllegalStateException("signatures could not be verified!");
 						}
@@ -293,7 +296,7 @@ public class CachePoolMerger {
 							log.log(ProgressLog.Level.SUB, baseName, "is up to date ("+localCacheEntriesSize+" entries)");
 						} else {
 							final int totalSignatureCount=StateCacheEntrySigned.countTotalSignatures(missingEntries);
-							log.log(ProgressLog.Level.SUB, baseName, "verifying "+totalSignatureCount+" for "+missingEntries.size()+" entries");
+							log.log(ProgressLog.Level.SUB, baseName, "verifying "+totalSignatureCount+" signatures for "+missingEntries.size()+" entries");
 							final ImmutableSet<StateCacheEntry> verifiedMissingEntries=missingEntries.parallelStream()
 									.filter(e -> e.verifyAllSignaturesValid(publicKeyCache::getUnchecked)) // TODO: optimize, single request
 									.map(StateCacheEntrySigned::getCacheEntry)
