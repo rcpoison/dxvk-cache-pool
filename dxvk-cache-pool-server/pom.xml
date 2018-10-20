@@ -63,6 +63,10 @@
 			<artifactId>activation</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>dxvk-cache-pool-test</artifactId>
 			<version>${project.version}</version>
