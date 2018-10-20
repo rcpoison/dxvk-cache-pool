@@ -1,0 +1,60 @@
+@import java.util.*
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.Util
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.model.*
+@import com.google.common.base.Strings
+@import com.google.common.collect.SetMultimap
+@import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount
+
+@args (SetMultimap<String, SignatureCount> signatureCounts, int pages, int page, String search)
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>DXVK cache pool</title>
+		<link rel="stylesheet" href="/s/main.css">
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script src="/s/main.js"></script>
+	</head>
+	<body>
+		<div class="topnav">
+			<h1>DXVK cache pool</h1>
+			<div class="search-container">
+			<form action="/stats.html" method="get">
+				<input type="text" name="search" value="@?search">
+				<button type="submit">Search</button>
+			</form>
+			</div>
+		</div>
+		<h2>Stats</h2>
+		@if (pages>1) {
+		<div class="pagination">
+			@for (int p=0; p < pages; ++p) {
+
+			@if (p==page) {
+			<a class="active" href="#">@p</a>
+			} else {
+			<a href="/index.html?search=@?search&page=@p">@p</a>
+			}
+			}
+		</div>
+		}
+		@if (!signatureCounts.isEmpty()) {
+			@for (baseName : signatureCounts.keySet()) {
+			<h3>@baseName</h3>
+			<table>
+				<tr><th>Signees</th><th>Entries</th></tr>
+				@for (signatureCount : signatureCounts.get(baseName)) {
+				<tr>
+					<td>@signatureCount.getSignatureCount()</td>
+					<td>@signatureCount.getOccurences()</td>
+				</tr>
+				}
+			</table>
+			}
+		} else {
+		<div>Pool is empty.</div>
+		}
+	</body>
+</html>

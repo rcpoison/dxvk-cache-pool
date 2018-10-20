@@ -10,6 +10,8 @@ import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.OutputStreamOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.io.ByteStreams;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheIO;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
@@ -19,6 +21,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Index;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Stats;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
@@ -120,6 +123,34 @@ public class CachePoolHome {
 				.map(e -> cacheStorage.getCacheDescriptor(VERSION, e))
 				.collect(ImmutableSet.toImmutableSet());
 		Index template=Index.template(cacheInfosForPage, lastPage, page, search);
+		return buildResponse(template);
+	}
+	
+	private SetMultimap<String, SignatureCount> buildSignatureCounts(final Set<String> baseNames) {
+		ImmutableSetMultimap.Builder<String, SignatureCount> builder=ImmutableSetMultimap.<String, SignatureCount>builder();
+		for (String baseName : baseNames) {
+			builder.putAll(baseName, cacheStorageSigned.getSignatureCounts(VERSION, baseName));
+		}
+		return builder.build();
+	}
+
+	@GET
+	@Path("stats.html")
+	@Produces(MediaType.TEXT_HTML)
+	public Response stats(@QueryParam("page") int page, @QueryParam("search") String search) {
+		//final Set<SignatureCount> totalSignatureCounts=cacheStorageSigned.getTotalSignatureCounts(VERSION);
+		
+		final Set<String> cacheInfos=cacheStorage.findBaseNames(VERSION, search);
+		final int lastPage=cacheInfos.size()/PAGE_SIZE;
+		final int offset=PAGE_SIZE*Math.min(Math.max(page, 0), lastPage);
+		ImmutableSet<String> baseNames=cacheInfos.stream()
+				.sorted()
+				.skip(offset)
+				.limit(PAGE_SIZE)
+				.collect(ImmutableSet.toImmutableSet());
+		SetMultimap<String, SignatureCount> signatureCounts=buildSignatureCounts(baseNames);
+		//signatureCounts.
+		Stats template=Stats.template(signatureCounts, lastPage, page, search);
 		return buildResponse(template);
 	}
 
