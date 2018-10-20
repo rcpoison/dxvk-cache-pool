@@ -67,4 +67,9 @@ public class PredicateMinimumSignatures implements Serializable, Predicate<State
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "PredicateMinimumSignatures{"+"minimumSignatures="+minimumSignatures+'}';
+	}
+
 }

@@ -69,4 +69,9 @@ public class PredicateStateCacheEntrySigned implements Serializable, Predicate<S
 				.apply(input);
 	}
 
+	@Override
+	public String toString() {
+		return "PredicateStateCacheEntrySigned{"+"acceptedPublicKeys="+acceptedPublicKeys+", minimumSignatures="+minimumSignatures+", onlyAcceptVerifiedKeys="+onlyAcceptVerifiedKeys+'}';
+	}
+
 }

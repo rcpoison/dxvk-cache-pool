@@ -71,4 +71,9 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "PredicateAcceptedPublicKeys{"+"acceptedPublicKeys="+acceptedPublicKeys+'}';
+	}
+
 }
