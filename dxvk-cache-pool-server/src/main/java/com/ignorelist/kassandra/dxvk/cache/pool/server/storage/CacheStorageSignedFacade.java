@@ -62,6 +62,21 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		}
 		StateCacheInfoSignees cacheInfoSignees=new StateCacheInfoSignees();
 		cacheDescriptor.copyShallowTo(cacheInfoSignees);
+		final Set<StateCacheEntryInfo> cacheInfos=cacheDescriptor.getEntries();
+
+		ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=buildCacheEntryInfosSignees(predicateStateCacheEntrySigned, cacheInfos);
+		cacheInfoSignees.setEntries(entriesSignees);
+		return cacheInfoSignees;
+	}
+
+	/**
+	 * build filtered entries with signees
+	 *
+	 * @param predicateStateCacheEntrySigned predicate to apply to cache infos
+	 * @param cacheInfos
+	 * @return
+	 */
+	private ImmutableSet<StateCacheEntryInfoSignees> buildCacheEntryInfosSignees(final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned, final Set<StateCacheEntryInfo> cacheInfos) {
 		final PredicatePublicKeyInfo predicatePublicKeyInfo=PredicatePublicKeyInfo.buildFrom(signatureStorage, predicateStateCacheEntrySigned);
 		final int signatureLimit;
 		if (null!=predicateStateCacheEntrySigned.getMinimumSignatures()&&null!=predicateStateCacheEntrySigned.getMinimumSignatures().getMinimumSignatures()) {
@@ -69,12 +84,11 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		} else {
 			signatureLimit=PredicateStateCacheEntrySigned.DEFAULT_SIGNATURE_MINIMUM;
 		}
-		final ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=cacheDescriptor.getEntries().parallelStream()
+		final ImmutableSet<StateCacheEntryInfoSignees> entriesSignees=cacheInfos.parallelStream()
 				.map(e -> new StateCacheEntryInfoSignees(e, getPublicKeyInfosFiltered(predicatePublicKeyInfo, signatureLimit, e)))
 				.filter(predicateStateCacheEntrySigned)
 				.collect(ImmutableSet.toImmutableSet());
-		cacheInfoSignees.setEntries(entriesSignees);
-		return cacheInfoSignees;
+		return entriesSignees;
 	}
 
 	private Set<PublicKeyInfo> getPublicKeyInfosFiltered(final PredicatePublicKeyInfo predicatePublicKeyInfo, final int signatureLimit, final StateCacheEntryInfo stateCacheEntryInfo) {
