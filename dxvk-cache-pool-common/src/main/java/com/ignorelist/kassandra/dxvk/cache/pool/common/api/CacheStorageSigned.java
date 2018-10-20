@@ -34,4 +34,6 @@ public interface CacheStorageSigned {
 
 	Set<SignatureCount> getSignatureCounts(final int version, final String baseName);
 
+	Set<SignatureCount> getTotalSignatureCounts(final int version);
+
 }

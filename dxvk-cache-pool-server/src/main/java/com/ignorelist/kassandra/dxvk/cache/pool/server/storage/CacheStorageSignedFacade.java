@@ -226,6 +226,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.collect(ImmutableSet.toImmutableSet());
 	}
 	
+	@Override
 	public Set<SignatureCount> getTotalSignatureCounts(final int version) {
 		final TreeMultiset<Integer> signatureCounts=cacheStorage.findBaseNames(version, null).stream()
 				.map(bN -> cacheStorage.getCacheDescriptor(version, bN))

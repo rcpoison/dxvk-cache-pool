@@ -253,6 +253,15 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	}
 
 	@Override
+	public Set<SignatureCount> getTotalSignatureCounts(int version) {
+		return getWebTarget()
+				.path("totalSignatureCounts")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.get(TYPE_SIGNATURE_COUNT_SET);
+	}
+
+	@Override
 	public Set<StateCacheEntry> getCacheEntries(StateCacheMeta cacheMeta, Set<StateCacheEntryInfo> cacheEntryInfos) {
 		throw new UnsupportedOperationException("Not supported."); // TODO: I don't think this needs to be exported through REST. Maybe introduce another iface.
 	}
