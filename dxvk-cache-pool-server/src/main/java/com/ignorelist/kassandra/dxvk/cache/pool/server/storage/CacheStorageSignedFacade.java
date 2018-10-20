@@ -214,9 +214,14 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	@Override
 	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
 		final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned=null==existingCache.getPredicateStateCacheEntrySigned() ? new PredicateStateCacheEntrySigned() : existingCache.getPredicateStateCacheEntrySigned();
-		final Set<StateCacheEntry> missingEntries=cacheStorage.getMissingEntries(existingCache);
-		return buildSignedEntries(missingEntries, predicateStateCacheEntrySigned);
-
+		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(existingCache.getVersion(), existingCache.getBaseName());
+		if (null==cacheDescriptor) {
+			return null;
+		}
+		final ImmutableSet<StateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
+		final ImmutableSet<StateCacheEntryInfoSignees> missingEntriesSignees=buildCacheEntryInfosSignees(predicateStateCacheEntrySigned, missingEntries);
+		
+		return buildSignedEntries(cacheDescriptor, missingEntriesSignees);
 	}
 
 	@Override
