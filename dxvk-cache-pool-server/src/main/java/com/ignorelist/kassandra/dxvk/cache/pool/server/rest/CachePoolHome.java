@@ -24,7 +24,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
-import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Index;
+import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Downloads;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.views.Stats;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -133,7 +133,7 @@ public class CachePoolHome {
 	}
 
 	@GET
-	@Path("{a:(|index.html)}")
+	@Path("downloads.html")
 	@Produces(MediaType.TEXT_HTML)
 	public Response list(@QueryParam("page") int page, @QueryParam("search") String search) {
 		final Set<String> cacheInfos=cacheStorage.findBaseNames(VERSION, search);
@@ -145,7 +145,7 @@ public class CachePoolHome {
 				.limit(PAGE_SIZE)
 				.map(e -> cacheStorage.getCacheDescriptor(VERSION, e))
 				.collect(ImmutableSet.toImmutableSet());
-		Index template=Index.template(cacheInfosForPage, lastPage, page, search);
+		Downloads template=Downloads.template(cacheInfosForPage, lastPage, page, search);
 		return buildResponse(template);
 	}
 
@@ -158,7 +158,7 @@ public class CachePoolHome {
 	}
 
 	@GET
-	@Path("stats.html")
+	@Path("{a:(|stats.html)}")
 	@Produces(MediaType.TEXT_HTML)
 	public Response stats(@QueryParam("page") int page, @QueryParam("search") String search) {
 		final Set<SignatureCount> totalSignatureCounts=totalSignatureCount.get();
