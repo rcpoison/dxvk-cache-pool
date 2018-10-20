@@ -231,6 +231,16 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	}
 
 	@POST
+	@Path("getAvailableBaseNames/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<String> getAvilableBaseNames(@PathParam("version") int version, Set<String> baseNames) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		return cacheStorage.getAvilableBaseNames(version, baseNames);
+	}
+
+	@POST
 	@Path("publicKey")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
