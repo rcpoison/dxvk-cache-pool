@@ -125,12 +125,10 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
 
-		final int signatureCount=signedEntries.stream()
-				.mapToInt(StateCacheEntrySigned::getSignatureCount)
-				.sum();
+		int signatureCount=getSignatureCount(signedEntries);
 		stopwatch.stop();
 
-		LOG.log(Level.INFO, "{0}: read {1} with {2} signatures in {3}ms", new Object[]{baseName, signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
+		LOG.log(Level.INFO, "{0}: read {1} entries with {2} signatures in {3}ms", new Object[]{baseName, signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
 
 		return cacheSigned;
 	}
@@ -198,6 +196,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 
 	@Override
 	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
+		Stopwatch stopwatch=Stopwatch.createStarted();
 		final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned=null==existingCache.getPredicateStateCacheEntrySigned() ? new PredicateStateCacheEntrySigned() : existingCache.getPredicateStateCacheEntrySigned();
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(existingCache.getVersion(), existingCache.getBaseName());
 		if (null==cacheDescriptor) {
@@ -206,7 +205,20 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		final ImmutableSet<StateCacheEntryInfo> missingEntries=cacheDescriptor.getMissingEntries(existingCache);
 		final ImmutableSet<StateCacheEntryInfoSignees> missingEntriesSignees=buildCacheEntryInfosSignees(predicateStateCacheEntrySigned, missingEntries);
 		
-		return buildSignedEntries(cacheDescriptor, missingEntriesSignees);
+		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cacheDescriptor, missingEntriesSignees);
+		stopwatch.stop();
+
+		int signatureCount=getSignatureCount(signedEntries);
+		
+		LOG.log(Level.INFO, "{0}: read {1} entries with {2} signatures in {3}ms", new Object[]{cacheDescriptor.getBaseName(), signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
+		return signedEntries;
+	}
+
+	private int getSignatureCount(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
+		final int signatureCount=signedEntries.stream()
+				.mapToInt(StateCacheEntrySigned::getSignatureCount)
+				.sum();
+		return signatureCount;
 	}
 
 	@Override
