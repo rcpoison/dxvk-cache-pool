@@ -41,18 +41,18 @@
 		</div>
 		}
 		@if (!signatureCounts.isEmpty()) {
+		<table class="statsBig">
 			@for (baseName : signatureCounts.keySet()) {
-			<h3>@baseName</h3>
-			<table>
+				<tr><th colspan="2" class="baseName">@baseName</th></tr>
 				<tr><th>Signees</th><th>Entries</th></tr>
 				@for (signatureCount : signatureCounts.get(baseName)) {
 				<tr>
-					<td>@signatureCount.getSignatureCount()</td>
-					<td>@signatureCount.getOccurences()</td>
+					<td class="signeeCount">@signatureCount.getSignatureCount()</td>
+					<td class="entryCount">@signatureCount.getOccurences()</td>
 				</tr>
 				}
-			</table>
 			}
+			</table>
 		} else {
 		<div>Pool is empty.</div>
 		}
