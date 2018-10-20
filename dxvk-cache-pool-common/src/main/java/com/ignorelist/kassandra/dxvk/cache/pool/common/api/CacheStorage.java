@@ -34,4 +34,6 @@ public interface CacheStorage extends Closeable {
 
 	Set<StateCacheEntry> getCacheEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfo> cacheEntryInfos);
 
+	Set<String> getAvilableBaseNames(final int version, final Set<String> baseNames);
+
 }

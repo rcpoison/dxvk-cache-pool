@@ -136,6 +136,15 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	}
 
 	@Override
+	public Set<String> getAvilableBaseNames(int version, Set<String> baseNames) {
+		return getWebTarget()
+				.path("getAvailableBaseNames")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(baseNames), TYPE_STRING_SET);
+	}
+
+	@Override
 	public StateCacheInfoSignees getCacheDescriptorSignees(int version, String baseName) {
 		return getWebTarget()
 				.path("cacheDescriptorSignees")
