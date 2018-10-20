@@ -128,7 +128,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		final ImmutableSet<PublicKey> usedPublicKeys=getUsedPublicKeys(signedEntries);
 		cacheSigned.setPublicKeys(usedPublicKeys);
 
-		int signatureCount=getSignatureCount(signedEntries);
+		int signatureCount=StateCacheEntrySigned.countTotalSignatures(signedEntries);
 		stopwatch.stop();
 
 		LOG.log(Level.INFO, "{0}: read {1} entries with {2} signatures in {3}ms", new Object[]{baseName, signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
@@ -211,18 +211,12 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		final ImmutableSet<StateCacheEntrySigned> signedEntries=buildSignedEntries(cacheDescriptor, missingEntriesSignees);
 		stopwatch.stop();
 
-		int signatureCount=getSignatureCount(signedEntries);
+		int signatureCount=StateCacheEntrySigned.countTotalSignatures(signedEntries);
 
 		LOG.log(Level.INFO, "{0}: read {1} entries with {2} signatures in {3}ms", new Object[]{cacheDescriptor.getBaseName(), signedEntries.size(), signatureCount, stopwatch.elapsed().toMillis()});
 		return signedEntries;
 	}
 
-	private int getSignatureCount(final ImmutableSet<StateCacheEntrySigned> signedEntries) {
-		final int signatureCount=signedEntries.stream()
-				.mapToInt(StateCacheEntrySigned::getSignatureCount)
-				.sum();
-		return signatureCount;
-	}
 
 	@Override
 	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames) {

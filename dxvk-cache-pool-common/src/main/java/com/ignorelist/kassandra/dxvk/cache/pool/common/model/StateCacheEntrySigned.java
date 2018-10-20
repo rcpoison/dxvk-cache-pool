@@ -15,6 +15,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import java.io.Serializable;
 import java.security.PublicKey;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
@@ -137,6 +138,12 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 	@Override
 	public int getSignatureCount() {
 		return null==signatures ? 0 : signatures.size();
+	}
+
+	public static int countTotalSignatures(final Collection<StateCacheEntrySigned> signedEntries) {
+		return signedEntries.stream()
+				.mapToInt(StateCacheEntrySigned::getSignatureCount)
+				.sum();
 	}
 
 	@Override
