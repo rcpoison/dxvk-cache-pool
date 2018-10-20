@@ -161,6 +161,15 @@ public class CacheStorageFS implements CacheStorage {
 		return cacheInfo;
 	}
 
+	public Set<String> getAvilableBaseNames(final int version, final Set<String> baseNames) {
+		try {
+			return Sets.intersection(getStorageCache(version).keySet(), baseNames);
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			return ImmutableSet.of();
+		}
+	}
+
 	@Override
 	public Set<String> findBaseNames(final int version, final String subString) {
 		try {
