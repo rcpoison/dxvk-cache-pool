@@ -5,7 +5,6 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.server.storage;
 
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.PredicateSignature;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorageSigned;
 import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
@@ -22,7 +21,6 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.CryptoUtil;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
@@ -156,11 +154,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 		return usedPublicKeys;
-	}
-
-	private ImmutableSet<SignaturePublicKeyInfo> getSignaturesFiltered(final PredicateSignature signaturePredicate, final StateCacheEntryInfo entryInfo) {
-		final Iterable<SignaturePublicKeyInfo> filteredSignatures=Iterables.filter(signatureStorage.getSignatures(entryInfo), signaturePredicate);
-		return ImmutableSet.copyOf(filteredSignatures);
 	}
 
 	@Override
