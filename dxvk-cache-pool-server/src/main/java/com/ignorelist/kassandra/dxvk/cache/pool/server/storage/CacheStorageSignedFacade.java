@@ -158,14 +158,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return usedPublicKeys;
 	}
 
-	private ImmutableSet<StateCacheEntrySigned> buildSignedEntries(final Set<StateCacheEntry> entries, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
-		final PredicateSignature signaturePredicate=PredicateSignature.buildFrom(signatureStorage, predicateStateCacheEntrySigned);
-		return entries.parallelStream()
-				.map(e -> new StateCacheEntrySigned(e, getSignaturesFiltered(signaturePredicate, e.getEntryInfo())))
-				.filter(predicateStateCacheEntrySigned)
-				.collect(ImmutableSet.toImmutableSet());
-	}
-
 	private ImmutableSet<SignaturePublicKeyInfo> getSignaturesFiltered(final PredicateSignature signaturePredicate, final StateCacheEntryInfo entryInfo) {
 		final Iterable<SignaturePublicKeyInfo> filteredSignatures=Iterables.filter(signatureStorage.getSignatures(entryInfo), signaturePredicate);
 		return ImmutableSet.copyOf(filteredSignatures);
