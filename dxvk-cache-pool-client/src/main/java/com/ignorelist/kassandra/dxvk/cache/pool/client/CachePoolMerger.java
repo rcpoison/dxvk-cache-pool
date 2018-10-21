@@ -184,6 +184,7 @@ public class CachePoolMerger {
 		return remoteAvailableBaseNames;
 	}
 
+	@Deprecated
 	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
 		// TODO: we don't actually need the descriptors anymore since we're not diffing against the remote
 		if (null==cacheDescriptorsByBaseName) {
@@ -239,16 +240,15 @@ public class CachePoolMerger {
 	 * @throws IOException
 	 */
 	public synchronized void downloadNew() throws IOException {
-		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
+		if (!getRemoteAvailableBaseNames().isEmpty()) {
 			// create new caches
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
-			final Map<String, StateCacheInfo> entriesWithoutLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), Predicates.not(baseNameToCacheTarget::containsKey));
-			log.log(ProgressLog.Level.MAIN, "writing "+entriesWithoutLocalCache.size()+" new caches");
-			if (!entriesWithoutLocalCache.isEmpty()) {
+			final Set<String> baseNamesWithoutLocalCache=Sets.difference(getRemoteAvailableBaseNames(), baseNameToCacheTarget.keySet());
+			log.log(ProgressLog.Level.MAIN, "writing "+baseNameToCacheTarget.size()+" new caches");
+			if (!baseNameToCacheTarget.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-					for (StateCacheInfo cacheInfo : entriesWithoutLocalCache.values()) {
-						final String baseName=cacheInfo.getBaseName();
+					for (final String baseName : baseNamesWithoutLocalCache) {
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
 						final StateCacheSigned cacheSigned=restClient.getCacheSigned(StateCacheHeaderInfo.getLatestVersion(), baseName, getCacheEntryPredicate());
 						log.log(ProgressLog.Level.SUB, baseName, "downloaded "+cacheSigned.getEntries().size()+" cache entries");
@@ -276,16 +276,14 @@ public class CachePoolMerger {
 	 * @throws IOException
 	 */
 	public synchronized void mergeExisting() throws IOException {
-		if (!getCacheDescriptorsByBaseNames().isEmpty()) {
-
+		if (!getRemoteAvailableBaseNames().isEmpty()) {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have a corresponsing .dxvk-cache file in the local target directory
-			final Map<String, StateCacheInfo> entriesLocalCache=Maps.filterKeys(getCacheDescriptorsByBaseNames(), baseNameToCacheTarget::containsKey);
-			log.log(ProgressLog.Level.MAIN, "updating "+entriesLocalCache.size()+" caches");
-			if (!entriesLocalCache.isEmpty()) {
+			final Set<String> baseNamesLocalCache=Sets.intersection(getRemoteAvailableBaseNames(), baseNameToCacheTarget.keySet());
+			log.log(ProgressLog.Level.MAIN, "updating "+baseNamesLocalCache.size()+" caches");
+			if (!baseNamesLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
-					for (StateCacheInfo cacheInfo : entriesLocalCache.values()) {
-						final String baseName=cacheInfo.getBaseName();
+					for (final String baseName : baseNamesLocalCache) {
 						final Path cacheFile=baseNameToCacheTarget.get(baseName);
 						final StateCache localCache=StateCacheIO.parse(cacheFile);
 						final StateCache localReferenceCache=readReference(localCache.getVersion(), baseName);
@@ -333,9 +331,9 @@ public class CachePoolMerger {
 	 */
 	public synchronized void uploadUnknown() throws IOException {
 		// upload unkown caches
-		ImmutableMap<String, StateCacheInfo> descriptors=getCacheDescriptorsByBaseNames();
-		ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
-		ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(descriptors::containsKey));
+		final ImmutableSet<String> remoteBaseNames=getRemoteAvailableBaseNames();
+		final ImmutableListMultimap<String, Path> cachePathsByBaseName=Multimaps.index(getScanResult().getStateCaches(), Util::baseName);
+		final ListMultimap<String, Path> pathsToUpload=Multimaps.filterKeys(cachePathsByBaseName, Predicates.not(remoteBaseNames::contains));
 		log.log(ProgressLog.Level.MAIN, "found "+pathsToUpload.keySet().size()+" candidates for upload");
 		try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 			for (Map.Entry<String, Collection<Path>> entry : pathsToUpload.asMap().entrySet()) {
