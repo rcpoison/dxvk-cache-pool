@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Striped;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.StateCacheHeaderInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
@@ -38,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.logging.Level;
@@ -63,17 +61,15 @@ public class CacheStorageFS implements CacheStorage {
 
 	private final Path storageRoot;
 	private final Striped<ReadWriteLock> storageLock=Striped.lazyWeakReadWriteLock(64);
+	private final ForkJoinPool storageThreadPool;
 	private ConcurrentMap<Integer, ConcurrentMap<String, StateCacheInfo>> storageCache;
-	private ForkJoinPool storageThreadPool;
 
-	public CacheStorageFS(Path storageRoot) {
+	public CacheStorageFS(final Path storageRoot, final ForkJoinPool storageThreadPool) {
 		this.storageRoot=storageRoot;
+		this.storageThreadPool=storageThreadPool;
 	}
 
-	private synchronized ForkJoinPool getThreadPool() {
-		if (null==storageThreadPool) {
-			storageThreadPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()/2));
-		}
+	private ForkJoinPool getThreadPool() {
 		return storageThreadPool;
 	}
 
@@ -166,6 +162,16 @@ public class CacheStorageFS implements CacheStorage {
 	}
 
 	@Override
+	public Set<String> getAvilableBaseNames(final int version, final Set<String> baseNames) {
+		try {
+			return Sets.intersection(getStorageCache(version).keySet(), baseNames);
+		} catch (IOException ex) {
+			LOG.log(Level.SEVERE, null, ex);
+			return ImmutableSet.of();
+		}
+	}
+
+	@Override
 	public Set<String> findBaseNames(final int version, final String subString) {
 		try {
 			return getStorageCache(version).keySet().stream()
@@ -217,28 +223,33 @@ public class CacheStorageFS implements CacheStorage {
 	@Override
 	public StateCache getCache(final int version, final String baseName) {
 		final Stopwatch stopwatch=Stopwatch.createStarted();
+		final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
+		if (null==cacheDescriptor) {
+			throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
+		}
+
+		StateCache cache=new StateCache();
+		cacheDescriptor.copyShallowTo(cache);
+		final Set<StateCacheEntry> cacheEntries=getCacheEntries(cache, cacheDescriptor.getEntries());
+		cache.setEntries(cacheEntries);
+
+		final Duration elapsed=stopwatch.elapsed();
+		LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
+		return cache;
+	}
+
+	@Override
+	public Set<StateCacheEntry> getCacheEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfo> cacheEntryInfos) {
+		final String baseName=cacheMeta.getBaseName();
 		final Lock readLock=getReadLock(baseName);
 		readLock.lock();
 		try {
-			final StateCacheInfo cacheDescriptor=getCacheDescriptor(version, baseName);
-			if (null==cacheDescriptor) {
-				throw new IllegalArgumentException("no entry for executableInfo: "+baseName);
-			}
-			final Path targetDirectory=buildTargetDirectory(cacheDescriptor);
-
-			StateCache cache=new StateCache();
-			cache.setBaseName(baseName);
-			cache.setVersion(cacheDescriptor.getVersion());
-			cache.setEntrySize(cacheDescriptor.getEntrySize());
+			final Path targetDirectory=buildTargetDirectory(cacheMeta);
 			final ForkJoinTask<ImmutableSet<StateCacheEntry>> task=getThreadPool().submit(()
-					-> cacheDescriptor.getEntries().parallelStream()
+					-> cacheEntryInfos.parallelStream()
 							.map(e -> readCacheEntry(targetDirectory, e))
 							.collect(ImmutableSet.toImmutableSet()));
-			cache.setEntries(task.get());
-
-			final Duration elapsed=stopwatch.elapsed();
-			LOG.log(Level.INFO, "{0} read {1} entries in {2}ms", new Object[]{baseName, cache.getEntries().size(), elapsed.toMillis()});
-			return cache;
+			return task.get();
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
@@ -326,9 +337,6 @@ public class CacheStorageFS implements CacheStorage {
 
 	@Override
 	public void close() throws IOException {
-		if (null!=storageThreadPool) {
-			MoreExecutors.shutdownAndAwaitTermination(storageThreadPool, 1, TimeUnit.MINUTES);
-		}
 	}
 
 	@Override

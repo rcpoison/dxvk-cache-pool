@@ -23,13 +23,19 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerificati
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.Configuration;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -46,6 +52,8 @@ import javax.ws.rs.core.MediaType;
 @Path("pool")
 public class CachePoolREST implements CacheStorage, CacheStorageSigned, IdentityStorage {
 
+	private static final Logger LOG=Logger.getLogger(CachePoolREST.class.getName());
+
 	private static final int PROTOCOL_VERSION=1;
 
 	@Inject
@@ -56,6 +64,8 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 	private SignatureStorage signatureStorage;
 	@Inject
 	private CacheStorageSigned cacheStorageSigned;
+	@Inject
+	private ExecutorService executorService;
 
 	@GET
 	@Path("protocolVersion")
@@ -199,7 +209,13 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 			throw new IllegalArgumentException("missing cache");
 		}
 		new StateCacheValidator().validate(cache);
-		cacheStorageSigned.storeSigned(cache);
+		executorService.submit(() -> {
+			try {
+				cacheStorageSigned.storeSigned(cache);
+			} catch (Exception ex) {
+				LOG.log(Level.SEVERE, null, ex);
+			}
+		});
 	}
 
 	@GET
@@ -212,6 +228,16 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 			throw new IllegalArgumentException("search string must not be empty");
 		}
 		return cacheStorage.findBaseNames(version, subString);
+	}
+
+	@POST
+	@Path("getAvailableBaseNames/{version}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<String> getAvilableBaseNames(@PathParam("version") int version, Set<String> baseNames) {
+		StateCacheHeaderInfo.getEntrySize(version);
+		return cacheStorage.getAvilableBaseNames(version, baseNames);
 	}
 
 	@POST
@@ -265,9 +291,30 @@ public class CachePoolREST implements CacheStorage, CacheStorageSigned, Identity
 		return signatureStorage.getVerifiedKeyInfos();
 	}
 
+	@GET
+	@Path("signatureCounts/{version}/{baseName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<SignatureCount> getSignatureCounts(@PathParam("version") int version, @PathParam("baseName") String baseName) {
+		return cacheStorageSigned.getSignatureCounts(version, baseName);
+	}
+
+	@GET
+	@Path("totalSignatureCounts/{version}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public Set<SignatureCount> getTotalSignatureCounts(@PathParam("version") int version) {
+		return cacheStorageSigned.getTotalSignatureCounts(version);
+	}
+
 	@Override
 	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
 		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
+	}
+
+	@Override
+	public Set<StateCacheEntry> getCacheEntries(StateCacheMeta cacheMeta, Set<StateCacheEntryInfo> cacheEntryInfos) {
+		throw new UnsupportedOperationException("Not supported."); // TODO: I don't think this needs to be exported through REST. Maybe introduce another iface.
 	}
 
 	@Override

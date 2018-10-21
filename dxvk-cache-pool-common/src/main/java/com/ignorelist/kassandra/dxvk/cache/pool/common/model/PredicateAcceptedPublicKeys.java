@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author poison
  */
 @XmlRootElement
-public class PredicateAcceptedPublicKeys implements Serializable, Predicate<StateCacheEntrySigned> {
+public class PredicateAcceptedPublicKeys implements Serializable, Predicate<StateCacheEntrySignees> {
 
 	private Set<PublicKeyInfo> acceptedPublicKeys;
 
@@ -38,9 +38,10 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 	}
 
 	@Override
-	public boolean apply(StateCacheEntrySigned entry) {
+	public boolean apply(StateCacheEntrySignees entry) {
 		if (null!=acceptedPublicKeys&&!acceptedPublicKeys.isEmpty()) {
-			return null!=entry.getSignatures()&&!Collections.disjoint(acceptedPublicKeys, entry.getSignatures());
+			final Set<PublicKeyInfo> publicKeyInfos=entry.getPublicKeyInfos();
+			return null!=publicKeyInfos&&!Collections.disjoint(acceptedPublicKeys, publicKeyInfos);
 		}
 		return true;
 	}
@@ -68,6 +69,11 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "PredicateAcceptedPublicKeys{"+"acceptedPublicKeys="+acceptedPublicKeys+'}';
 	}
 
 }

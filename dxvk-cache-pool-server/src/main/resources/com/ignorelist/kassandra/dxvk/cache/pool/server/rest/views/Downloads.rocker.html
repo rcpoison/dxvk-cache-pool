@@ -10,19 +10,23 @@
 		<meta charset="UTF-8">
 		<title>DXVK cache pool</title>
 		<link rel="stylesheet" href="/s/main.css">
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script src="/s/main.js"></script>
 	</head>
 	<body>
 		<div class="topnav">
 			<h1>DXVK cache pool</h1>
 			<div class="search-container">
-			<form action="/index.html" method="get">
+			<form action="/downloads.html" method="get">
 				<input type="text" name="search" value="@?search">
 				<button type="submit">Search</button>
 			</form>
-				</div>
+			</div>
 		</div>
 		<h2>Download</h2>
-		<div>Please use the <a href="https://github.com/rcpoison/dxvk-cache-pool/">client</a> instead.</div>
+		<div><strong>Please use the <a href="https://github.com/rcpoison/dxvk-cache-pool/">client</a> instead.</strong></div>
 		<div>
 		<hr/>
 		</div>
@@ -41,9 +45,9 @@
 		@if (!entries.isEmpty()) {
 		<ul>
 			@for (entry : entries) {
-			<li class="entry">
-				<span class="gameName">@entry.getBaseName()</span> <span class="entryCount">(@entry.getEntries().size())</span>
-				<a class="download" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
+			<li class="entry" data-baseName="@entry.getBaseName()">
+				<span class="gameName">@entry.getBaseName()</span> <span class="entryCount" title="">(@entry.getEntries().size())</span>
+				<a class="download" title="" href="d/@entry.getBaseName()@Util.DXVK_CACHE_EXT">@entry.getLastModifiedInstant()</a>
 			</li>
 			}
 		</ul>

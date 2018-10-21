@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
@@ -30,5 +31,9 @@ public interface CacheStorageSigned {
 	void storeSigned(StateCacheSigned cache) throws IOException;
 
 	Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames);
+
+	Set<SignatureCount> getSignatureCounts(final int version, final String baseName);
+
+	Set<SignatureCount> getTotalSignatureCounts(final int version);
 
 }

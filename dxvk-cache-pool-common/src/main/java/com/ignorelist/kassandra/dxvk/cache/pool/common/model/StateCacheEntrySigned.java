@@ -15,6 +15,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignaturePublicKeyInfo;
 import java.io.Serializable;
 import java.security.PublicKey;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
@@ -22,13 +23,14 @@ import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
  * @author poison
  */
 @XmlRootElement
-public class StateCacheEntrySigned implements Serializable {
+public class StateCacheEntrySigned implements Serializable, StateCacheEntrySignees {
 
 	private static final Logger LOG=Logger.getLogger(StateCacheEntrySigned.class.getName());
 
@@ -122,6 +124,26 @@ public class StateCacheEntrySigned implements Serializable {
 				.filter(Predicates.notNull())
 				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
 				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@XmlTransient
+	@Override
+	public Set<PublicKeyInfo> getPublicKeyInfos() {
+		return getSignatures().stream()
+				.map(SignaturePublicKeyInfo::getPublicKeyInfo)
+				.collect(ImmutableSet.toImmutableSet());
+	}
+
+	@XmlTransient
+	@Override
+	public int getSignatureCount() {
+		return null==signatures ? 0 : signatures.size();
+	}
+
+	public static int countTotalSignatures(final Collection<StateCacheEntrySigned> signedEntries) {
+		return signedEntries.stream()
+				.mapToInt(StateCacheEntrySigned::getSignatureCount)
+				.sum();
 	}
 
 	@Override

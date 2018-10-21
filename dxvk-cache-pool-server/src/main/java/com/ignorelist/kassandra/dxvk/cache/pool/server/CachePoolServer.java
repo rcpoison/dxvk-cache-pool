@@ -8,8 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.server;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolREST;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.CachePoolHome;
 import com.google.common.collect.ImmutableSet;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.CacheStorage;
-import com.ignorelist.kassandra.dxvk.cache.pool.common.api.SignatureStorage;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.rest.IllegalArgumentExceptionMapper;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.CacheStorageFS;
 import com.ignorelist.kassandra.dxvk.cache.pool.server.storage.SignatureStorageFS;
@@ -18,7 +17,12 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.cli.CommandLine;
@@ -43,26 +47,78 @@ import org.glassfish.jersey.server.filter.EncodingFilter;
  */
 public class CachePoolServer implements Closeable {
 
-	private static final Logger LOG=Logger.getLogger(CachePoolServer.class.getName());
+	public static class DelayedResetLogManager extends LogManager {
+
+		private static DelayedResetLogManager instance;
+
+		public DelayedResetLogManager() {
+			instance=this;
+		}
+
+		@Override
+		public void reset() {
+		}
+
+		private void actuallyReset() {
+			super.reset();
+		}
+
+		public static void resetStatic() {
+			instance.actuallyReset();
+		}
+	}
+
+	private static final Logger LOG;
+
+	static {
+		System.setProperty("java.util.logging.manager", DelayedResetLogManager.class.getName());
+		//System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %2$s %5$s%6$s%n");
+		System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s %2$s %5$s%6$s%n");
+		LOG=Logger.getLogger(CachePoolServer.class.getName());
+	}
 
 	private final Configuration configuration;
-	private final CacheStorage cacheStorage;
-	private final SignatureStorage signatureStorage;
+	private CacheStorageFS cacheStorage;
+	private SignatureStorageFS signatureStorage;
+	private ForkJoinPool forkJoinPool;
+	private ScheduledExecutorService scheduledExecutorService;
 	private Server server;
 
-	public CachePoolServer(final Configuration configuration, final CacheStorage cacheStorage, final SignatureStorage signatureStorage) {
+	public CachePoolServer(final Configuration configuration) {
 		this.configuration=configuration;
-		this.cacheStorage=cacheStorage;
-		this.signatureStorage=signatureStorage;
 	}
 
 	public synchronized void start() throws Exception {
 		if (null!=server) {
 			throw new IllegalStateException("server already started");
 		}
-		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
+
+		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+		scheduledExecutorService=Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+
+		cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
+		scheduledExecutorService.submit(() -> {
+			try {
+				cacheStorage.init();
+			} catch (IOException ex) {
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				throw new IllegalStateException(ex);
+			}
+		});
+
+		signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"), forkJoinPool);
+		scheduledExecutorService.submit(() -> {
+			try {
+				signatureStorage.init();
+			} catch (IOException ex) {
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				throw new IllegalStateException(ex);
+			}
+		});
+
 		ResourceConfig resourceConfig=buildResourceConfig();
 
+		URI baseUri=UriBuilder.fromUri("http://localhost/").port(configuration.getPort()).build();
 		server=JettyHttpContainerFactory.createServer(baseUri, resourceConfig);
 		server.setRequestLog(new RequestLog() {
 			@Override
@@ -77,7 +133,7 @@ public class CachePoolServer implements Closeable {
 		ResourceConfig resourceConfig=new ResourceConfig();
 		resourceConfig.register(CachePoolREST.class);
 		resourceConfig.register(CachePoolHome.class);
-		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage));
+		resourceConfig.register(new ServerBinder(configuration, cacheStorage, signatureStorage, forkJoinPool, scheduledExecutorService));
 		resourceConfig.register(IllegalArgumentExceptionMapper.class);
 		EncodingFilter.enableFor(resourceConfig, GZipEncoder.class);
 		return resourceConfig;
@@ -97,6 +153,7 @@ public class CachePoolServer implements Closeable {
 			return;
 		}
 		try {
+			LOG.info("stopping server");
 			server.stop();
 			server.destroy();
 			server=null;
@@ -104,6 +161,12 @@ public class CachePoolServer implements Closeable {
 			LOG.log(Level.SEVERE, null, ex);
 			throw new IOException(ex);
 		}
+		LOG.info("closing storage");
+		cacheStorage.close();
+		signatureStorage.close();
+		LOG.info("shutting down executors");
+		MoreExecutors.shutdownAndAwaitTermination(forkJoinPool, 2, TimeUnit.MINUTES);
+		MoreExecutors.shutdownAndAwaitTermination(scheduledExecutorService, 2, TimeUnit.MINUTES);
 	}
 
 	/**
@@ -117,12 +180,25 @@ public class CachePoolServer implements Closeable {
 			System.exit(1);
 		}
 
-		try (final CacheStorageFS storage=new CacheStorageFS(configuration.getStorage().resolve("cache"));
-				final SignatureStorageFS signatureStorage=new SignatureStorageFS(configuration.getStorage().resolve("signatures"));
-				final CachePoolServer js=new CachePoolServer(configuration, storage, signatureStorage)) {
-			storage.init();
-			signatureStorage.init();
+		try (final CachePoolServer js=new CachePoolServer(configuration)) {
 			js.start();
+
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					LOG.info("attempting graceful shutdown");
+					try {
+						js.close();
+					} catch (Exception ex) {
+						LOG.log(Level.SEVERE, "failed to shutdown gracefully", ex);
+					} finally {
+						LOG.info("finished graceful shutdown");
+						DelayedResetLogManager.resetStatic();
+					}
+				}
+
+			});
+
 			js.join();
 		}
 	}

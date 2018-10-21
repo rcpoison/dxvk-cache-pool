@@ -7,7 +7,9 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.api;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
@@ -29,5 +31,9 @@ public interface CacheStorage extends Closeable {
 	Set<String> findBaseNames(int version, String subString);
 
 	Set<StateCacheInfo> getCacheDescriptors(int version, Set<String> baseNames);
+
+	Set<StateCacheEntry> getCacheEntries(final StateCacheMeta cacheMeta, final Set<StateCacheEntryInfo> cacheEntryInfos);
+
+	Set<String> getAvilableBaseNames(final int version, final Set<String> baseNames);
 
 }

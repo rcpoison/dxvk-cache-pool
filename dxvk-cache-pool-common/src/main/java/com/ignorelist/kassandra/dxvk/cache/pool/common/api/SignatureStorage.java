@@ -24,6 +24,8 @@ public interface SignatureStorage extends IdentityStorage {
 
 	Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo);
 
+	Set<SignaturePublicKeyInfo> getSignatures(final StateCacheEntryInfo entryInfo, final Set<PublicKeyInfo> signedBy);
+
 	Set<PublicKeyInfo> getSignedBy(final StateCacheEntryInfo entryInfo);
 
 	void storePublicKey(final PublicKey publicKey) throws IOException;

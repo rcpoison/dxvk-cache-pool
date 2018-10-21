@@ -13,12 +13,15 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerificati
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKey;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.SignatureCount;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntry;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntryInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheInfoSignees;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheMeta;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCacheSigned;
 import java.io.IOException;
 import java.util.Set;
@@ -50,6 +53,8 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	private static final GenericType<Set<PublicKey>> TYPE_PUBLIC_KEY_SET=new GenericType<Set<PublicKey>>() {
 	};
 	private static final GenericType<Set<PublicKeyInfo>> TYPE_PUBLIC_KEY_INFO_SET=new GenericType<Set<PublicKeyInfo>>() {
+	};
+	private static final GenericType<Set<SignatureCount>> TYPE_SIGNATURE_COUNT_SET=new GenericType<Set<SignatureCount>>() {
 	};
 
 	public CachePoolRestClient(String baseUrl) {
@@ -128,6 +133,15 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 				.path(subString)
 				.request(MediaType.APPLICATION_JSON)
 				.get(TYPE_STRING_SET);
+	}
+
+	@Override
+	public Set<String> getAvilableBaseNames(int version, Set<String> baseNames) {
+		return getWebTarget()
+				.path("getAvailableBaseNames")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(baseNames), TYPE_STRING_SET);
 	}
 
 	@Override
@@ -226,6 +240,30 @@ public class CachePoolRestClient extends AbstractRestClient implements CacheStor
 	@Override
 	public void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException {
 		throw new UnsupportedOperationException("Not supported yet."); //TODO: implement
+	}
+
+	@Override
+	public Set<SignatureCount> getSignatureCounts(int version, String baseName) {
+		return getWebTarget()
+				.path("signatureCounts")
+				.path(Integer.toString(version))
+				.path(baseName)
+				.request(MediaType.APPLICATION_JSON)
+				.get(TYPE_SIGNATURE_COUNT_SET);
+	}
+
+	@Override
+	public Set<SignatureCount> getTotalSignatureCounts(int version) {
+		return getWebTarget()
+				.path("totalSignatureCounts")
+				.path(Integer.toString(version))
+				.request(MediaType.APPLICATION_JSON)
+				.get(TYPE_SIGNATURE_COUNT_SET);
+	}
+
+	@Override
+	public Set<StateCacheEntry> getCacheEntries(StateCacheMeta cacheMeta, Set<StateCacheEntryInfo> cacheEntryInfos) {
+		throw new UnsupportedOperationException("Not supported."); // TODO: I don't think this needs to be exported through REST. Maybe introduce another iface.
 	}
 
 }

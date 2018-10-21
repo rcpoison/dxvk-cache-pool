@@ -9,6 +9,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityWithVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
@@ -16,8 +17,7 @@ import java.util.Set;
  *
  * @author poison
  */
-public interface IdentityStorage {
-	
+public interface IdentityStorage extends Closeable {
 
 	Identity getIdentity(final PublicKeyInfo keyInfo);
 
@@ -26,5 +26,5 @@ public interface IdentityStorage {
 	void storeIdentity(IdentityWithVerification identityWithVerification) throws IOException;
 
 	Set<PublicKeyInfo> getVerifiedKeyInfos();
-	
+
 }
