@@ -76,6 +76,7 @@ public class CachePoolMerger {
 			});
 	private FsScanner scanResult;
 	private ImmutableSet<String> availableBaseNames;
+	private ImmutableSet<String> remoteAvailableBaseNames;
 	private ImmutableMap<String, StateCacheInfo> cacheDescriptorsByBaseName;
 	private KeyStore keyStore;
 	private PredicateStateCacheEntrySigned predicateStateCacheEntrySigned;
@@ -170,6 +171,17 @@ public class CachePoolMerger {
 					.collect(ImmutableSet.toImmutableSet());
 		}
 		return availableBaseNames;
+	}
+
+	public synchronized ImmutableSet<String> getRemoteAvailableBaseNames() throws IOException {
+		if (null==remoteAvailableBaseNames) {
+			try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
+				log.log(ProgressLog.Level.MAIN, "looking up remote base names for "+getAvailableBaseNames().size()+" possible games");
+				remoteAvailableBaseNames=ImmutableSet.copyOf(restClient.getAvilableBaseNames(StateCacheHeaderInfo.getLatestVersion(), getAvailableBaseNames()));
+				log.log(ProgressLog.Level.SUB, "found "+remoteAvailableBaseNames.size()+" matching base names");
+			}
+		}
+		return remoteAvailableBaseNames;
 	}
 
 	public synchronized ImmutableMap<String, StateCacheInfo> getCacheDescriptorsByBaseNames() throws IOException {
