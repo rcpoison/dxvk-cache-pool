@@ -245,8 +245,8 @@ public class CachePoolMerger {
 			final ImmutableMap<String, Path> baseNameToCacheTarget=getScanResult().getBaseNameToCacheTarget();
 			// remote cache entries which have no corresponsing .dxvk-cache file in the local target directory
 			final Set<String> baseNamesWithoutLocalCache=Sets.difference(getRemoteAvailableBaseNames(), baseNameToCacheTarget.keySet());
-			log.log(ProgressLog.Level.MAIN, "writing "+baseNameToCacheTarget.size()+" new caches");
-			if (!baseNameToCacheTarget.isEmpty()) {
+			log.log(ProgressLog.Level.MAIN, "writing "+baseNamesWithoutLocalCache.size()+" new caches");
+			if (!baseNamesWithoutLocalCache.isEmpty()) {
 				try (CachePoolRestClient restClient=new CachePoolRestClient(configuration.getHost())) {
 					for (final String baseName : baseNamesWithoutLocalCache) {
 						final Path targetPath=Util.cacheFileForBaseName(configuration.getCacheTargetPath(), baseName);
