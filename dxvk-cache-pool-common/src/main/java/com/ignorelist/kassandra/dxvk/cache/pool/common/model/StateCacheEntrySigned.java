@@ -117,6 +117,9 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 	}
 
 	public static ImmutableSet<PublicKeyInfo> getUsedPublicKeyInfos(final Set<StateCacheEntrySigned> signedEntries) {
+		if (null==signedEntries) {
+			return ImmutableSet.of();
+		}
 		return signedEntries.parallelStream()
 				.map(StateCacheEntrySigned::getSignatures)
 				.filter(Predicates.notNull())
