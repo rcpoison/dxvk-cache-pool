@@ -3,8 +3,4 @@
 # Script written by SpectralMemories on october 16 2018
 # POST INSTALL
 
-#All the commands below should be run as root
-
-chmod a+x /usr/bin/dxvk-cache-client #Allow execution
-
-echo "Environment variables were tampered with. You should restart the machine"
+echo "Environment variables were tampered with. You should login again or restart the machine"
