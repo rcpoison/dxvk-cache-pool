@@ -65,7 +65,7 @@ public class SignaturePublicKeyInfo implements Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof SignaturePublicKeyInfo)) {
 			return false;
 		}
 		final SignaturePublicKeyInfo other=(SignaturePublicKeyInfo) obj;

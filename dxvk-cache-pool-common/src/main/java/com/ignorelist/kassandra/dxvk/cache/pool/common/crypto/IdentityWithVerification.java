@@ -65,7 +65,7 @@ public class IdentityWithVerification implements Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof IdentityWithVerification)) {
 			return false;
 		}
 		final IdentityWithVerification other=(IdentityWithVerification) obj;

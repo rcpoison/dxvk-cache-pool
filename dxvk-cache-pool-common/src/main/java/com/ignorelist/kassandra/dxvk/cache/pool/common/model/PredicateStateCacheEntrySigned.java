@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.common.model;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import java.io.Serializable;
+import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -68,6 +69,41 @@ public class PredicateStateCacheEntrySigned implements Serializable, Predicate<S
 						null==minimumSignatures ? Predicates.alwaysTrue() : minimumSignatures)
 				.apply(input);
 	}
+
+	@Override
+	public int hashCode() {
+		int hash=7;
+		hash=41*hash+Objects.hashCode(this.acceptedPublicKeys);
+		hash=41*hash+Objects.hashCode(this.minimumSignatures);
+		hash=41*hash+(this.onlyAcceptVerifiedKeys ? 1 : 0);
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this==obj) {
+			return true;
+		}
+		if (obj==null) {
+			return false;
+		}
+		if (!(obj instanceof PredicateStateCacheEntrySigned)) {
+			return false;
+		}
+		final PredicateStateCacheEntrySigned other=(PredicateStateCacheEntrySigned) obj;
+		if (this.onlyAcceptVerifiedKeys!=other.onlyAcceptVerifiedKeys) {
+			return false;
+		}
+		if (!Objects.equals(this.acceptedPublicKeys, other.acceptedPublicKeys)) {
+			return false;
+		}
+		if (!Objects.equals(this.minimumSignatures, other.minimumSignatures)) {
+			return false;
+		}
+		return true;
+	}
+	
+	
 
 	@Override
 	public String toString() {

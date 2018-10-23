@@ -164,7 +164,7 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheEntrySigned)) {
 			return false;
 		}
 		final StateCacheEntrySigned other=(StateCacheEntrySigned) obj;

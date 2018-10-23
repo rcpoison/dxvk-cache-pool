@@ -131,6 +131,19 @@
 			<version>2.23.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>nl.jqno.equalsverifier</groupId>
+			<artifactId>equalsverifier</artifactId>
+			<version>1.7.8</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.meanbean</groupId>
+			<artifactId>meanbean</artifactId>
+			<version>2.0.3</version>
+			<scope>test</scope>
+		</dependency>
+		
 	</dependencies>
 	<build>
 		<plugins>

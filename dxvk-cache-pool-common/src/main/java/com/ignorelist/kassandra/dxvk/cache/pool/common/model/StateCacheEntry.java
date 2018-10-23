@@ -97,7 +97,7 @@ public class StateCacheEntry implements Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheEntry)) {
 			return false;
 		}
 		final StateCacheEntry other=(StateCacheEntry) obj;
