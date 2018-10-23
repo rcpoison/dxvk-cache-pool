@@ -171,8 +171,8 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 			Stopwatch stopwatch=Stopwatch.createStarted();
 			final ImmutableSet<StateCacheEntrySigned> verifiedEntries=cache.getEntries().parallelStream()
 					.map(StateCacheEntrySigned::copySafe) // do not trust info, rebuild
-					.filter(e -> 1==e.getSignatures().size())
-					.filter(e -> 1==e.verifiedSignatures(keyByInfo::get).size())
+					.filter(e -> 1==e.getSignatureCount())
+					.filter(e -> e.verifyAllSignaturesValid(keyByInfo::get))
 					.collect(ImmutableSet.toImmutableSet());
 			stopwatch.stop();
 			LOG.log(Level.INFO, "{0}: verified {1} entries in {2}ms", new Object[]{cache.getBaseName(), verifiedEntries.size(), stopwatch.elapsed().toMillis()});
