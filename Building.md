@@ -1,21 +1,21 @@
 ## Building
 
-*Prerequisites:*
+**Prerequisites:**
 - maven 3
 - openjdk >= 8
 
-*Build:*
+**Build:**
 ```bash
 ./build.sh
 ```
 
-*Executables:*
+**Executables:**
 ```bash
 dxvk-cache-client
 dxvk-cache-server
 ```
 
-*Debian package:*
+**Debian package:**
 ```
 dxvk-cache-pool-client/target/dxvk-cache-pool-client_*_all.deb
 ```
