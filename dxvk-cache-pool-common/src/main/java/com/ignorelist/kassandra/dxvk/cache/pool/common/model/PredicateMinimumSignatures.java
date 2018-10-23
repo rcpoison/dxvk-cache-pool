@@ -57,7 +57,7 @@ public class PredicateMinimumSignatures implements Serializable, Predicate<State
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof PredicateMinimumSignatures)) {
 			return false;
 		}
 		final PredicateMinimumSignatures other=(PredicateMinimumSignatures) obj;

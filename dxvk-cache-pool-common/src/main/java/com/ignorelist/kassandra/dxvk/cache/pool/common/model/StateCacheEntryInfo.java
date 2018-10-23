@@ -56,7 +56,7 @@ public class StateCacheEntryInfo implements Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheEntryInfo)) {
 			return false;
 		}
 		final StateCacheEntryInfo other=(StateCacheEntryInfo) obj;

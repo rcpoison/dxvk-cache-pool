@@ -72,7 +72,7 @@ public class StateCacheEntryInfoSignees implements Serializable, StateCacheEntry
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheEntryInfoSignees)) {
 			return false;
 		}
 		final StateCacheEntryInfoSignees other=(StateCacheEntryInfoSignees) obj;

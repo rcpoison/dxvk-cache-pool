@@ -205,7 +205,7 @@ public class StateCache implements StateCacheMeta, Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCache)) {
 			return false;
 		}
 		final StateCache other=(StateCache) obj;

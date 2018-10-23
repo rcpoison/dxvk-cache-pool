@@ -126,7 +126,7 @@ public class StateCacheSigned implements Serializable, StateCacheMeta {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheSigned)) {
 			return false;
 		}
 		final StateCacheSigned other=(StateCacheSigned) obj;
