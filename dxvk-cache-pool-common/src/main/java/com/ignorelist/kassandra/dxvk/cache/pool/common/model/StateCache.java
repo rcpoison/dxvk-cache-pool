@@ -19,11 +19,13 @@ import java.util.logging.Logger;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author poison
  */
+@XmlRootElement
 public class StateCache implements StateCacheMeta, Serializable {
 
 	private static final Logger LOG=Logger.getLogger(StateCache.class.getName());
