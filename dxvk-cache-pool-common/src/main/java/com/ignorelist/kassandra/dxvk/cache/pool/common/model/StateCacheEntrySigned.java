@@ -75,31 +75,44 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 		}
 		ImmutableSet.Builder<SignaturePublicKeyInfo> validSignatures=ImmutableSet.<SignaturePublicKeyInfo>builder();
 		for (SignaturePublicKeyInfo signature : getSignatures()) {
-			final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
-			PublicKey publicKey=null;
-			try {
-				publicKey=keyAccessor.apply(publicKeyInfo);
-			} catch (Exception e) {
-				LOG.log(Level.FINE, "failed loading public key", e);
-			}
-			if (null==publicKey) {
-				LOG.log(Level.WARNING, "public key not found for: {0}", publicKeyInfo);
-				continue;
-			}
-			try {
-				if (CryptoUtil.verify(getCacheEntry().getEntry(), publicKey, signature.getSignature().getSignature())) {
-					validSignatures.add(signature);
-				}
-			} catch (Exception ex) {
-				LOG.log(Level.WARNING, "failed to verify: "+publicKeyInfo, ex);
+			if (isSignatureValid(keyAccessor, signature)) {
+				validSignatures.add(signature);
 			}
 		}
 		return validSignatures.build();
 	}
 
+	private boolean isSignatureValid(final Function<PublicKeyInfo, PublicKey> keyAccessor, SignaturePublicKeyInfo signature) {
+		final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
+		final PublicKey publicKey;
+		try {
+			publicKey=keyAccessor.apply(publicKeyInfo);
+		} catch (Exception e) {
+			LOG.log(Level.FINE, "failed loading public key", e);
+			return false;
+		}
+		if (null==publicKey) {
+			LOG.log(Level.WARNING, "public key not found for: {0}", publicKeyInfo);
+			return false;
+		}
+		try {
+			return CryptoUtil.verify(getCacheEntry().getEntry(), publicKey, signature.getSignature().getSignature());
+		} catch (Exception ex) {
+			LOG.log(Level.WARNING, "failed to verify: "+publicKeyInfo, ex);
+			return false;
+		}
+	}
+
 	public boolean verifyAllSignaturesValid(final Function<PublicKeyInfo, PublicKey> keyAccessor) {
-		final ImmutableSet<SignaturePublicKeyInfo> verifiedSignatures=verifiedSignatures(keyAccessor);
-		return Objects.equals(getSignatures(), verifiedSignatures);
+		if (null==getSignatures()) {
+			return true;
+		}
+		for (SignaturePublicKeyInfo signature : getSignatures()) {
+			if (!isSignatureValid(keyAccessor, signature)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public StateCacheEntrySigned copySafe() {
