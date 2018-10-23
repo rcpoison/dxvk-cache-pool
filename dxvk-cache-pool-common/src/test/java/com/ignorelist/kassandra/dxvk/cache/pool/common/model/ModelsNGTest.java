@@ -13,6 +13,8 @@ import java.util.Iterator;
 import javax.xml.bind.annotation.XmlRootElement;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
+import org.meanbean.lang.Factory;
+import org.meanbean.test.BeanTester;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -62,6 +64,19 @@ public class ModelsNGTest {
 		EqualsVerifier.forClass(clazz)
 				.suppress(Warning.STRICT_INHERITANCE, Warning.NONFINAL_FIELDS)
 				.verify();
+	}
+
+	@Test(dataProvider="models")
+	public void testBean(Class<?> clazz) {
+		BeanTester beanTester=new BeanTester();
+		beanTester.getFactoryCollection()
+				.addFactory(byte[].class, new Factory<byte[]>() {
+					@Override
+					public byte[] create() {
+						return new byte[]{6, 6, 6};
+					}
+				});
+		beanTester.testBean(clazz);
 		System.err.println(clazz.getName());
 	}
 
