@@ -76,7 +76,7 @@ public class SignatureCount implements Serializable, Comparable<SignatureCount> 
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof SignatureCount)) {
 			return false;
 		}
 		final SignatureCount other=(SignatureCount) obj;

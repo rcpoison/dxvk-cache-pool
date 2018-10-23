@@ -74,7 +74,7 @@ public class PublicKey implements Serializable, Comparable<PublicKey> {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof PublicKey)) {
 			return false;
 		}
 		final PublicKey other=(PublicKey) obj;

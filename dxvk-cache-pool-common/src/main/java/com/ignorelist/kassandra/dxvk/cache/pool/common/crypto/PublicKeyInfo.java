@@ -62,7 +62,7 @@ public class PublicKeyInfo implements Serializable, Comparable<PublicKeyInfo> {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof PublicKeyInfo)) {
 			return false;
 		}
 		final PublicKeyInfo other=(PublicKeyInfo) obj;
