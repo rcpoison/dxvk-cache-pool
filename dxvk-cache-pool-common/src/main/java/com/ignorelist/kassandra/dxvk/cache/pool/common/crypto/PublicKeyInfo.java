@@ -75,7 +75,7 @@ public class PublicKeyInfo implements Serializable, Comparable<PublicKeyInfo> {
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				.add("hash", BaseEncoding.base16().encode(hash))
+				.add("hash", null==hash ? null : BaseEncoding.base16().encode(hash))
 				.toString();
 	}
 
