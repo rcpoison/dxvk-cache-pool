@@ -113,7 +113,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	@Override
 	public StateCacheSigned getCacheSigned(final int version, final String baseName, final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned) {
 		Stopwatch stopwatch=Stopwatch.createStarted();
-		LOG.log(Level.INFO, "using predicate: {0}", predicateStateCacheEntrySigned);
+		LOG.log(Level.INFO, "{0}: using predicate: {1}", new Object[]{baseName, predicateStateCacheEntrySigned});
 		final StateCacheInfoSignees cacheDescriptorSignees=getCacheDescriptorSignees(version, baseName, predicateStateCacheEntrySigned);
 		if (null==cacheDescriptorSignees) {
 			return null;
@@ -202,7 +202,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 	public Set<StateCacheEntrySigned> getMissingEntriesSigned(final StateCacheInfo existingCache) {
 		Stopwatch stopwatch=Stopwatch.createStarted();
 		final PredicateStateCacheEntrySigned predicateStateCacheEntrySigned=null==existingCache.getPredicateStateCacheEntrySigned() ? new PredicateStateCacheEntrySigned() : existingCache.getPredicateStateCacheEntrySigned();
-		LOG.log(Level.INFO, "using predicate: {0}", predicateStateCacheEntrySigned);
+		LOG.log(Level.INFO, "{0}: using predicate: {1}", new Object[]{existingCache.getBaseName(), predicateStateCacheEntrySigned});
 		final StateCacheInfo cacheDescriptor=cacheStorage.getCacheDescriptor(existingCache.getVersion(), existingCache.getBaseName());
 		if (null==cacheDescriptor) {
 			return null;
@@ -219,7 +219,6 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 		return signedEntries;
 	}
 
-
 	@Override
 	public Set<StateCacheInfoSignees> getCacheDescriptorsSignees(int version, Set<String> baseNames) {
 		return baseNames.parallelStream()
@@ -227,7 +226,7 @@ public class CacheStorageSignedFacade implements CacheStorageSigned {
 				.filter(Predicates.notNull())
 				.collect(ImmutableSet.toImmutableSet());
 	}
-	
+
 	@Override
 	public Set<SignatureCount> getTotalSignatureCounts(final int version) {
 		final TreeMultiset<Integer> signatureCounts=cacheStorage.findBaseNames(version, null).parallelStream()
