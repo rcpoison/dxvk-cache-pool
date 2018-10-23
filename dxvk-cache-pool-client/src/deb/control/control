@@ -1,0 +1,9 @@
+Package: dxvk-cache-client
+Version: [[version]]
+Section: games
+Priority: low
+Architecture: all
+Description: Allows sharing of DXVK State Cache, for smoother gameplay for everyone
+Maintainer: "rc.poison" <rc.poison@gmail.com>
+Homepage: https://github.com/rcpoison/dxvk-cache-pool
+Depends: java8-runtime-headless
