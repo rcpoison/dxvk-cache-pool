@@ -73,7 +73,6 @@ public class ModelsNGTest {
 		beanTester.getFactoryCollection()
 				.addFactory(byte[].class, () -> BYTES);
 		beanTester.testBean(clazz);
-		System.err.println(clazz.getName());
 	}
 
 }
