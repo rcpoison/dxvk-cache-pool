@@ -1,23 +1,30 @@
 ## Building
 
-Prerequisites:
+**Prerequisites:**
 - maven 3
 - openjdk >= 8
 
-Build: 
+**Build:**
 ```bash
 ./build.sh
 ```
 
-Executables:
+**Executables:**
 ```bash
 dxvk-cache-client
 dxvk-cache-server
 ```
 
-Archlinux:
+**Debian package:**
+```
+dxvk-cache-pool-client/target/dxvk-cache-pool-client_*_all.deb
+```
 
-See [PKGBUILD](arch/PKGBUILD)
+### Archlinux
+
+You can use the AUR: https://aur.archlinux.org/pkgbase/dxvk-cache-pool-git/
+
+Otherwise see [PKGBUILD](arch/PKGBUILD)
 
 ## Implementation problems
 

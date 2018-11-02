@@ -78,7 +78,7 @@ public class Identity implements Serializable, Comparable<Identity> {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof Identity)) {
 			return false;
 		}
 		final Identity other=(Identity) obj;

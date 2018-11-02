@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# Script written by SpectralMemories on october 16 2018
+# POST INSTALL
+
+echo "Environment variables were tampered with. You should login again or restart the machine"

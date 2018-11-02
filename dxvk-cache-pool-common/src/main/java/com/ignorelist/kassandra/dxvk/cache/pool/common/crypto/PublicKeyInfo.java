@@ -62,7 +62,7 @@ public class PublicKeyInfo implements Serializable, Comparable<PublicKeyInfo> {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof PublicKeyInfo)) {
 			return false;
 		}
 		final PublicKeyInfo other=(PublicKeyInfo) obj;
@@ -75,7 +75,7 @@ public class PublicKeyInfo implements Serializable, Comparable<PublicKeyInfo> {
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				.add("hash", BaseEncoding.base16().encode(hash))
+				.add("hash", null==hash ? null : BaseEncoding.base16().encode(hash))
 				.toString();
 	}
 

@@ -61,7 +61,7 @@ public class PredicateAcceptedPublicKeys implements Serializable, Predicate<Stat
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof PredicateAcceptedPublicKeys)) {
 			return false;
 		}
 		final PredicateAcceptedPublicKeys other=(PredicateAcceptedPublicKeys) obj;

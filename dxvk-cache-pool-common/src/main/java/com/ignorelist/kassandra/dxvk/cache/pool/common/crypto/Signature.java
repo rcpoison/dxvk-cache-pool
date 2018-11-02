@@ -52,7 +52,7 @@ public class Signature implements Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof Signature)) {
 			return false;
 		}
 		final Signature other=(Signature) obj;

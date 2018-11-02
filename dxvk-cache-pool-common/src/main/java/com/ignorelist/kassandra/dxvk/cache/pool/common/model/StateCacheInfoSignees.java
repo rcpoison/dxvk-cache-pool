@@ -112,7 +112,7 @@ public class StateCacheInfoSignees implements StateCacheMeta, Serializable {
 		if (obj==null) {
 			return false;
 		}
-		if (getClass()!=obj.getClass()) {
+		if (!(obj instanceof StateCacheInfoSignees)) {
 			return false;
 		}
 		final StateCacheInfoSignees other=(StateCacheInfoSignees) obj;

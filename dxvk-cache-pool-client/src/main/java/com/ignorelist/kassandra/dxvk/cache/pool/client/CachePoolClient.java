@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,7 +56,15 @@ public class CachePoolClient {
 				c.setScanRecursive(false);
 			}
 			if (commandLine.hasOption("min-signatures")) {
-				c.setMinimumSignatures(Integer.parseInt(commandLine.getOptionValue("min-signatures")));
+				final int minSignatures=Integer.parseInt(commandLine.getOptionValue("min-signatures"));
+				if (minSignatures<0) {
+					System.err.println("min-signatures must be positive");
+					System.exit(1);
+				}
+				if (minSignatures<PredicateStateCacheEntrySigned.DEFAULT_SIGNATURE_MINIMUM) {
+					System.err.println("You've specified min-signatures < "+PredicateStateCacheEntrySigned.DEFAULT_SIGNATURE_MINIMUM+". Please reconsider, you won't be contributing your signatures.");
+				}
+				c.setMinimumSignatures(minSignatures);
 			}
 			if (commandLine.hasOption("cache-target-dir")) {
 				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));

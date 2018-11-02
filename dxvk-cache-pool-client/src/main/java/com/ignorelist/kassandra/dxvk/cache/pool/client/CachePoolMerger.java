@@ -370,7 +370,9 @@ public class CachePoolMerger {
 	private StateCache readReference(final int version, final String baseName) throws IOException {
 		final Path referencePath=buildReferencePath(baseName);
 		try (InputStream in=new BufferedInputStream(new GZIPInputStream(Files.newInputStream(referencePath)))) {
-			return StateCacheIO.parse(in);
+			final StateCache stateCache=StateCacheIO.parse(in);
+			stateCache.setBaseName(baseName);
+			return stateCache;
 		} catch (IOException ioe) {
 			log.log(ProgressLog.Level.SUB, baseName, "couldn't find reference cache, assuming generated locally");
 			StateCache stateCache=new StateCache();

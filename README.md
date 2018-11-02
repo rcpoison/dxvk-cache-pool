@@ -107,6 +107,14 @@ You can opt to only download cache entries which are signed by verified users (`
 
 See [Verification](Verification.md).
 
-## Miscellaneous
+## FAQ
 
-For frequently asked questions, see [FAQ.md](FAQ.md). For building, see the [Building.md](Building.md). For server documentation, see the [server README](dxvk-cache-pool-server/README.md).
+For frequently asked questions, see [FAQ](FAQ.md)
+
+## Building
+
+See [Building](Building.md)
+
+## Server
+
+For server documentation, see the [server README](dxvk-cache-pool-server/README.md).
