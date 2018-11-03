@@ -63,7 +63,9 @@ public class CachePoolServer implements Closeable {
 		}
 
 		public static void resetStatic() {
-			instance.actuallyReset();
+			if (null!=instance) {
+				instance.actuallyReset();
+			}
 		}
 	}
 
