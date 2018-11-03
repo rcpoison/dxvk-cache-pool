@@ -101,7 +101,7 @@ public class CachePoolServer implements Closeable {
 			try {
 				cacheStorage.init();
 			} catch (IOException ex) {
-				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, "failed to init cache storage", ex);
 				throw new IllegalStateException(ex);
 			}
 		});
@@ -111,7 +111,7 @@ public class CachePoolServer implements Closeable {
 			try {
 				signatureStorage.init();
 			} catch (IOException ex) {
-				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(CachePoolServer.class.getName()).log(Level.SEVERE, "failed to init signature storage", ex);
 				throw new IllegalStateException(ex);
 			}
 		});
