@@ -88,7 +88,7 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 		try {
 			publicKey=keyAccessor.apply(publicKeyInfo);
 		} catch (Exception e) {
-			LOG.log(Level.FINE, "failed loading public key", e);
+			LOG.log(Level.WARNING, "failed loading public key", e);
 			return false;
 		}
 		if (null==publicKey) {
