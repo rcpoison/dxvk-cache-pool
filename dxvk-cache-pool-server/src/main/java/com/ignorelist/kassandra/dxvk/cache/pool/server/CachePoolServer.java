@@ -92,9 +92,9 @@ public class CachePoolServer implements Closeable {
 		if (null!=server) {
 			throw new IllegalStateException("server already started");
 		}
-
-		forkJoinPool=new ForkJoinPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
-		scheduledExecutorService=Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+		final int threads=Math.max(4, Runtime.getRuntime().availableProcessors());
+		forkJoinPool=new ForkJoinPool(threads);
+		scheduledExecutorService=Executors.newScheduledThreadPool(threads);
 
 		cacheStorage=new CacheStorageFS(configuration.getStorage().resolve("cache"), forkJoinPool);
 		scheduledExecutorService.submit(() -> {
