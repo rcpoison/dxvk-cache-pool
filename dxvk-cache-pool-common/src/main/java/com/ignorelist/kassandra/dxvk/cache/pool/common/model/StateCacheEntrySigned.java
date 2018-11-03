@@ -82,7 +82,7 @@ public class StateCacheEntrySigned implements Serializable, StateCacheEntrySigne
 		return validSignatures.build();
 	}
 
-	private boolean isSignatureValid(final Function<PublicKeyInfo, PublicKey> keyAccessor, SignaturePublicKeyInfo signature) {
+	private boolean isSignatureValid(final Function<PublicKeyInfo, PublicKey> keyAccessor, final SignaturePublicKeyInfo signature) {
 		final PublicKeyInfo publicKeyInfo=signature.getPublicKeyInfo();
 		final PublicKey publicKey;
 		try {
