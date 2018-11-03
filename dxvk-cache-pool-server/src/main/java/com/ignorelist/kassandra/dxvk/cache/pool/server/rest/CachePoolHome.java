@@ -75,7 +75,7 @@ public class CachePoolHome {
 
 	public CachePoolHome() {
 		totalSignatureCount=Suppliers.memoizeWithExpiration(() -> cacheStorageSigned.getTotalSignatureCounts(VERSION), 2, TimeUnit.MINUTES);
-		this.signatureCountCache=CacheBuilder.newBuilder()
+		signatureCountCache=CacheBuilder.newBuilder()
 				.expireAfterWrite(1, TimeUnit.MINUTES)
 				.build(new CacheLoader<String, Set<SignatureCount>>() {
 					@Override
