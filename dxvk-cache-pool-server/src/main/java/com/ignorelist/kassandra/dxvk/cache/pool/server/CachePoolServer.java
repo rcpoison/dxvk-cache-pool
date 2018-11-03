@@ -185,10 +185,10 @@ public class CachePoolServer implements Closeable {
 					LOG.info("attempting graceful shutdown");
 					try {
 						js.close();
+						LOG.info("finished graceful shutdown");
 					} catch (Exception ex) {
 						LOG.log(Level.SEVERE, "failed to shutdown gracefully", ex);
 					} finally {
-						LOG.info("finished graceful shutdown");
 						DelayedResetLogManager.resetStatic();
 					}
 				}
