@@ -29,6 +29,7 @@ import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.Identity;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.IdentityVerification;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.KeyStore;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateAcceptedPublicKeys;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateMinimumSignatures;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.StateCache;
@@ -149,6 +150,9 @@ public class CachePoolMerger {
 			predicateStateCacheEntrySigned.setOnlyAcceptVerifiedKeys(configuration.isOnlyVerified());
 			PredicateMinimumSignatures minimumSignatures=new PredicateMinimumSignatures(configuration.getMinimumSignatures());
 			predicateStateCacheEntrySigned.setMinimumSignatures(minimumSignatures);
+			if (null!=configuration.getAcceptPublicKeys()&&!configuration.getAcceptPublicKeys().isEmpty()) {
+				predicateStateCacheEntrySigned.setAcceptedPublicKeys(new PredicateAcceptedPublicKeys(configuration.getAcceptPublicKeys()));
+			}
 		}
 		return predicateStateCacheEntrySigned;
 	}
