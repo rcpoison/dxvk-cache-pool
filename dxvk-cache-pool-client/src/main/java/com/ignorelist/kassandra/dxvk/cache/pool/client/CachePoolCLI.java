@@ -26,7 +26,7 @@ import org.apache.commons.cli.ParseException;
  *
  * @author poison
  */
-public class CachePoolClient {
+public class CachePoolCLI {
 
 	/**
 	 * @param args the command line arguments
