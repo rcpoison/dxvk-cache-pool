@@ -7,6 +7,8 @@ package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import com.ignorelist.kassandra.dxvk.cache.pool.common.model.PredicateStateCacheEntrySigned;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -65,6 +67,18 @@ public class CachePoolCLI {
 					System.err.println("You've specified min-signatures < "+PredicateStateCacheEntrySigned.DEFAULT_SIGNATURE_MINIMUM+". Please reconsider, you won't be contributing your signatures.");
 				}
 				c.setMinimumSignatures(minSignatures);
+			}
+			if (commandLine.hasOption("accept-keys")) {
+				ImmutableSet<String> acceptedPublicKeysStrings=ImmutableSet.copyOf(commandLine.getOptionValues("accept-keys"));
+				if (!acceptedPublicKeysStrings.isEmpty()) {
+					final BaseEncoding base16=BaseEncoding.base16();
+					final ImmutableSet<PublicKeyInfo> acceptedPublicKeys=acceptedPublicKeysStrings.stream()
+							.map(base16::decode)
+							.map(PublicKeyInfo::new)
+							.collect(ImmutableSet.toImmutableSet());
+					c.setAcceptPublicKeys(acceptedPublicKeys);
+				}
+				
 			}
 			if (commandLine.hasOption("cache-target-dir")) {
 				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));
@@ -136,6 +150,7 @@ public class CachePoolCLI {
 		options.addOption(Option.builder().longOpt("non-recursive").desc("Do not scan direcories recursively").build());
 		options.addOption(Option.builder().longOpt("init-keys").desc("Ensure keys exist and exit").build());
 		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
+		options.addOption(Option.builder().longOpt("accept-keys").hasArgs().argName("public keys").desc("Only use entries signed by specified public keys").build());
 		options.addOption(Option.builder().longOpt("cache-target-dir").numberOfArgs(1).argName("dir").desc("Override default cache target directory").build());
 		return options;
 	}
