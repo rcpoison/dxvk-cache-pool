@@ -27,6 +27,7 @@ public class Configuration {
 	private Path configurationPath;
 	private Path cacheReferencePath;
 	private Set<Path> gamePaths;
+	private Set<Path> steamApps;
 	private boolean scanRecursive=true;
 	private boolean onlyVerified=false;
 	private int minimumSignatures=2;
@@ -93,6 +94,14 @@ public class Configuration {
 
 	public void setGamePaths(Set<Path> gamePaths) {
 		this.gamePaths=gamePaths;
+	}
+
+	public Set<Path> getSteamApps() {
+		return steamApps;
+	}
+
+	public void setSteamApps(Set<Path> steamApps) {
+		this.steamApps=steamApps;
 	}
 
 	public boolean isScanRecursive() {
