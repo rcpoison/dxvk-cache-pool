@@ -84,6 +84,16 @@ public class CachePoolCLI {
 			if (commandLine.hasOption("cache-target-dir")) {
 				c.setCacheTargetPath(Paths.get(commandLine.getOptionValue("cache-target-dir")));
 			}
+			if (commandLine.hasOption("steam-apps")) {
+				ImmutableSet<String> steamAppsStrings=ImmutableSet.copyOf(commandLine.getOptionValues("steam-apps"));
+				ImmutableSet<Path> steamApps=steamAppsStrings.stream()
+						.filter(Predicates.notNull())
+						.map(Paths::get)
+						.filter(p -> Files.isDirectory(p.resolveSibling("shadercache")))
+						.collect(ImmutableSet.toImmutableSet());
+				c.setSteamApps(steamApps);
+			}
+			
 			final List<String> argList=commandLine.getArgList();
 			if (1==argList.size()&&Files.isRegularFile(Paths.get(argList.get(0)))) {
 				c.setGamePaths(ImmutableSet.of(Paths.get(argList.get(0)).getParent()));
@@ -153,6 +163,7 @@ public class CachePoolCLI {
 		options.addOption(Option.builder().longOpt("min-signatures").numberOfArgs(1).argName("count").desc("Minimum required signatures to download a cache entry").build());
 		options.addOption(Option.builder().longOpt("accept-keys").hasArgs().argName("public keys").desc("Only use entries signed by specified public keys").build());
 		options.addOption(Option.builder().longOpt("cache-target-dir").numberOfArgs(1).argName("dir").desc("Override default cache target directory").build());
+		options.addOption(Option.builder().longOpt("steam-apps").hasArgs().argName("SteamApps directories").desc("SteamApps directories").build());
 		return options;
 	}
 
