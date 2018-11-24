@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.dxvk.cache.pool.client;
 
 import com.ignorelist.kassandra.dxvk.cache.pool.common.Util;
+import com.ignorelist.kassandra.dxvk.cache.pool.common.crypto.PublicKeyInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +30,7 @@ public class Configuration {
 	private boolean scanRecursive=true;
 	private boolean onlyVerified=false;
 	private int minimumSignatures=2;
+	private Set<PublicKeyInfo> acceptPublicKeys;
 	private boolean verbose=false;
 
 	public String getHost() {
@@ -115,6 +117,14 @@ public class Configuration {
 
 	public void setMinimumSignatures(int minimumSignatures) {
 		this.minimumSignatures=minimumSignatures;
+	}
+
+	public Set<PublicKeyInfo> getAcceptPublicKeys() {
+		return acceptPublicKeys;
+	}
+
+	public void setAcceptPublicKeys(Set<PublicKeyInfo> acceptPublicKeys) {
+		this.acceptPublicKeys=acceptPublicKeys;
 	}
 
 	public boolean isVerbose() {
