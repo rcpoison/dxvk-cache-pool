@@ -37,6 +37,7 @@ public class CachePoolCLI {
 		Options options=buildOptions();
 		CommandLineParser parser=new DefaultParser();
 		CommandLine commandLine=null;
+		final BaseEncoding base16=BaseEncoding.base16();
 		Configuration c=new Configuration();
 		try {
 			commandLine=parser.parse(options, args);
@@ -71,7 +72,7 @@ public class CachePoolCLI {
 			if (commandLine.hasOption("accept-keys")) {
 				ImmutableSet<String> acceptedPublicKeysStrings=ImmutableSet.copyOf(commandLine.getOptionValues("accept-keys"));
 				if (!acceptedPublicKeysStrings.isEmpty()) {
-					final BaseEncoding base16=BaseEncoding.base16();
+					
 					final ImmutableSet<PublicKeyInfo> acceptedPublicKeys=acceptedPublicKeysStrings.stream()
 							.map(base16::decode)
 							.map(PublicKeyInfo::new)
@@ -115,8 +116,8 @@ public class CachePoolCLI {
 		}
 		System.err.println("target directory is: "+c.getCacheTargetPath());
 		CachePoolMerger merger=new CachePoolMerger(c);
+		System.err.println("my public key: "+base16.encode(merger.getKeyStore().getPublicKey().getKeyInfo().getHash()));
 		if (commandLine.hasOption("init-keys")) {
-			merger.getKeyStore();
 			System.exit(0);
 		}
 		try {
